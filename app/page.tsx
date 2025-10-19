@@ -126,144 +126,112 @@ export default function HomePage() {
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
             <div className="p-8 md:p-12">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-                {/* Image Section - First on mobile */}
-                <motion.div
-                  initial={{ opacity: 0, x: -50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.8 }}
-                  className="relative flex justify-center items-center order-1 md:order-2"
-                >
-                  <div className="relative w-96 h-64 md:w-[28rem] md:h-80">
-                    <Image
-                      src="/hero-img.jpg"
-                      alt="MHM Academy"
-                      fill
-                      priority
+          {/* Image Section - First on mobile */}
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+                  className="relative flex justify-center items-center order-1 md:order-2 -mx-8 md:mx-0"
+          >
+                  <div className="relative w-full h-64 md:w-[28rem] md:h-80">
+              <Image
+                src="/hero-img.jpg"
+                alt="MHM Academy"
+                fill
+                priority
                       className="object-cover rounded-2xl border-4 border-[#090919]/20 shadow-lg"
-                      sizes="(max-width: 768px) 384px, 448px"
-                    />
-                  </div>
-                  
-                  {/* Floating Stationery Items */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ 
-                      opacity: 1, 
-                      y: [0, -15, 0],
-                      rotate: [0, 5, 0]
-                    }}
-                    transition={{ 
-                      duration: 0.5, 
-                      delay: 0.5,
-                      y: {
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      },
-                      rotate: {
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }
-                    }}
-                    className="absolute top-1 -right-2"
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                  >
-                    <Image
+                      sizes="(max-width: 100%) 100vw, 448px"
+              />
+            </div>
+            
+            {/* Floating Stationery Items */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ 
+                opacity: 1, 
+                y: [0, -15, 0],
+                rotate: [0, 5, 0]
+              }}
+              transition={{ 
+                duration: 0.5, 
+                delay: 0.5,
+                y: {
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                },
+                rotate: {
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }
+              }}
+                    className="absolute top-1 right-2 md:-right-2"
+              whileHover={{ scale: 1.1, rotate: 5 }}
+            >
+              <Image
                       src="/open-book.png"
                       alt="Open Book"
-                      width={50}
-                      height={50}
-                      className="object-contain"
-                    />
-                  </motion.div>
+                width={50}
+                height={50}
+                className="object-contain"
+              />
+            </motion.div>
 
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ 
-                      opacity: 1, 
-                      y: [0, -12, 0],
-                      rotate: [0, -5, 0]
-                    }}
-                    transition={{ 
-                      duration: 0.5, 
-                      delay: 0.7,
-                      y: {
-                        duration: 2.5,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      },
-                      rotate: {
-                        duration: 2.5,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }
-                    }}
-                    className="absolute bottom-1/3 left-6"
-                    whileHover={{ scale: 1.1, rotate: -5 }}
-                  >
-                    <Image
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ 
+                opacity: 1, 
+                y: [0, -12, 0],
+                rotate: [0, -5, 0]
+              }}
+              transition={{ 
+                duration: 0.5, 
+                delay: 0.7,
+                y: {
+                  duration: 2.5,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                },
+                rotate: {
+                  duration: 2.5,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }
+              }}
+                    className="absolute bottom-1/3 left-2 md:left-6"
+              whileHover={{ scale: 1.1, rotate: -5 }}
+            >
+              <Image
                       src="/certificate.png"
                       alt="Certificate"
-                      width={50}
-                      height={50}
-                      className="object-contain"
-                    />
-                  </motion.div>
+                width={50}
+                height={50}
+                className="object-contain"
+              />
+            </motion.div>
 
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ 
-                      opacity: 1, 
-                      y: [0, -18, 0],
-                      rotate: [0, 10, 0]
-                    }}
-                    transition={{ 
-                      duration: 0.5, 
-                      delay: 0.9,
-                      y: {
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      },
-                      rotate: {
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }
-                    }}
-                    className="absolute top-1/2 -right-6"
-                    whileHover={{ scale: 1.1, rotate: 10 }}
-                  >
-                    <Image
-                      src="/idea.png"
-                      alt="Idea"
-                      width={55}
-                      height={55}
-                      className="object-contain"
-                    />
-                  </motion.div>
-                </motion.div>
+          </motion.div>
 
-                {/* Text Section - Second on mobile */}
-                <motion.div
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.8 }}
-                  className="text-center mt-0 md:mt-0 order-2 md:order-1"
-                >
+          {/* Text Section - Second on mobile */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mt-0 md:mt-0 order-2 md:order-1"
+          >
                   <h1 className="text-4xl md:text-6xl font-bold mb-4 font-cairo">
                     MHM Academy
-                  </h1>
+            </h1>
                 <p className="text-xl md:text-2xl text-muted-foreground mb-8" suppressHydrationWarning>
-                  {t('home.subtitle')}
-                </p>
-                  <Button size="lg" asChild className="bg-[#090919] hover:bg-[#090919]/90 text-white">
-                    <Link href="/sign-up">
+              {t('home.subtitle')}
+            </p>
+            <Button size="lg" asChild className="bg-[#090919] hover:bg-[#090919]/90 text-white">
+              <Link href="/sign-up">
                       <span suppressHydrationWarning>{t('home.getStarted')}</span> <ArrowRight className="mr-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </motion.div>
+              </Link>
+            </Button>
+          </motion.div>
               </div>
             </div>
             
@@ -342,8 +310,8 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl font-bold mb-4" suppressHydrationWarning>{t('home.availableCourses')}</h2>
-            <p className="text-muted-foreground" suppressHydrationWarning>{t('home.discoverCourses')}</p>
+            <h2 className="text-3xl font-bold mb-4" suppressHydrationWarning>اختر منهجك التعليمي</h2>
+            <p className="text-muted-foreground" suppressHydrationWarning>نقدم لك مناهج تعليمية متخصصة تناسب احتياجاتك</p>
           </motion.div>
 
           <motion.div
@@ -351,126 +319,119 @@ export default function HomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="flex flex-wrap justify-center gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto"
           >
-            {isLoading ? (
-              // Loading skeleton
-              Array.from({ length: 6 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="w-full sm:w-80 md:w-72 lg:w-80 bg-card rounded-xl overflow-hidden border shadow-sm animate-pulse"
+            {/* Egyptian Curriculum Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="group bg-white rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            >
+              <div className="relative w-full h-48 bg-gradient-to-br from-[#090919] to-[#1a1a2e] overflow-hidden">
+                <Image
+                  src="/egypt.jpg"
+                  alt="Egyptian Curriculum"
+                  fill
+                  className="object-cover blur-sm"
+                />
+                <div className="absolute inset-0 bg-black/60" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <BookOpen className="h-8 w-8" />
+                    </div>
+                    <h3 className="text-2xl font-bold">المنهج المصري</h3>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-bold mb-4 text-gray-900">المنهج المصري</h3>
+                <ul className="space-y-3 mb-6 text-gray-600">
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>من كجي إلى المرحلة الثانوية</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>شعبة عربي ولغات</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>شعبة عام وأزهر</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>شعبة علمي وأدبي</span>
+                  </li>
+                </ul>
+                <Button 
+                  className="w-full bg-[#090919] hover:bg-[#090919]/90 text-white font-semibold py-3"
+                  asChild
                 >
-                  <div className="w-full aspect-video bg-muted" />
-                  <div className="p-4 space-y-3">
-                    <div className="h-4 bg-muted rounded w-3/4" />
-                    <div className="h-4 bg-muted rounded w-1/2" />
+                  <Link href="/sign-up">
+                    ابدأ مع المنهج المصري
+                  </Link>
+                </Button>
+              </div>
+            </motion.div>
+
+            {/* Saudi Curriculum Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="group bg-white rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            >
+              <div className="relative w-full h-48 bg-gradient-to-br from-[#090919] to-[#1a1a2e] overflow-hidden">
+                <Image
+                  src="/saudi.jpg"
+                  alt="Saudi Curriculum"
+                  fill
+                  className="object-cover blur-sm"
+                />
+                <div className="absolute inset-0 bg-black/60" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <BookOpen className="h-8 w-8" />
+                    </div>
+                    <h3 className="text-2xl font-bold">المنهج السعودي</h3>
                   </div>
                 </div>
-              ))
-            ) : (
-              courses.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="max-w-md mx-auto">
-                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                      <BookOpen className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2" suppressHydrationWarning>{t('home.noCoursesAvailable')}</h3>
-                    <p className="text-muted-foreground mb-4" suppressHydrationWarning>
-                      {t('home.noCoursesDescription')}
-                    </p>
-                    <Button 
-                      variant="outline" 
-                      asChild
-                      className="bg-[#090919] hover:bg-[#090919]/90 text-white border-[#090919]"
-                    >
-                      <Link href="/sign-up">
-                        <span suppressHydrationWarning>{t('home.signUpForEarlyAccess')}</span>
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                courses.map((course, index) => (
-                  <motion.div
-                    key={course.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="group w-full sm:w-80 md:w-72 lg:w-80 bg-card rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition-all"
-                  >
-                    <div className="relative w-full aspect-video">
-                      <Image
-                        src={course.imageUrl || "/placeholder.png"}
-                        alt={course.title}
-                        fill
-                        className="object-cover rounded-t-xl"
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="text-lg font-semibold mb-2 line-clamp-2">
-                        {course.title}
-                      </h3>
-                      
-                      {/* Target Audience Info */}
-                      {(course.targetCurriculum || course.targetLevel || course.targetLanguage || course.targetGrade) && (
-                        <div className="mb-3 flex flex-wrap gap-1">
-                          {course.targetCurriculum && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              {course.targetCurriculum === 'egyptian' ? 'المنهج المصري' : 'المنهج السعودي'}
-                            </span>
-                          )}
-                          {course.targetLevel && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                              {course.targetLevel}
-                            </span>
-                          )}
-                          {course.targetLanguage && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                              {course.targetLanguage === 'arabic' ? 'عربي' : 'لغات'}
-                            </span>
-                          )}
-                          {course.targetGrade && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {course.targetGrade}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                        <BookOpen className="h-4 w-4" />
-                        <span>
-                          {course.chapters?.length || 0} {course.chapters?.length === 1 ? t('home.chapter') : t('home.chapters')}
-                          {course.quizzes && course.quizzes.length > 0 && (
-                            <span className="mr-2">، {course.quizzes.length} {course.quizzes.length === 1 ? t('home.quiz') : t('home.quizzes')}</span>
-                          )}
-                        </span>
-                      </div>
-                      
-                      {/* Course Price */}
-                      {course.price && course.price > 0 && (
-                        <div className="mb-4">
-                          <span className="text-2xl font-bold text-[#090919]">
-                            {formatPrice(course.price)}
-                          </span>
-                        </div>
-                      )}
-                      <Button 
-                        className="w-full bg-[#090919] hover:bg-[#090919]/90 text-white" 
-                        variant="default"
-                        asChild
-                      >
-                        <Link href={course.chapters && course.chapters.length > 0 ? `/courses/${course.id}/chapters/${course.chapters[0].id}` : `/courses/${course.id}`}>
-                          <span suppressHydrationWarning>{t('home.viewCourse')}</span>
-                        </Link>
-                      </Button>
-                    </div>
-                  </motion.div>
-                ))
-              )
-            )}
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-bold mb-4 text-gray-900">المنهج السعودي</h3>
+                <ul className="space-y-3 mb-6 text-gray-600">
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>من كجي إلى المرحلة المتوسطة</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>مناهج معتمدة من وزارة التعليم</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>مواد دراسية شاملة</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>تقييمات دورية ومتابعة مستمرة</span>
+                  </li>
+                </ul>
+                <Button 
+                  className="w-full bg-[#090919] hover:bg-[#090919]/90 text-white font-semibold py-3"
+                  asChild
+                >
+                  <Link href="/sign-up">
+                    ابدأ مع المنهج السعودي
+                  </Link>
+                </Button>
+              </div>
+            </motion.div>
           </motion.div>
         </motion.div>
       </section>

@@ -12,7 +12,7 @@ export const CurrencySelector = () => {
   };
 
   return (
-    <div className="fixed left-0 top-1/2 transform -translate-y-1/2 z-50">
+    <div className="hidden md:block fixed left-0 top-1/2 transform -translate-y-1/2 z-50">
       <div 
         className="relative group"
         onMouseEnter={() => setIsHovered(true)}

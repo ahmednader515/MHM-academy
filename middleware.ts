@@ -81,6 +81,6 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|hero-img.jpg|logo.png|male.png|certificate.png|idea.png|open-book.png|$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|hero-img.jpg|logo.png|male.png|certificate.png|egypt.jpg|saudi.jpg|idea.png|open-book.png|$).*)",
   ],
 };
