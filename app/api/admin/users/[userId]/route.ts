@@ -18,7 +18,7 @@ export async function PATCH(
             return new NextResponse("Forbidden", { status: 403 });
         }
 
-        const { fullName, phoneNumber, email, college, faculty, level, role } = await req.json();
+        const { fullName, phoneNumber, email, curriculum, level, language, grade, role } = await req.json();
 
         // Check if user exists
         const existingUser = await db.user.findUnique({
@@ -69,9 +69,10 @@ export async function PATCH(
                 ...(fullName && { fullName }),
                 ...(phoneNumber && { phoneNumber }),
                 ...(email && { email }),
-                ...(college && { college }),
-                ...(faculty && { faculty }),
+                ...(curriculum && { curriculum }),
                 ...(level && { level }),
+                ...(language && { language }),
+                ...(grade && { grade }),
                 ...(role && { role })
             }
         });

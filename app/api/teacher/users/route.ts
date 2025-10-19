@@ -5,11 +5,18 @@ import { db } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
     try {
+        console.log("[TEACHER_USERS_GET] Starting request");
+        
         const session = await getServerSession(authOptions);
-
-        console.log("[TEACHER_USERS_GET] Session:", { userId: session?.user?.id, role: session?.user?.role });
+        console.log("[TEACHER_USERS_GET] Session:", { 
+            userId: session?.user?.id, 
+            role: session?.user?.role,
+            hasSession: !!session,
+            hasUser: !!session?.user
+        });
 
         if (!session?.user) {
+            console.log("[TEACHER_USERS_GET] No session or user");
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
@@ -18,6 +25,8 @@ export async function GET(req: NextRequest) {
             return new NextResponse("Forbidden", { status: 403 });
         }
 
+        console.log("[TEACHER_USERS_GET] User is teacher, fetching users from database");
+        
         // Teachers can see all users (USER, TEACHER, and ADMIN roles)
         const users = await db.user.findMany({
             where: {
@@ -30,9 +39,10 @@ export async function GET(req: NextRequest) {
                 fullName: true,
                 phoneNumber: true,
                 email: true,
-                college: true,
-                faculty: true,
+                curriculum: true,
                 level: true,
+                language: true,
+                grade: true,
                 role: true,
                 balance: true,
                 createdAt: true,
@@ -56,10 +66,11 @@ export async function GET(req: NextRequest) {
             TEACHER: users.filter(u => u.role === "TEACHER").length,
             ADMIN: users.filter(u => u.role === "ADMIN").length
         });
-        console.log("[TEACHER_USERS_GET] Admin users:", users.filter(u => u.role === "ADMIN"));
+        
         return NextResponse.json(users);
     } catch (error) {
-        console.error("[TEACHER_USERS_GET]", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        console.error("[TEACHER_USERS_GET] Error details:", error);
+        console.error("[TEACHER_USERS_GET] Error stack:", error instanceof Error ? error.stack : 'No stack trace');
+        return new NextResponse(`Internal Error: ${error instanceof Error ? error.message : 'Unknown error'}`, { status: 500 });
     }
 }

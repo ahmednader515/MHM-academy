@@ -49,9 +49,9 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             href: "/dashboard/teacher/analytics",
         },
         {
-            icon: Users,
-            label: t('dashboard.students'),
-            href: "/dashboard/teacher/users",
+            icon: Wallet,
+            label: t('dashboard.balance'),
+            href: "/dashboard/teacher/balance",
         },
         {
             icon: Shield,
@@ -75,11 +75,6 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             icon: FileText,
             label: t('dashboard.quizzes'),
             href: "/dashboard/admin/quizzes",
-        },
-        {
-            icon: Shield,
-            label: t('admin.createAccount'),
-            href: "/dashboard/admin/create-account",
         },
         {
             icon: Eye,

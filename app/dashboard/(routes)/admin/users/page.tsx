@@ -45,9 +45,10 @@ interface User {
     fullName: string;
     phoneNumber: string;
     email: string;
-    college?: string;
-    faculty?: string;
+    curriculum?: string;
     level?: string;
+    language?: string;
+    grade?: string;
     role: string;
     balance: number;
     createdAt: string;
@@ -63,9 +64,10 @@ interface EditUserData {
     fullName: string;
     phoneNumber: string;
     email: string;
-    college: string;
-    faculty: string;
+    curriculum: string;
     level: string;
+    language: string;
+    grade: string;
     role: string;
 }
 
@@ -79,9 +81,10 @@ const UsersPage = () => {
         fullName: "",
         phoneNumber: "",
         email: "",
-        college: "",
-        faculty: "",
+        curriculum: "",
         level: "",
+        language: "",
+        grade: "",
         role: ""
     });
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -112,9 +115,10 @@ const UsersPage = () => {
             fullName: user.fullName,
             phoneNumber: user.phoneNumber,
             email: user.email,
-            college: user.college || "",
-            faculty: user.faculty || "",
+            curriculum: user.curriculum || "",
             level: user.level || "",
+            language: user.language || "",
+            grade: user.grade || "",
             role: user.role
         });
         setIsEditDialogOpen(true);

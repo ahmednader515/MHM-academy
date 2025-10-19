@@ -21,7 +21,7 @@ export async function PATCH(
             return new NextResponse("Forbidden", { status: 403 });
         }
 
-        const { fullName, phoneNumber, email, college, faculty, level, role } = await req.json();
+        const { fullName, phoneNumber, email, college, faculty, level, role, balance } = await req.json();
 
         // Check if user exists (teachers can edit all users)
         const existingUser = await db.user.findUnique({
@@ -72,6 +72,11 @@ export async function PATCH(
             return new NextResponse("Invalid role", { status: 400 });
         }
 
+        // Validate balance
+        if (balance !== undefined && (typeof balance !== "number" || balance < 0)) {
+            return new NextResponse("Invalid balance amount", { status: 400 });
+        }
+
         // Update user (teachers can update basic info and change role)
         const updatedUser = await db.user.update({
             where: {
@@ -87,7 +92,8 @@ export async function PATCH(
                 ...(college && { college }),
                 ...(faculty && { faculty }),
                 ...(level && { level }),
-                ...(role && { role })
+                ...(role && { role }),
+                ...(balance !== undefined && { balance })
             }
         });
 
