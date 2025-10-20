@@ -13,7 +13,6 @@ async function testSessionManagement() {
         id: true,
         fullName: true,
         phoneNumber: true,
-        isActive: true,
         sessionId: true,
         lastLoginAt: true
       }
@@ -27,7 +26,7 @@ async function testSessionManagement() {
     const testUser = users[0];
     console.log('✅ Found test user:', testUser.fullName);
     console.log('   Phone:', testUser.phoneNumber);
-    console.log('   Is Active:', testUser.isActive);
+    console.log('   Has Session:', !!testUser.sessionId);
     console.log('   Session ID:', testUser.sessionId);
     console.log('   Last Login:', testUser.lastLoginAt);
 
@@ -37,7 +36,7 @@ async function testSessionManagement() {
     // First, make sure user is not active
     await prisma.user.update({
       where: { id: testUser.id },
-      data: { isActive: false, sessionId: null }
+      data: { sessionId: null }
     });
 
     // Test session creation manually
@@ -47,7 +46,6 @@ async function testSessionManagement() {
     await prisma.user.update({
       where: { id: testUser.id },
       data: {
-        isActive: true,
         sessionId: sessionId,
         lastLoginAt: new Date()
       }
@@ -58,9 +56,9 @@ async function testSessionManagement() {
     // Test 3: Verify session is active
     const updatedUser = await prisma.user.findUnique({
       where: { id: testUser.id },
-      select: { isActive: true, sessionId: true }
+      select: { sessionId: true }
     });
-    console.log('✅ User is active:', updatedUser?.isActive);
+    console.log('✅ User has session:', !!updatedUser?.sessionId);
 
     // Test 4: Test session validation
     const sessionUser = await prisma.user.findUnique({
@@ -72,12 +70,11 @@ async function testSessionManagement() {
         email: true,
         role: true,
         image: true,
-        isActive: true,
         sessionId: true
       }
     });
     
-    const isValid = sessionUser && sessionUser.isActive && sessionUser.sessionId === sessionId;
+    const isValid = sessionUser && sessionUser.sessionId === sessionId;
     console.log('✅ Session validation:', isValid);
     console.log('   User:', sessionUser?.fullName);
 
@@ -86,16 +83,15 @@ async function testSessionManagement() {
     await prisma.user.update({
       where: { id: testUser.id },
       data: {
-        isActive: false,
         sessionId: null
       }
     });
     
     const userAfterLogout = await prisma.user.findUnique({
       where: { id: testUser.id },
-      select: { isActive: true, sessionId: true }
+      select: { sessionId: true }
     });
-    console.log('✅ User is active after logout:', userAfterLogout?.isActive);
+    console.log('✅ User has session after logout:', !!userAfterLogout?.sessionId);
 
     // Test 6: Test session validation after logout
     const sessionUserAfter = await prisma.user.findUnique({

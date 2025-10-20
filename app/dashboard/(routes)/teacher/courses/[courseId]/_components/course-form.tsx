@@ -173,8 +173,8 @@ export const CourseForm = ({
                         <div className="space-y-4">
                             <FormLabel>المنهج والمرحلة والصف المستهدفة (اختياري)</FormLabel>
         <CurriculumSelector
-            selectedCurriculum={form.watch("targetCurriculum") as 'egyptian' | 'saudi' | null}
-            selectedLevel={form.watch("targetLevel") as 'kg' | 'primary' | 'preparatory' | 'secondary' | null}
+            selectedCurriculum={form.watch("targetCurriculum") as 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy' | null}
+            selectedLevel={form.watch("targetLevel") as 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels' | null}
             selectedLanguage={form.watch("targetLanguage") as 'arabic' | 'languages' | null}
             selectedGrade={form.watch("targetGrade")}
             onCurriculumChange={(curriculum) => {

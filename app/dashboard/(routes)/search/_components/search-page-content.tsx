@@ -162,7 +162,11 @@ export const SearchPageContent = ({ coursesWithProgress, title }: SearchPageCont
                                         <div className="mb-3 flex flex-wrap gap-2">
                                             {course.targetCurriculum && (
                                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                    {course.targetCurriculum === 'egyptian' ? 'المنهج المصري' : 'المنهج السعودي'}
+                                                    {course.targetCurriculum === 'egyptian' ? 'المنهج المصري' : 
+                                                     course.targetCurriculum === 'saudi' ? 'المنهج السعودي' :
+                                                     course.targetCurriculum === 'summer_courses' ? 'الكورسات الصيفية' :
+                                                     course.targetCurriculum === 'center_mhm_academy' ? 'Center MHM Academy' :
+                                                     course.targetCurriculum}
                                                 </span>
                                             )}
                                             {course.targetLevel && (

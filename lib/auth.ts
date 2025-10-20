@@ -60,10 +60,7 @@ export const authOptions: AuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        // Check if user is already logged in
-        if (user.isActive) {
-          throw new Error("UserAlreadyLoggedIn");
-        }
+        // Allow multiple device logins - no restriction
 
         return {
           id: user.id,

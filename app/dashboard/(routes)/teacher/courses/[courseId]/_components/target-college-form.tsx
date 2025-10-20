@@ -87,7 +87,11 @@ export const TargetCollegeForm = ({
             !initialData.targetCurriculum && "text-muted-foreground italic"
         )}>
             {initialData.targetCurriculum ? 
-                `${initialData.targetCurriculum === 'egyptian' ? 'المنهج المصري' : 'المنهج السعودي'}${initialData.targetLevel ? ` - ${initialData.targetLevel}` : ''}${initialData.targetLanguage ? ` - ${initialData.targetLanguage === 'arabic' ? 'عربي' : 'لغات'}` : ''}${initialData.targetGrade ? ` - ${initialData.targetGrade}` : ''}` 
+                `${initialData.targetCurriculum === 'egyptian' ? 'المنهج المصري' : 
+                  initialData.targetCurriculum === 'saudi' ? 'المنهج السعودي' :
+                  initialData.targetCurriculum === 'summer_courses' ? 'الكورسات الصيفية' :
+                  initialData.targetCurriculum === 'center_mhm_academy' ? 'Center MHM Academy' : 
+                  initialData.targetCurriculum}${initialData.targetLevel ? ` - ${initialData.targetLevel}` : ''}${initialData.targetLanguage ? ` - ${initialData.targetLanguage === 'arabic' ? 'عربي' : 'لغات'}` : ''}${initialData.targetGrade ? ` - ${initialData.targetGrade}` : ''}` 
                 : t('teacher.notSpecified')
             }
         </p>
@@ -97,8 +101,8 @@ export const TargetCollegeForm = ({
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
                         <CurriculumSelector
-                            selectedCurriculum={form.watch("targetCurriculum") as 'egyptian' | 'saudi' | null}
-                            selectedLevel={form.watch("targetLevel") as 'kg' | 'primary' | 'preparatory' | 'secondary' | null}
+                            selectedCurriculum={form.watch("targetCurriculum") as 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy' | null}
+                            selectedLevel={form.watch("targetLevel") as 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels' | null}
                             selectedLanguage={form.watch("targetLanguage") as 'arabic' | 'languages' | null}
                             selectedGrade={form.watch("targetGrade")}
                             onCurriculumChange={(curriculum) => {

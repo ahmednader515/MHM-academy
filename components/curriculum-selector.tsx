@@ -7,12 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, ChevronDown } from "lucide-react";
 
 interface CurriculumSelectorProps {
-  selectedCurriculum?: 'egyptian' | 'saudi' | null;
-  selectedLevel?: 'kg' | 'primary' | 'preparatory' | 'secondary' | null;
+  selectedCurriculum?: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy' | null;
+  selectedLevel?: 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels' | null;
   selectedLanguage?: 'arabic' | 'languages' | null;
   selectedGrade?: string | null;
-  onCurriculumChange: (curriculum: 'egyptian' | 'saudi' | null) => void;
-  onLevelChange: (level: 'kg' | 'primary' | 'preparatory' | 'secondary' | null) => void;
+  onCurriculumChange: (curriculum: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy' | null) => void;
+  onLevelChange: (level: 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels' | null) => void;
   onLanguageChange: (language: 'arabic' | 'languages' | null) => void;
   onGradeChange: (grade: string | null) => void;
   className?: string;
@@ -33,14 +33,14 @@ export const CurriculumSelector = ({
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isGradeOpen, setIsGradeOpen] = useState(false);
 
-  const handleCurriculumSelect = (curriculum: 'egyptian' | 'saudi') => {
+  const handleCurriculumSelect = (curriculum: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy') => {
     onCurriculumChange(curriculum);
     onLevelChange(null); // Reset level when curriculum changes
     onLanguageChange(null); // Reset language when curriculum changes
     onGradeChange(null); // Reset grade when curriculum changes
   };
 
-  const handleLevelSelect = (level: 'kg' | 'primary' | 'preparatory' | 'secondary') => {
+  const handleLevelSelect = (level: 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels') => {
     onLevelChange(level);
     onLanguageChange(null); // Reset language when level changes
     onGradeChange(null); // Reset grade when level changes

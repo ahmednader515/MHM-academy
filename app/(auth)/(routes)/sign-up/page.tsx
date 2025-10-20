@@ -24,8 +24,8 @@ export default function SignUpPage() {
     fullName: "",
     phoneNumber: "",
     email: "",
-    curriculum: null as 'egyptian' | 'saudi' | null,
-    level: null as 'kg' | 'primary' | 'preparatory' | 'secondary' | null,
+    curriculum: null as 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy' | null,
+    level: null as 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels' | null,
     language: null as 'arabic' | 'languages' | null,
     grade: null as string | null,
     password: "",
@@ -40,7 +40,7 @@ export default function SignUpPage() {
     }));
   };
 
-  const handleCurriculumChange = (curriculum: 'egyptian' | 'saudi' | null) => {
+  const handleCurriculumChange = (curriculum: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy' | null) => {
     setFormData((prev) => ({
       ...prev,
       curriculum,
@@ -50,7 +50,7 @@ export default function SignUpPage() {
     }));
   };
 
-  const handleLevelChange = (level: 'kg' | 'primary' | 'preparatory' | 'secondary' | null) => {
+  const handleLevelChange = (level: 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels' | null) => {
     setFormData((prev) => ({
       ...prev,
       level,
@@ -74,21 +74,38 @@ export default function SignUpPage() {
     }));
   };
 
-  const validatePasswords = () => {
+  const validateForm = () => {
+    const passwordValid = formData.password === formData.confirmPassword && formData.password.length > 0;
+    const curriculumValid = formData.curriculum !== null;
+    const levelValid = formData.level !== null;
+    const gradeValid = formData.grade !== null;
+    
     return {
-      match: formData.password === formData.confirmPassword,
-      isValid: formData.password === formData.confirmPassword && formData.password.length > 0,
+      passwordMatch: formData.password === formData.confirmPassword,
+      passwordValid,
+      curriculumValid,
+      levelValid,
+      gradeValid,
+      isValid: passwordValid && curriculumValid && levelValid && gradeValid,
     };
   };
 
-  const passwordChecks = validatePasswords();
+  const formValidation = validateForm();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
-    if (!passwordChecks.isValid) {
-      toast.error(t('auth.passwordsDoNotMatch'));
+    if (!formValidation.isValid) {
+      if (!formValidation.passwordValid) {
+        toast.error(t('auth.passwordsDoNotMatch'));
+      } else if (!formValidation.curriculumValid) {
+        toast.error('يرجى اختيار المنهج');
+      } else if (!formValidation.levelValid) {
+        toast.error('يرجى اختيار المرحلة');
+      } else if (!formValidation.gradeValid) {
+        toast.error('يرجى اختيار الصف');
+      }
       setIsLoading(false);
       return;
     }
@@ -287,7 +304,7 @@ export default function SignUpPage() {
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                {passwordChecks.match ? (
+                {formValidation.passwordMatch ? (
                   <Check className="h-4 w-4 text-green-500" />
                 ) : (
                   <X className="h-4 w-4 text-red-500" />
@@ -299,7 +316,7 @@ export default function SignUpPage() {
             <Button
               type="submit"
               className="w-full h-10 bg-[#090919] hover:bg-[#090919]/90 text-white"
-              disabled={isLoading || !passwordChecks.isValid}
+              disabled={isLoading || !formValidation.isValid}
             >
               {isLoading ? t('auth.signingUp') : t('auth.signUp')}
             </Button>

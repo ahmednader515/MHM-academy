@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Star, Users, BookOpen, Award, ChevronDown } from "lucide-react";
+import { ArrowRight, Star, Users, BookOpen, Award, ChevronDown, Facebook } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/navbar";
@@ -170,8 +170,8 @@ export default function HomePage() {
               whileHover={{ scale: 1.1, rotate: 5 }}
             >
               <Image
-                      src="/open-book.png"
-                      alt="Open Book"
+                      src="/saudi-arabia.png"
+                      alt="Saudi Arabia"
                 width={50}
                 height={50}
                 className="object-contain"
@@ -203,8 +203,8 @@ export default function HomePage() {
               whileHover={{ scale: 1.1, rotate: -5 }}
             >
               <Image
-                      src="/certificate.png"
-                      alt="Certificate"
+                      src="/egypt.png"
+                      alt="Egypt"
                 width={50}
                 height={50}
                 className="object-contain"
@@ -241,20 +241,15 @@ export default function HomePage() {
                 <div className="text-center md:text-right">
                   <h3 className="text-lg font-bold">ندعوكم للانضمام إلينا</h3>
                 </div>
-                <div className="flex items-center gap-4">
-                  <Button 
-                    size="sm" 
-                    className="bg-green-500 hover:bg-green-600 text-white flex items-center gap-2"
-                    asChild
-                  >
-                    <Link href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.214-.361a9.86 9.86 0 01-1.378-5.031c0-5.449 4.436-9.884 9.884-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.449-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
-                      </svg>
-                      واتساب
-                    </Link>
-                  </Button>
-                </div>
+                <Button 
+                  asChild
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                >
+                  <Link href="https://www.facebook.com/MHM.academy100/" target="_blank" rel="noopener noreferrer">
+                    <Facebook className="h-4 w-4" />
+                    تابعنا على فيسبوك
+                  </Link>
+                </Button>
               </div>
             </div>
           </div>
@@ -327,7 +322,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="group bg-white rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="group bg-white rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex flex-col h-full"
             >
               <div className="relative w-full h-48 bg-gradient-to-br from-[#090919] to-[#1a1a2e] overflow-hidden">
                 <Image
@@ -346,9 +341,9 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-              <div className="p-6">
+              <div className="p-6 flex flex-col flex-grow">
                 <h3 className="text-xl font-bold mb-4 text-gray-900">المنهج المصري</h3>
-                <ul className="space-y-3 mb-6 text-gray-600">
+                <ul className="space-y-3 mb-6 text-gray-600 flex-grow">
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
                     <span>من كجي إلى المرحلة الثانوية</span>
@@ -367,7 +362,7 @@ export default function HomePage() {
                   </li>
                 </ul>
                 <Button 
-                  className="w-full bg-[#090919] hover:bg-[#090919]/90 text-white font-semibold py-3"
+                  className="w-full bg-[#090919] hover:bg-[#090919]/90 text-white font-semibold py-3 mt-auto"
                   asChild
                 >
                   <Link href="/sign-up">
@@ -383,7 +378,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="group bg-white rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="group bg-white rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex flex-col h-full"
             >
               <div className="relative w-full h-48 bg-gradient-to-br from-[#090919] to-[#1a1a2e] overflow-hidden">
                 <Image
@@ -402,9 +397,9 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-              <div className="p-6">
+              <div className="p-6 flex flex-col flex-grow">
                 <h3 className="text-xl font-bold mb-4 text-gray-900">المنهج السعودي</h3>
-                <ul className="space-y-3 mb-6 text-gray-600">
+                <ul className="space-y-3 mb-6 text-gray-600 flex-grow">
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
                     <span>من كجي إلى المرحلة المتوسطة</span>
@@ -423,7 +418,7 @@ export default function HomePage() {
                   </li>
                 </ul>
                 <Button 
-                  className="w-full bg-[#090919] hover:bg-[#090919]/90 text-white font-semibold py-3"
+                  className="w-full bg-[#090919] hover:bg-[#090919]/90 text-white font-semibold py-3 mt-auto"
                   asChild
                 >
                   <Link href="/sign-up">
@@ -432,6 +427,138 @@ export default function HomePage() {
                 </Button>
               </div>
             </motion.div>
+
+            {/* Summer Courses Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="group bg-white rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex flex-col h-full"
+            >
+              <div className="relative w-full h-48 bg-gradient-to-br from-[#090919] to-[#1a1a2e] overflow-hidden">
+                <Image
+                  src="/summer.jpg"
+                  alt="Summer Courses"
+                  fill
+                  className="object-cover blur-sm"
+                />
+                <div className="absolute inset-0 bg-black/60" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <BookOpen className="h-8 w-8" />
+                    </div>
+                    <h3 className="text-2xl font-bold">الكورسات الصيفية</h3>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 flex flex-col flex-grow">
+                <h3 className="text-xl font-bold mb-4 text-gray-900">الكورسات الصيفية</h3>
+                <ul className="space-y-3 mb-6 text-gray-600 flex-grow">
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>UC Math - Level 1 & 2</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>البرمجة - Level 1, 2 & 3</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>English - Level 1, 2 & 3</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>تأسيس عربي - مستوي أول وثان</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>القرآن الكريم - مستوي أول وثان</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>تدريب كبار - مستوي أول وثان</span>
+                  </li>
+                </ul>
+                <Button 
+                  className="w-full bg-[#090919] hover:bg-[#090919]/90 text-white font-semibold py-3 mt-auto"
+                  asChild
+                >
+                  <Link href="/sign-up">
+                    ابدأ مع الكورسات الصيفية
+                  </Link>
+                </Button>
+              </div>
+            </motion.div>
+
+            {/* Summer Courses Card 2 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="group bg-white rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex flex-col h-full"
+            >
+              <div className="relative w-full h-48 bg-gradient-to-br from-[#090919] to-[#1a1a2e] overflow-hidden">
+                <Image
+                  src="/hero-img.jpg"
+                  alt="Center MHM Academy"
+                  fill
+                  className="object-cover blur-sm"
+                />
+                <div className="absolute inset-0 bg-black/60" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Award className="h-8 w-8" />
+                    </div>
+                    <h3 className="text-2xl font-bold">Center MHM Academy </h3>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 flex flex-col flex-grow">
+                <h3 className="text-xl font-bold mb-4 text-gray-900">Center MHM Academy</h3>
+                <ul className="space-y-3 mb-6 text-gray-600 flex-grow">
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>القرآن الكريم - مستوي أول وثان</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>تدريب كبار - مستوي أول وثان</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>مناهج متدرجة ومتخصصة</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
+                    <span>متابعة شخصية وتقييم مستمر</span>
+                  </li>
+                </ul>
+                <Button 
+                  className="w-full bg-[#090919] hover:bg-[#090919]/90 text-white font-semibold py-3 mt-auto"
+                  asChild
+                >
+                  <Link href="/sign-up">
+                    ابدأ مع Center MHM Academy
+                  </Link>
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* MHM Academy Centered Text */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="text-center mt-12"
+          >
+            <h2 className="text-4xl font-bold text-[#090919] mb-4">MHM Academy</h2>
+            <p className="text-xl text-muted-foreground">نقدم لك أفضل المناهج التعليمية والكورسات المتخصصة</p>
           </motion.div>
         </motion.div>
       </section>

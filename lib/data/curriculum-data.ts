@@ -1,29 +1,29 @@
 export interface Grade {
   id: string;
   name: string;
-  curriculum: 'egyptian' | 'saudi';
-  level: 'kg' | 'primary' | 'preparatory' | 'secondary';
+  curriculum: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy';
+  level: 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels';
   language: 'arabic' | 'languages' | null;
   order: number;
 }
 
 export interface Level {
-  id: 'kg' | 'primary' | 'preparatory' | 'secondary';
+  id: 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels';
   name: string;
-  curriculum: 'egyptian' | 'saudi';
+  curriculum: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy';
   order: number;
 }
 
 export interface Language {
   id: 'arabic' | 'languages';
   name: string;
-  curriculum: 'egyptian' | 'saudi';
-  level: 'kg' | 'primary' | 'preparatory' | 'secondary';
+  curriculum: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy';
+  level: 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels';
   order: number;
 }
 
 export interface Curriculum {
-  id: 'egyptian' | 'saudi';
+  id: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy';
   name: string;
   levels: Level[];
   languages: Language[];
@@ -117,32 +117,72 @@ export const CURRICULA: Curriculum[] = [
       { id: 'int2_saudi', name: 'الصف الثاني المتوسط', curriculum: 'saudi', level: 'preparatory', language: null, order: 11 },
       { id: 'int3_saudi', name: 'الصف الثالث المتوسط', curriculum: 'saudi', level: 'preparatory', language: null, order: 12 },
     ]
+  },
+  {
+    id: 'summer_courses',
+    name: 'الكورسات الصيفية',
+    levels: [
+      { id: 'summer_levels', name: 'مستويات الكورسات الصيفية', curriculum: 'summer_courses', order: 1 },
+    ],
+    languages: [],
+    grades: [
+      { id: 'uc_math_1', name: 'UC Math - Level 1', curriculum: 'summer_courses', level: 'summer_levels', language: null, order: 1 },
+      { id: 'uc_math_2', name: 'UC Math - Level 2', curriculum: 'summer_courses', level: 'summer_levels', language: null, order: 2 },
+      { id: 'programming_1', name: 'البرمجة - Level 1', curriculum: 'summer_courses', level: 'summer_levels', language: null, order: 3 },
+      { id: 'programming_2', name: 'البرمجة - Level 2', curriculum: 'summer_courses', level: 'summer_levels', language: null, order: 4 },
+      { id: 'programming_3', name: 'البرمجة - Level 3', curriculum: 'summer_courses', level: 'summer_levels', language: null, order: 5 },
+      { id: 'english_1', name: 'English - Level 1', curriculum: 'summer_courses', level: 'summer_levels', language: null, order: 6 },
+      { id: 'english_2', name: 'English - Level 2', curriculum: 'summer_courses', level: 'summer_levels', language: null, order: 7 },
+      { id: 'english_3', name: 'English - Level 3', curriculum: 'summer_courses', level: 'summer_levels', language: null, order: 8 },
+      { id: 'arabic_foundation_1', name: 'تأسيس عربي - مستوي أول', curriculum: 'summer_courses', level: 'summer_levels', language: null, order: 9 },
+      { id: 'arabic_foundation_2', name: 'تأسيس عربي - مستوي ثان', curriculum: 'summer_courses', level: 'summer_levels', language: null, order: 10 },
+      { id: 'quran_1', name: 'القرآن الكريم - مستوي أول', curriculum: 'summer_courses', level: 'summer_levels', language: null, order: 11 },
+      { id: 'quran_2', name: 'القرآن الكريم - مستوي ثان', curriculum: 'summer_courses', level: 'summer_levels', language: null, order: 12 },
+      { id: 'senior_training_1', name: 'تدريب كبار - مستوي أول', curriculum: 'summer_courses', level: 'summer_levels', language: null, order: 13 },
+      { id: 'senior_training_2', name: 'تدريب كبار - مستوي ثان', curriculum: 'summer_courses', level: 'summer_levels', language: null, order: 14 },
+    ]
+  },
+  {
+    id: 'center_mhm_academy',
+    name: 'Center MHM Academy',
+    levels: [
+      { id: 'summer_levels', name: 'مستويات متخصصة', curriculum: 'center_mhm_academy', order: 1 },
+    ],
+    languages: [],
+    grades: [
+      { id: 'quran_center_1', name: 'القرآن الكريم - مستوي أول', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 1 },
+      { id: 'quran_center_2', name: 'القرآن الكريم - مستوي ثان', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 2 },
+      { id: 'senior_training_center_1', name: 'تدريب كبار - مستوي أول', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 3 },
+      { id: 'senior_training_center_2', name: 'تدريب كبار - مستوي ثان', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 4 },
+      { id: 'specialized_courses', name: 'مناهج متدرجة ومتخصصة', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 5 },
+      { id: 'personal_followup', name: 'متابعة شخصية وتقييم مستمر', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 6 },
+    ]
   }
 ];
 
-export const getLevelsByCurriculum = (curriculumId: 'egyptian' | 'saudi'): Level[] => {
+export const getLevelsByCurriculum = (curriculumId: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy'): Level[] => {
   const curriculum = CURRICULA.find(c => c.id === curriculumId);
   return curriculum ? curriculum.levels : [];
 };
 
-export const getLanguagesByLevel = (curriculumId: 'egyptian' | 'saudi', levelId: 'kg' | 'primary' | 'preparatory' | 'secondary'): Language[] => {
+export const getLanguagesByLevel = (curriculumId: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy', levelId: 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels'): Language[] => {
   const curriculum = CURRICULA.find(c => c.id === curriculumId);
   if (!curriculum) return [];
   return curriculum.languages.filter(l => l.level === levelId);
 };
 
-export const getGradesByCurriculum = (curriculumId: 'egyptian' | 'saudi'): Grade[] => {
+export const getGradesByCurriculum = (curriculumId: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy'): Grade[] => {
   const curriculum = CURRICULA.find(c => c.id === curriculumId);
   return curriculum ? curriculum.grades : [];
 };
 
-export const getGradesByLevel = (curriculumId: 'egyptian' | 'saudi', levelId: 'kg' | 'primary' | 'preparatory' | 'secondary'): Grade[] => {
+export const getGradesByLevel = (curriculumId: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy', levelId: 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels'): Grade[] => {
   const curriculum = CURRICULA.find(c => c.id === curriculumId);
   if (!curriculum) return [];
   return curriculum.grades.filter(g => g.level === levelId);
 };
 
-export const getGradesByLanguage = (curriculumId: 'egyptian' | 'saudi', levelId: 'kg' | 'primary' | 'preparatory' | 'secondary', languageId: 'arabic' | 'languages' | null): Grade[] => {
+export const getGradesByLanguage = (curriculumId: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy', levelId: 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels', languageId: 'arabic' | 'languages' | null): Grade[] => {
   const curriculum = CURRICULA.find(c => c.id === curriculumId);
   if (!curriculum) return [];
   return curriculum.grades.filter(g => g.level === levelId && g.language === languageId);
@@ -156,12 +196,12 @@ export const getGradeById = (gradeId: string): Grade | undefined => {
   return undefined;
 };
 
-export const getLevelById = (levelId: string, curriculumId: 'egyptian' | 'saudi'): Level | undefined => {
+export const getLevelById = (levelId: string, curriculumId: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy'): Level | undefined => {
   const curriculum = CURRICULA.find(c => c.id === curriculumId);
   if (!curriculum) return undefined;
   return curriculum.levels.find(l => l.id === levelId);
 };
 
-export const getCurriculumById = (curriculumId: 'egyptian' | 'saudi'): Curriculum | undefined => {
+export const getCurriculumById = (curriculumId: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy'): Curriculum | undefined => {
   return CURRICULA.find(c => c.id === curriculumId);
 };

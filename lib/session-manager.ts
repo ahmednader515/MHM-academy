@@ -15,10 +15,10 @@ export class SessionManager {
   static async isUserActive(userId: string): Promise<boolean> {
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: { isActive: true, sessionId: true }
+      select: { sessionId: true }
     });
 
-    return user?.isActive || false;
+    return !!user?.sessionId;
   }
 
   /**
@@ -27,10 +27,10 @@ export class SessionManager {
   static async isUserActiveByPhone(phoneNumber: string): Promise<boolean> {
     const user = await db.user.findUnique({
       where: { phoneNumber },
-      select: { isActive: true, sessionId: true }
+      select: { sessionId: true }
     });
 
-    return user?.isActive || false;
+    return !!user?.sessionId;
   }
 
   /**
@@ -42,7 +42,6 @@ export class SessionManager {
     await db.user.update({
       where: { id: userId },
       data: {
-        isActive: true,
         sessionId: sessionId,
         lastLoginAt: new Date()
       }
@@ -58,7 +57,6 @@ export class SessionManager {
     await db.user.update({
       where: { id: userId },
       data: {
-        isActive: false,
         sessionId: null
       }
     });
@@ -71,7 +69,6 @@ export class SessionManager {
     await db.user.updateMany({
       where: { sessionId },
       data: {
-        isActive: false,
         sessionId: null
       }
     });
@@ -90,12 +87,11 @@ export class SessionManager {
         email: true,
         role: true,
         image: true,
-        isActive: true,
         sessionId: true
       }
     });
 
-    if (!user || !user.isActive || user.sessionId !== sessionId) {
+    if (!user || user.sessionId !== sessionId) {
       return { user: null, isValid: false };
     }
 
@@ -109,7 +105,6 @@ export class SessionManager {
     await db.user.update({
       where: { id: userId },
       data: {
-        isActive: false,
         sessionId: null
       }
     });
@@ -119,11 +114,10 @@ export class SessionManager {
    * Clean up expired sessions (optional - for maintenance)
    */
   static async cleanupExpiredSessions(): Promise<void> {
-    // This could be implemented to clean up sessions older than a certain time
-    // For now, we'll rely on the isActive flag
+    // Clean up sessions older than 24 hours
     const expiredUsers = await db.user.findMany({
       where: {
-        isActive: true,
+        sessionId: { not: null },
         lastLoginAt: {
           lt: new Date(Date.now() - 24 * 60 * 60 * 1000) // 24 hours ago
         }

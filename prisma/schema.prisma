@@ -15,7 +15,7 @@ model User {
   fullName                String
   phoneNumber             String    @unique
   email                   String    @unique
-  curriculum              String?   // 'egyptian' or 'saudi'
+  curriculum              String?   // 'egyptian', 'saudi', 'summer_courses', or 'center_mhm_academy'
   level                   String?   // 'kg', 'primary', 'preparatory', 'secondary'
   language                String?   // 'arabic' or 'languages'
   grade                   String?   // Grade ID from curriculum data
@@ -23,7 +23,6 @@ model User {
   image                   String?
   role                    String    @default("USER")
   balance                 Float     @default(0)
-  isActive                Boolean   @default(false)
   sessionId               String?   @unique
   lastLoginAt             DateTime?
   createdAt               DateTime  @default(now())
