@@ -47,6 +47,17 @@ export async function GET(
             }
         });
 
+        // Get published live streams
+        const liveStreams = await db.liveStream.findMany({
+            where: {
+                courseId: resolvedParams.courseId,
+                isPublished: true
+            },
+            orderBy: {
+                createdAt: "asc"
+            }
+        });
+
         // Combine and sort by position
         const allContent = [
             ...chapters.map(chapter => ({
@@ -56,6 +67,11 @@ export async function GET(
             ...quizzes.map(quiz => ({
                 ...quiz,
                 type: 'quiz' as const
+            })),
+            ...liveStreams.map(liveStream => ({
+                ...liveStream,
+                type: 'livestream' as const,
+                position: 999 // Live streams appear at the end
             }))
         ].sort((a, b) => a.position - b.position);
 

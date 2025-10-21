@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { extractZoomMeetingId, isValidZoomUrl } from "@/lib/zoom";
+import { detectMeetingType, extractMeetingId, isValidMeetingUrl } from "@/lib/zoom";
 
 export async function GET(
   req: Request,
@@ -44,11 +44,11 @@ export async function PATCH(
 
     const resolvedParams = await params;
     const { livestreamId } = resolvedParams;
-    const { title, description, zoomUrl, scheduledAt, duration, isPublished } = await req.json();
+    const { title, description, meetingUrl, scheduledAt, duration, isPublished } = await req.json();
 
-    // Validate Zoom URL if provided
-    if (zoomUrl && !isValidZoomUrl(zoomUrl)) {
-      return NextResponse.json({ error: "Invalid Zoom URL" }, { status: 400 });
+    // Validate meeting URL if provided
+    if (meetingUrl && !isValidMeetingUrl(meetingUrl)) {
+      return NextResponse.json({ error: "Invalid meeting URL. Please provide a valid Zoom or Google Meet URL." }, { status: 400 });
     }
 
     const updateData: any = {};
@@ -58,13 +58,20 @@ export async function PATCH(
     if (duration !== undefined) updateData.duration = duration ? parseInt(duration) : null;
     if (isPublished !== undefined) updateData.isPublished = isPublished;
 
-    if (zoomUrl) {
-      const zoomMeetingId = extractZoomMeetingId(zoomUrl);
-      if (!zoomMeetingId) {
-        return NextResponse.json({ error: "Could not extract Zoom meeting ID" }, { status: 400 });
+    if (meetingUrl) {
+      const meetingType = detectMeetingType(meetingUrl);
+      if (!meetingType) {
+        return NextResponse.json({ error: "Could not detect meeting type" }, { status: 400 });
       }
-      updateData.zoomUrl = zoomUrl;
-      updateData.zoomMeetingId = zoomMeetingId;
+
+      const meetingId = extractMeetingId(meetingUrl, meetingType);
+      if (!meetingId) {
+        return NextResponse.json({ error: "Could not extract meeting ID" }, { status: 400 });
+      }
+
+      updateData.meetingUrl = meetingUrl;
+      updateData.meetingId = meetingId;
+      updateData.meetingType = meetingType;
     }
 
     const liveStream = await db.liveStream.update({

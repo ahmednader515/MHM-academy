@@ -60,6 +60,14 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
         },
     ];
 
+    const parentRoutes = [
+        {
+            icon: Layout,
+            label: t('parent.dashboard'),
+            href: "/dashboard/parent",
+        },
+    ];
+
     const adminRoutes = [
         {
             icon: Users,
@@ -107,7 +115,8 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
 
     const isTeacherPage = pathName?.includes("/dashboard/teacher");
     const isAdminPage = pathName?.includes("/dashboard/admin");
-    const routes = isAdminPage ? adminRoutes : isTeacherPage ? teacherRoutes : guestRoutes;
+    const isParentPage = pathName?.includes("/dashboard/parent");
+    const routes = isAdminPage ? adminRoutes : isTeacherPage ? teacherRoutes : isParentPage ? parentRoutes : guestRoutes;
 
     return (
         <div className="flex flex-col w-full pt-0">

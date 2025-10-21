@@ -150,12 +150,15 @@ export const CURRICULA: Curriculum[] = [
     ],
     languages: [],
     grades: [
-      { id: 'quran_center_1', name: 'القرآن الكريم - مستوي أول', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 1 },
-      { id: 'quran_center_2', name: 'القرآن الكريم - مستوي ثان', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 2 },
-      { id: 'senior_training_center_1', name: 'تدريب كبار - مستوي أول', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 3 },
-      { id: 'senior_training_center_2', name: 'تدريب كبار - مستوي ثان', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 4 },
-      { id: 'specialized_courses', name: 'مناهج متدرجة ومتخصصة', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 5 },
-      { id: 'personal_followup', name: 'متابعة شخصية وتقييم مستمر', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 6 },
+      { id: 'grade1_primary', name: 'الصف الاول الابتدائي عربي /لغات', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 1 },
+      { id: 'grade2_primary', name: 'الصف الثاني عربي /لغات', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 2 },
+      { id: 'grade3_primary', name: 'الصف التالت عربي/لغات', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 3 },
+      { id: 'grade4_primary', name: 'الصف الرابع عربي /لغات', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 4 },
+      { id: 'grade5_primary', name: 'الصف الخامس عربي /لغات', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 5 },
+      { id: 'grade6_primary', name: 'الصف السادس عربي /لغات', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 6 },
+      { id: 'grade1_preparatory', name: 'الصف الاول الاعدادي عام عربي/لغات', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 7 },
+      { id: 'grade2_preparatory', name: 'الصف الثاني الاعدادي عام عربي/لغات', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 8 },
+      { id: 'grade3_preparatory', name: 'الصف التالت الاعدادي عام عربي/لغات', curriculum: 'center_mhm_academy', level: 'summer_levels', language: null, order: 9 },
     ]
   }
 ];

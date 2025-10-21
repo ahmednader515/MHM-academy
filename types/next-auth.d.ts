@@ -9,6 +9,8 @@ declare module "next-auth" {
       image?: string;
       phoneNumber?: string;
       role: string;
+      points?: number;
+      parentPhoneNumber?: string;
     };
   }
 
@@ -18,6 +20,8 @@ declare module "next-auth" {
     email: string;
     phoneNumber?: string;
     role: string;
+    points?: number;
+    parentPhoneNumber?: string;
   }
 }
 
@@ -28,6 +32,8 @@ declare module "next-auth/jwt" {
     email: string;
     phoneNumber?: string;
     role: string;
+    points?: number;
+    parentPhoneNumber?: string;
     sessionId?: string;
   }
 } 

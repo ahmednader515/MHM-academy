@@ -51,6 +51,7 @@ interface User {
     grade?: string;
     role: string;
     balance: number;
+    points: number;
     createdAt: string;
     updatedAt: string;
     _count: {
@@ -402,6 +403,7 @@ const UsersPage = () => {
                                     <TableHead className={isRTL ? "text-right" : "text-left"}>{t('dashboard.email')}</TableHead>
                                     <TableHead className={isRTL ? "text-right" : "text-left"}>{t('dashboard.role')}</TableHead>
                                     <TableHead className={isRTL ? "text-right" : "text-left"}>{t('dashboard.balance')}</TableHead>
+                                    <TableHead className={isRTL ? "text-right" : "text-left"}>{t('dashboard.points') || 'Points'}</TableHead>
                                     <TableHead className={isRTL ? "text-right" : "text-left"}>{t('dashboard.purchasedCoursesCount')}</TableHead>
                                     <TableHead className={isRTL ? "text-right" : "text-left"}>{t('dashboard.registrationDate')}</TableHead>
                                     <TableHead className={isRTL ? "text-right" : "text-left"}>{t('dashboard.actions')}</TableHead>
@@ -423,6 +425,11 @@ const UsersPage = () => {
                                         <TableCell className={isRTL ? "text-right" : "text-left"}>
                                             <Badge variant="secondary">
                                                 {user.balance} {t('dashboard.egyptianPound')}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className={isRTL ? "text-right" : "text-left"}>
+                                            <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
+                                                {user.points} {t('dashboard.points') || 'Points'}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className={isRTL ? "text-right" : "text-left"}>

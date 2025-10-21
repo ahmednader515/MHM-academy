@@ -32,7 +32,7 @@ interface CourseContent {
   id: string;
   title: string;
   position: number;
-  type: 'chapter' | 'quiz';
+  type: 'chapter' | 'quiz' | 'livestream';
   isFree?: boolean;
   userProgress?: {
     isCompleted: boolean;
@@ -43,6 +43,8 @@ interface CourseContent {
     totalPoints: number;
     percentage: number;
   }[];
+  scheduledAt?: string | null;
+  duration?: number | null;
 }
 
 interface CourseSidebarProps {
@@ -109,6 +111,8 @@ export const CourseSidebar = ({ course }: CourseSidebarProps) => {
         router.push(`/courses/${courseId}/chapters/${content.id}`);
       } else if (content.type === 'quiz') {
         router.push(`/courses/${courseId}/quizzes/${content.id}`);
+      } else if (content.type === 'livestream') {
+        router.push(`/courses/${courseId}/livestreams/${content.id}`);
       }
       router.refresh();
     }
@@ -150,7 +154,9 @@ export const CourseSidebar = ({ course }: CourseSidebarProps) => {
           const isSelected = selectedContentId === content.id;
           const isCompleted = content.type === 'chapter' 
             ? content.userProgress?.[0]?.isCompleted || false
-            : content.quizResults && content.quizResults.length > 0;
+            : content.type === 'quiz'
+            ? content.quizResults && content.quizResults.length > 0
+            : false; // Live streams don't have completion status
           
           return (
             <div
@@ -174,10 +180,18 @@ export const CourseSidebar = ({ course }: CourseSidebarProps) => {
                 {content.type === 'quiz' && (
                   <span className="ml-2 text-xs text-blue-600">({t('student.quiz')})</span>
                 )}
+                {content.type === 'livestream' && (
+                  <span className="ml-2 text-xs text-red-600">({t('student.liveStream')})</span>
+                )}
               </span>
               {!course?.isFree && content.type === 'chapter' && content.isFree && (
                 <span className="ml-4 px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
                   {t('student.free')}
+                </span>
+              )}
+              {content.type === 'livestream' && content.scheduledAt && (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {new Date(content.scheduledAt).toLocaleDateString()}
                 </span>
               )}
             </div>

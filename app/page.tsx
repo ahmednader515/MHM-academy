@@ -519,24 +519,46 @@ export default function HomePage() {
               </div>
               <div className="p-6 flex flex-col flex-grow">
                 <h3 className="text-xl font-bold mb-4 text-gray-900" suppressHydrationWarning>{t('home.centerMHMAcademy')}</h3>
-                <ul className="space-y-3 mb-6 text-gray-600 flex-grow">
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span suppressHydrationWarning>{t('home.centerMHMAcademyDesc')}</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span suppressHydrationWarning>{t('home.adultTrainingCenter')}</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span suppressHydrationWarning>{t('home.graduatedSpecialized')}</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span suppressHydrationWarning>{t('home.personalFollowUp')}</span>
-                  </li>
-                </ul>
+                <div className="mb-6 text-gray-600 flex-grow">
+                  <ul className="space-y-1 text-sm">
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-[#090919] rounded-full"></div>
+                      <span>الصف الاول الابتدائي عربي /لغات</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-[#090919] rounded-full"></div>
+                      <span>الصف الثاني عربي /لغات</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-[#090919] rounded-full"></div>
+                      <span>الصف التالت عربي/لغات</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-[#090919] rounded-full"></div>
+                      <span>الصف الرابع عربي /لغات</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-[#090919] rounded-full"></div>
+                      <span>الصف الخامس عربي /لغات</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-[#090919] rounded-full"></div>
+                      <span>الصف السادس عربي /لغات</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-[#090919] rounded-full"></div>
+                      <span>الصف الاول الاعدادي عام عربي/لغات</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-[#090919] rounded-full"></div>
+                      <span>الصف الثاني الاعدادي عام عربي/لغات</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-[#090919] rounded-full"></div>
+                      <span>الصف التالت الاعدادي عام عربي/لغات</span>
+                    </li>
+                  </ul>
+                </div>
                 <Button 
                   className="w-full bg-[#090919] hover:bg-[#090919]/90 text-white font-semibold py-3 mt-auto"
                   asChild

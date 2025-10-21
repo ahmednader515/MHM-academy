@@ -187,6 +187,8 @@ const ChapterPage = () => {
         await axios.delete(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/progress`);
       } else {
         await axios.put(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/progress`);
+        // Dispatch custom event to refresh points in navbar
+        window.dispatchEvent(new CustomEvent('pointsUpdated'));
       }
       setIsCompleted(!isCompleted);
       router.refresh();
@@ -201,6 +203,8 @@ const ChapterPage = () => {
       if (!isCompleted) {
         await axios.put(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/progress`);
         setIsCompleted(true);
+        // Dispatch custom event to refresh points in navbar
+        window.dispatchEvent(new CustomEvent('pointsUpdated'));
         router.refresh();
       }
     } catch (error) {

@@ -69,6 +69,8 @@ export const authOptions: AuthOptions = {
           name: user.fullName,
           phoneNumber: user.phoneNumber,
           role: user.role,
+          points: user.points,
+          parentPhoneNumber: user.parentPhoneNumber,
         } as any;
       },
     }),
@@ -113,6 +115,8 @@ export const authOptions: AuthOptions = {
         session.user.phoneNumber = token.phoneNumber as string;
         session.user.image = token.picture as string | undefined;
         session.user.role = token.role as string;
+        session.user.points = token.points as number;
+        session.user.parentPhoneNumber = token.parentPhoneNumber as string;
       }
 
       return session;
@@ -131,6 +135,8 @@ export const authOptions: AuthOptions = {
             phoneNumber: user.phoneNumber,
             picture: (user as any).picture,
             role: user.role,
+            points: (user as any).points || 0,
+            parentPhoneNumber: (user as any).parentPhoneNumber || null,
             sessionId: sessionId,
           };
         } catch (error) {
@@ -144,6 +150,7 @@ export const authOptions: AuthOptions = {
             phoneNumber: user.phoneNumber,
             picture: (user as any).picture,
             role: user.role,
+            points: (user as any).points || 0,
           };
         }
       }

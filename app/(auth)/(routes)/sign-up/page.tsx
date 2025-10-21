@@ -24,6 +24,7 @@ export default function SignUpPage() {
     fullName: "",
     phoneNumber: "",
     email: "",
+    parentPhoneNumber: "",
     curriculum: null as 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy' | null,
     level: null as 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels' | null,
     language: null as 'arabic' | 'languages' | null,
@@ -231,6 +232,24 @@ export default function SignUpPage() {
                 onChange={handleInputChange}
                 placeholder="student@example.com"
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="parentPhoneNumber">{t('auth.parentPhoneNumber')}</Label>
+              <Input
+                id="parentPhoneNumber"
+                name="parentPhoneNumber"
+                type="tel"
+                autoComplete="tel"
+                required
+                disabled={isLoading}
+                className="h-10"
+                value={formData.parentPhoneNumber}
+                onChange={handleInputChange}
+                placeholder="+20XXXXXXXXXX"
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('auth.parentPhoneNumberHelp')}
+              </p>
             </div>
         <CurriculumSelector
           selectedCurriculum={formData.curriculum}

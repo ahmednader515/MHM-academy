@@ -26,7 +26,7 @@ export default function CreateLiveStreamPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    zoomUrl: "",
+    meetingUrl: "",
     courseId: "",
     scheduledAt: "",
     duration: "",
@@ -50,7 +50,7 @@ export default function CreateLiveStreamPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.zoomUrl || !formData.courseId) {
+    if (!formData.title || !formData.meetingUrl || !formData.courseId) {
       toast.error(t('admin.fillRequiredFields'));
       return;
     }
@@ -155,19 +155,19 @@ export default function CreateLiveStreamPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="zoomUrl">{t('admin.zoomUrl')} *</Label>
+              <Label htmlFor="meetingUrl">{t('admin.meetingUrl')} *</Label>
               <div className="flex items-center gap-2">
                 <Link className="h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="zoomUrl"
-                  value={formData.zoomUrl}
-                  onChange={(e) => handleInputChange("zoomUrl", e.target.value)}
-                  placeholder="https://zoom.us/j/123456789"
+                  id="meetingUrl"
+                  value={formData.meetingUrl}
+                  onChange={(e) => handleInputChange("meetingUrl", e.target.value)}
+                  placeholder="https://zoom.us/j/123456789 or https://meet.google.com/abc-defg-hij"
                   required
                 />
               </div>
               <p className="text-sm text-muted-foreground">
-                {t('admin.zoomUrlHelp')}
+                {t('admin.meetingUrlHelp')}
               </p>
             </div>
 

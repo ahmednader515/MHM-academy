@@ -8,6 +8,8 @@ function getDashboardUrlByRole(role: string): string {
       return "/dashboard/teacher/courses";
     case "ADMIN":
       return "/dashboard/admin/users";
+    case "PARENT":
+      return "/dashboard/parent";
     case "USER":
     default:
       return "/dashboard";
@@ -18,6 +20,8 @@ export default withAuth(
   function middleware(req) {
     const isTeacherRoute = req.nextUrl.pathname.startsWith("/dashboard/teacher");
     const isTeacher = req.nextauth.token?.role === "TEACHER";
+    const isParentRoute = req.nextUrl.pathname.startsWith("/dashboard/parent");
+    const isParent = req.nextauth.token?.role === "PARENT";
     const isAuthPage = req.nextUrl.pathname.startsWith("/sign-in") || 
                       req.nextUrl.pathname.startsWith("/sign-up") ||
                       req.nextUrl.pathname.startsWith("/forgot-password") ||
@@ -45,6 +49,11 @@ export default withAuth(
 
     // If user is not a teacher or admin but trying to access teacher routes
     if (isTeacherRoute && !(isTeacher || isAdmin)) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    // If user is not a parent but trying to access parent routes
+    if (isParentRoute && !isParent) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
