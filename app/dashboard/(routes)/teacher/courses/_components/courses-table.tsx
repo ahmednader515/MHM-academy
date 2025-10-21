@@ -45,12 +45,14 @@ interface DataTableProps<TData extends { id: string }, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
     hideActions?: boolean;
+    isAdmin?: boolean;
 }
 
 export function CoursesTable<TData extends { id: string }, TValue>({
     columns,
     data,
     hideActions = false,
+    isAdmin = false,
 }: DataTableProps<TData, TValue>) {
     const { t, isRTL } = useLanguage();
     const [sorting, setSorting] = useState<SortingState>([]);
@@ -146,7 +148,7 @@ export function CoursesTable<TData extends { id: string }, TValue>({
                                     {!hideActions && (
                                         <TableCell className={isRTL ? "text-right" : "text-left"}>
                                             <div className="flex items-center gap-2">
-                                                <Link href={`/dashboard/teacher/courses/${row.original.id}`}>
+                                                <Link href={`/dashboard/${isAdmin ? 'admin' : 'teacher'}/courses/${row.original.id}`}>
                                                     <Button variant="ghost" size="icon">
                                                         <Pencil className="h-4 w-4" />
                                                     </Button>

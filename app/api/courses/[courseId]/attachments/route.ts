@@ -7,7 +7,7 @@ export async function POST(
     { params }: { params: Promise<{ courseId: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const { userId, user } = await auth();
         const { url, name } = await req.json();
 
         if (!userId) {
@@ -17,11 +17,13 @@ export async function POST(
         const resolvedParams = await params;
         const { courseId } = resolvedParams;
 
+        // Check if user is admin or course owner
+        const whereClause = user?.role === "ADMIN"
+            ? { id: courseId }
+            : { id: courseId, userId };
+
         const courseOwner = await db.course.findUnique({
-            where: {
-                id: courseId,
-                userId: userId,
-            }
+            where: whereClause
         });
 
         if (!courseOwner) {
@@ -48,7 +50,7 @@ export async function GET(
     { params }: { params: Promise<{ courseId: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const { userId, user } = await auth();
 
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 });
@@ -57,11 +59,13 @@ export async function GET(
         const resolvedParams = await params;
         const { courseId } = resolvedParams;
 
+        // Check if user is admin or course owner
+        const whereClause = user?.role === "ADMIN"
+            ? { id: courseId }
+            : { id: courseId, userId };
+
         const courseOwner = await db.course.findUnique({
-            where: {
-                id: courseId,
-                userId: userId,
-            }
+            where: whereClause
         });
 
         if (!courseOwner) {

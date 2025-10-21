@@ -239,7 +239,7 @@ export default function HomePage() {
             <div className="bg-[#090919] text-white px-8 py-4 rounded-b-2xl">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="text-center md:text-right">
-                  <h3 className="text-lg font-bold">ندعوكم للانضمام إلينا</h3>
+                  <h3 className="text-lg font-bold" suppressHydrationWarning>{t('home.joinUsInvitation')}</h3>
                 </div>
                 <Button 
                   asChild
@@ -247,7 +247,7 @@ export default function HomePage() {
                 >
                   <Link href="https://www.facebook.com/MHM.academy100/" target="_blank" rel="noopener noreferrer">
                     <Facebook className="h-4 w-4" />
-                    تابعنا على فيسبوك
+                    <span suppressHydrationWarning>{t('home.followUsOnFacebook')}</span>
                   </Link>
                 </Button>
               </div>
@@ -305,8 +305,8 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl font-bold mb-4" suppressHydrationWarning>اختر منهجك التعليمي</h2>
-            <p className="text-muted-foreground" suppressHydrationWarning>نقدم لك مناهج تعليمية متخصصة تناسب احتياجاتك</p>
+            <h2 className="text-3xl font-bold mb-4" suppressHydrationWarning>{t('home.chooseYourCurriculum')}</h2>
+            <p className="text-muted-foreground" suppressHydrationWarning>{t('home.curriculumSubtitle')}</p>
           </motion.div>
 
           <motion.div
@@ -337,28 +337,28 @@ export default function HomePage() {
                     <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                       <BookOpen className="h-8 w-8" />
                     </div>
-                    <h3 className="text-2xl font-bold">المنهج المصري</h3>
+                    <h3 className="text-2xl font-bold" suppressHydrationWarning>{t('home.egyptianCurriculum')}</h3>
                   </div>
                 </div>
               </div>
               <div className="p-6 flex flex-col flex-grow">
-                <h3 className="text-xl font-bold mb-4 text-gray-900">المنهج المصري</h3>
+                <h3 className="text-xl font-bold mb-4 text-gray-900" suppressHydrationWarning>{t('home.egyptianCurriculum')}</h3>
                 <ul className="space-y-3 mb-6 text-gray-600 flex-grow">
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>من كجي إلى المرحلة الثانوية</span>
+                    <span suppressHydrationWarning>{t('home.egyptianCurriculumDesc')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>شعبة عربي ولغات</span>
+                    <span suppressHydrationWarning>{t('home.arabicLanguages')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>شعبة عام وأزهر</span>
+                    <span suppressHydrationWarning>{t('home.generalAzhar')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>شعبة علمي وأدبي</span>
+                    <span suppressHydrationWarning>{t('home.scientificLiterary')}</span>
                   </li>
                 </ul>
                 <Button 
@@ -366,7 +366,7 @@ export default function HomePage() {
                   asChild
                 >
                   <Link href="/sign-up">
-                    ابدأ مع المنهج المصري
+                    <span suppressHydrationWarning>{t('home.startWithEgyptian')}</span>
                   </Link>
                 </Button>
               </div>
@@ -393,28 +393,28 @@ export default function HomePage() {
                     <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                       <BookOpen className="h-8 w-8" />
                     </div>
-                    <h3 className="text-2xl font-bold">المنهج السعودي</h3>
+                    <h3 className="text-2xl font-bold" suppressHydrationWarning>{t('home.saudiCurriculum')}</h3>
                   </div>
                 </div>
               </div>
               <div className="p-6 flex flex-col flex-grow">
-                <h3 className="text-xl font-bold mb-4 text-gray-900">المنهج السعودي</h3>
+                <h3 className="text-xl font-bold mb-4 text-gray-900" suppressHydrationWarning>{t('home.saudiCurriculum')}</h3>
                 <ul className="space-y-3 mb-6 text-gray-600 flex-grow">
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>من كجي إلى المرحلة المتوسطة</span>
+                    <span suppressHydrationWarning>{t('home.saudiCurriculumDesc')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>مناهج معتمدة من وزارة التعليم</span>
+                    <span suppressHydrationWarning>{t('home.ministryApproved')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>مواد دراسية شاملة</span>
+                    <span suppressHydrationWarning>{t('home.comprehensiveSubjects')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>تقييمات دورية ومتابعة مستمرة</span>
+                    <span suppressHydrationWarning>{t('home.periodicAssessments')}</span>
                   </li>
                 </ul>
                 <Button 
@@ -422,7 +422,7 @@ export default function HomePage() {
                   asChild
                 >
                   <Link href="/sign-up">
-                    ابدأ مع المنهج السعودي
+                    <span suppressHydrationWarning>{t('home.startWithSaudi')}</span>
                   </Link>
                 </Button>
               </div>
@@ -449,36 +449,36 @@ export default function HomePage() {
                     <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                       <BookOpen className="h-8 w-8" />
                     </div>
-                    <h3 className="text-2xl font-bold">الكورسات الصيفية</h3>
+                    <h3 className="text-2xl font-bold" suppressHydrationWarning>{t('home.summerCourses')}</h3>
                   </div>
                 </div>
               </div>
               <div className="p-6 flex flex-col flex-grow">
-                <h3 className="text-xl font-bold mb-4 text-gray-900">الكورسات الصيفية</h3>
+                <h3 className="text-xl font-bold mb-4 text-gray-900" suppressHydrationWarning>{t('home.summerCourses')}</h3>
                 <ul className="space-y-3 mb-6 text-gray-600 flex-grow">
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>UC Math - Level 1 & 2</span>
+                    <span suppressHydrationWarning>{t('home.summerCoursesDesc')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>البرمجة - Level 1, 2 & 3</span>
+                    <span suppressHydrationWarning>{t('home.programming')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>English - Level 1, 2 & 3</span>
+                    <span suppressHydrationWarning>{t('home.english')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>تأسيس عربي - مستوي أول وثان</span>
+                    <span suppressHydrationWarning>{t('home.arabicFoundation')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>القرآن الكريم - مستوي أول وثان</span>
+                    <span suppressHydrationWarning>{t('home.quran')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>تدريب كبار - مستوي أول وثان</span>
+                    <span suppressHydrationWarning>{t('home.adultTraining')}</span>
                   </li>
                 </ul>
                 <Button 
@@ -486,7 +486,7 @@ export default function HomePage() {
                   asChild
                 >
                   <Link href="/sign-up">
-                    ابدأ مع الكورسات الصيفية
+                    <span suppressHydrationWarning>{t('home.startWithSummer')}</span>
                   </Link>
                 </Button>
               </div>
@@ -513,28 +513,28 @@ export default function HomePage() {
                     <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Award className="h-8 w-8" />
                     </div>
-                    <h3 className="text-2xl font-bold">Center MHM Academy </h3>
+                    <h3 className="text-2xl font-bold" suppressHydrationWarning>{t('home.centerMHMAcademy')}</h3>
                   </div>
                 </div>
               </div>
               <div className="p-6 flex flex-col flex-grow">
-                <h3 className="text-xl font-bold mb-4 text-gray-900">Center MHM Academy</h3>
+                <h3 className="text-xl font-bold mb-4 text-gray-900" suppressHydrationWarning>{t('home.centerMHMAcademy')}</h3>
                 <ul className="space-y-3 mb-6 text-gray-600 flex-grow">
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>القرآن الكريم - مستوي أول وثان</span>
+                    <span suppressHydrationWarning>{t('home.centerMHMAcademyDesc')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>تدريب كبار - مستوي أول وثان</span>
+                    <span suppressHydrationWarning>{t('home.adultTrainingCenter')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>مناهج متدرجة ومتخصصة</span>
+                    <span suppressHydrationWarning>{t('home.graduatedSpecialized')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#090919] rounded-full"></div>
-                    <span>متابعة شخصية وتقييم مستمر</span>
+                    <span suppressHydrationWarning>{t('home.personalFollowUp')}</span>
                   </li>
                 </ul>
                 <Button 
@@ -542,7 +542,7 @@ export default function HomePage() {
                   asChild
                 >
                   <Link href="/sign-up">
-                    ابدأ مع Center MHM Academy
+                    <span suppressHydrationWarning>{t('home.startWithCenter')}</span>
                   </Link>
                 </Button>
               </div>
@@ -557,8 +557,8 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.6 }}
             className="text-center mt-12"
           >
-            <h2 className="text-4xl font-bold text-[#090919] mb-4">MHM Academy</h2>
-            <p className="text-xl text-muted-foreground">نقدم لك أفضل المناهج التعليمية والكورسات المتخصصة</p>
+            <h2 className="text-4xl font-bold text-[#090919] mb-4" suppressHydrationWarning>{t('home.mhmAcademyTitle')}</h2>
+            <p className="text-xl text-muted-foreground" suppressHydrationWarning>{t('home.mhmAcademySubtitle')}</p>
           </motion.div>
         </motion.div>
       </section>

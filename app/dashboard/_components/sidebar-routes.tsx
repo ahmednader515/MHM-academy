@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart, Compass, Layout, List, Wallet, Shield, Users, Eye, TrendingUp, BookOpen, FileText, Award, PlusSquare } from "lucide-react";
+import { BarChart, Compass, Layout, List, Wallet, Shield, Users, Eye, TrendingUp, BookOpen, FileText, Award, PlusSquare, Video } from "lucide-react";
 import { SidebarItem } from "./sidebar-item";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/contexts/language-context";
@@ -75,6 +75,11 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             icon: FileText,
             label: t('dashboard.quizzes'),
             href: "/dashboard/admin/quizzes",
+        },
+        {
+            icon: Video,
+            label: t('admin.liveStreams'),
+            href: "/dashboard/admin/livestreams",
         },
         {
             icon: Eye,

@@ -118,7 +118,7 @@ export async function PATCH(
     { params }: { params: Promise<{ courseId: string; chapterId: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const { userId, user } = await auth();
         const resolvedParams = await params;
         const values = await req.json();
 
@@ -126,11 +126,13 @@ export async function PATCH(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
+        // Check if user is admin or course owner
+        const whereClause = user?.role === "ADMIN"
+            ? { id: resolvedParams.courseId }
+            : { id: resolvedParams.courseId, userId };
+
         const courseOwner = await db.course.findUnique({
-            where: {
-                id: resolvedParams.courseId,
-                userId: userId,
-            }
+            where: whereClause
         });
 
         if (!courseOwner) {
@@ -159,19 +161,20 @@ export async function DELETE(
     { params }: { params: Promise<{ courseId: string; chapterId: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const { userId, user } = await auth();
         const resolvedParams = await params;
 
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        // Check if user owns the course
+        // Check if user is admin or course owner
+        const whereClause = user?.role === "ADMIN"
+            ? { id: resolvedParams.courseId }
+            : { id: resolvedParams.courseId, userId };
+
         const courseOwner = await db.course.findUnique({
-            where: {
-                id: resolvedParams.courseId,
-                userId: userId,
-            }
+            where: whereClause
         });
 
         if (!courseOwner) {

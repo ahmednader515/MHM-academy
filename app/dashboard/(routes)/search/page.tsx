@@ -55,6 +55,52 @@ export default async function SearchPage({
     if (user?.curriculum || user?.level || user?.language || user?.grade) {
         whereClause.OR = [];
         
+        // Add courses with no targeting (available to all)
+        whereClause.OR.push({
+            AND: [
+                { targetCurriculum: null },
+                { targetLevel: null },
+                { targetLanguage: null },
+                { targetGrade: null }
+            ]
+        });
+        
+        // Add courses that match user's curriculum only (any level, any language, any grade)
+        if (user.curriculum) {
+            whereClause.OR.push({
+                AND: [
+                    { targetCurriculum: user.curriculum },
+                    { targetLevel: null },
+                    { targetLanguage: null },
+                    { targetGrade: null }
+                ]
+            });
+        }
+        
+        // Add courses that match user's curriculum and level (any language, any grade)
+        if (user.curriculum && user.level) {
+            whereClause.OR.push({
+                AND: [
+                    { targetCurriculum: user.curriculum },
+                    { targetLevel: user.level },
+                    { targetLanguage: null },
+                    { targetGrade: null }
+                ]
+            });
+        }
+        
+        // Add courses that match user's curriculum, level and language (any grade)
+        if (user.curriculum && user.level && user.language) {
+            whereClause.OR.push({
+                AND: [
+                    { targetCurriculum: user.curriculum },
+                    { targetLevel: user.level },
+                    { targetLanguage: user.language },
+                    { targetGrade: null }
+                ]
+            });
+        }
+        
         // Add courses that match user's curriculum, level, language and grade exactly
         if (user.curriculum && user.level && user.language && user.grade) {
             whereClause.OR.push({
@@ -67,51 +113,39 @@ export default async function SearchPage({
             });
         }
         
-        // Add courses that match user's curriculum, level and language only
-        if (user.curriculum && user.level && user.language) {
-            whereClause.OR.push({
-                AND: [
-                    { targetCurriculum: user.curriculum },
-                    { targetLevel: user.level },
-                    { targetLanguage: user.language },
-                    { targetGrade: null }
-                ]
-            });
-        }
-        
-        // Add courses that match user's curriculum and level only
-        if (user.curriculum && user.level) {
-            whereClause.OR.push({
-                AND: [
-                    { targetCurriculum: user.curriculum },
-                    { targetLevel: user.level },
-                    { targetLanguage: null },
-                    { targetGrade: null }
-                ]
-            });
-        }
-        
-        // Add courses that match user's curriculum only
+        // Add courses that are more general but still match user's curriculum
+        // This handles cases where courses have partial targeting
         if (user.curriculum) {
-            whereClause.OR.push({
-                AND: [
-                    { targetCurriculum: user.curriculum },
-                    { targetLevel: null },
-                    { targetLanguage: null },
-                    { targetGrade: null }
-                ]
-            });
+            // Courses that match curriculum and level but have any language/grade
+            if (user.level) {
+                whereClause.OR.push({
+                    AND: [
+                        { targetCurriculum: user.curriculum },
+                        { targetLevel: user.level }
+                    ]
+                });
+            }
+            
+            // Courses that match curriculum and language but have any level/grade
+            if (user.language) {
+                whereClause.OR.push({
+                    AND: [
+                        { targetCurriculum: user.curriculum },
+                        { targetLanguage: user.language }
+                    ]
+                });
+            }
+            
+            // Courses that match curriculum and grade but have any level/language
+            if (user.grade) {
+                whereClause.OR.push({
+                    AND: [
+                        { targetCurriculum: user.curriculum },
+                        { targetGrade: user.grade }
+                    ]
+                });
+            }
         }
-        
-        // Add courses with no targeting (available to all)
-        whereClause.OR.push({
-            AND: [
-                { targetCurriculum: null },
-                { targetLevel: null },
-                { targetLanguage: null },
-                { targetGrade: null }
-            ]
-        });
     }
 
     const courses = await db.course.findMany({

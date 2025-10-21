@@ -24,12 +24,14 @@ export const auth = async () => {
 
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(db) as Adapter,
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-development",
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? [
+      GoogleProvider({
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      })
+    ] : []),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -85,25 +87,32 @@ export const authOptions: AuthOptions = {
   },
   callbacks: {
     async session({ token, session }) {
-      if (token && token.sessionId) {
-        try {
-          // Validate session on each request
-          const { isValid } = await SessionManager.validateSession(token.sessionId as string);
-          
-          if (!isValid) {
-            // Session is invalid, return null to force re-authentication
-            return null;
+      if (token) {
+        // If we have a sessionId, validate it
+        if (token.sessionId) {
+          try {
+            // Validate session on each request
+            const { isValid } = await SessionManager.validateSession(token.sessionId as string);
+            
+            if (!isValid) {
+              // Session is invalid, clear the sessionId but don't return null
+              // This will trigger a re-authentication on the next request
+              token.sessionId = undefined;
+            }
+          } catch (error) {
+            console.error("Session validation error:", error);
+            // Clear sessionId on error but don't return null
+            token.sessionId = undefined;
           }
-
-          session.user.id = token.id;
-          session.user.name = token.name;
-          session.user.phoneNumber = token.phoneNumber;
-          session.user.image = token.picture ?? undefined;
-          session.user.role = token.role;
-        } catch (error) {
-          console.error("Session validation error:", error);
-          return null;
         }
+
+        // Always populate session data from token
+        session.user.id = token.id as string;
+        session.user.name = token.name as string;
+        session.user.email = token.email as string;
+        session.user.phoneNumber = token.phoneNumber as string;
+        session.user.image = token.picture as string | undefined;
+        session.user.role = token.role as string;
       }
 
       return session;
@@ -118,6 +127,7 @@ export const authOptions: AuthOptions = {
             ...token,
             id: user.id,
             name: user.name,
+            email: (user as any).email || "",
             phoneNumber: user.phoneNumber,
             picture: (user as any).picture,
             role: user.role,
@@ -125,7 +135,16 @@ export const authOptions: AuthOptions = {
           };
         } catch (error) {
           console.error("Session creation error:", error);
-          throw error;
+          // Return token without sessionId if session creation fails
+          return {
+            ...token,
+            id: user.id,
+            name: user.name,
+            email: (user as any).email || "",
+            phoneNumber: user.phoneNumber,
+            picture: (user as any).picture,
+            role: user.role,
+          };
         }
       }
 

@@ -54,6 +54,7 @@ model Course {
   chapters Chapter[]
   purchases Purchase[]
   quizzes Quiz[]
+  liveStreams LiveStream[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -224,4 +225,21 @@ model QuizAnswer {
 
     @@index([questionId])
     @@index([quizResultId])
+}
+
+model LiveStream {
+    id String @id @default(uuid())
+    title String
+    description String? @db.Text
+    zoomUrl String @db.Text
+    zoomMeetingId String
+    isPublished Boolean @default(false)
+    scheduledAt DateTime?
+    duration Int? // Duration in minutes
+    courseId String
+    course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([courseId])
 }
