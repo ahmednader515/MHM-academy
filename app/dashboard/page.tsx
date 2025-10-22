@@ -57,7 +57,8 @@ const CoursesPage = async () => {
     },
     orderBy: {
       percentage: 'desc' // Order by percentage descending to get best attempts first
-    }
+    },
+    cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
   });
 
   // Get only the best attempt for each quiz
@@ -82,7 +83,8 @@ const CoursesPage = async () => {
       image: true,
       role: true,
       balance: true
-    }
+    },
+    cacheStrategy: { ttl: 60 }, // Cache for 1 minute
   });
 
   if (!user) {
@@ -110,7 +112,8 @@ const CoursesPage = async () => {
     },
     orderBy: {
       updatedAt: 'desc'
-    }
+    },
+    cacheStrategy: { ttl: 60 }, // Cache for 1 minute
   });
 
   const lastWatchedChapterData = lastWatchedChapter ? {
@@ -163,7 +166,8 @@ const CoursesPage = async () => {
     },
     orderBy: {
       createdAt: "desc",
-    }
+    },
+    cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
   });
 
   const coursesWithProgress = await Promise.all(

@@ -35,14 +35,42 @@ export async function GET(req: Request) {
         level: true,
         grade: true,
         points: true,
-        courses: {
+        purchases: {
+          where: {
+            status: "ACTIVE"
+          },
           select: {
-            id: true,
-            title: true,
-            chapters: {
+            course: {
               select: {
                 id: true,
-                isPublished: true
+                title: true,
+                imageUrl: true,
+                chapters: {
+                  where: {
+                    isPublished: true
+                  },
+                  select: {
+                    id: true,
+                    title: true,
+                    position: true
+                  },
+                  orderBy: {
+                    position: 'asc'
+                  }
+                },
+                quizzes: {
+                  where: {
+                    isPublished: true
+                  },
+                  select: {
+                    id: true,
+                    title: true,
+                    position: true
+                  },
+                  orderBy: {
+                    position: 'asc'
+                  }
+                }
               }
             }
           }
@@ -85,18 +113,57 @@ export async function GET(req: Request) {
           orderBy: {
             createdAt: 'desc'
           },
-          take: 5
+          take: 10
         }
       }
     });
 
     // Transform the data for the parent dashboard
     const childrenData = children.map(child => {
-      const coursesCount = child.courses.length;
-      const totalChapters = child.courses.reduce((total, course) => 
-        total + course.chapters.filter(chapter => chapter.isPublished).length, 0
+      // Get purchased courses
+      const purchasedCourses = child.purchases.map(purchase => purchase.course);
+      const coursesCount = purchasedCourses.length;
+      
+      // Calculate total chapters from purchased courses only
+      const totalChapters = purchasedCourses.reduce((total, course) => 
+        total + course.chapters.length, 0
       );
-      const completedChapters = child.userProgress.filter(progress => progress.isCompleted).length;
+      
+      // Calculate completed chapters from purchased courses only
+      const purchasedCourseIds = purchasedCourses.map(course => course.id);
+      const completedChapters = child.userProgress.filter(progress => 
+        progress.isCompleted && 
+        purchasedCourseIds.includes(progress.chapter.course.id)
+      ).length;
+
+      // Calculate quiz statistics
+      const totalQuizzes = purchasedCourses.reduce((total, course) => 
+        total + course.quizzes.length, 0
+      );
+      
+      // Get quiz results for purchased courses only
+      const purchasedQuizIds = purchasedCourses.flatMap(course => 
+        course.quizzes.map(quiz => quiz.id)
+      );
+      const relevantQuizResults = child.quizResults.filter(result => 
+        purchasedQuizIds.includes(result.quiz.id)
+      );
+
+      // Calculate average score from best attempts
+      const bestAttempts = new Map();
+      relevantQuizResults.forEach(result => {
+        if (!bestAttempts.has(result.quiz.id) || 
+            result.percentage > bestAttempts.get(result.quiz.id)) {
+          bestAttempts.set(result.quiz.id, result.percentage);
+        }
+      });
+      
+      const averageScore = bestAttempts.size > 0 
+        ? Math.round(Array.from(bestAttempts.values()).reduce((sum, percentage) => sum + percentage, 0) / bestAttempts.size)
+        : 0;
+
+      // Calculate completed quizzes
+      const completedQuizzes = bestAttempts.size;
 
       return {
         id: child.id,
@@ -110,7 +177,12 @@ export async function GET(req: Request) {
         coursesCount,
         completedChapters,
         totalChapters,
-        recentQuizResults: child.quizResults
+        totalQuizzes,
+        completedQuizzes,
+        averageScore,
+        courses: purchasedCourses,
+        userProgress: child.userProgress,
+        recentQuizResults: relevantQuizResults.slice(0, 5)
       };
     });
 

@@ -530,7 +530,12 @@
     "recentQuizResults": "Recent Quiz Results",
     "noQuizResults": "No quiz results available",
     "score": "Score",
-    "attempt": "Attempt"
+    "attempt": "Attempt",
+    "averageScore": "Average Score",
+    "chaptersProgress": "Chapters Progress",
+    "quizzesProgress": "Quizzes Progress",
+    "totalQuizzes": "Total Quizzes",
+    "completedQuizzes": "Completed Quizzes"
   },
   "teacher": {
     "dashboard": "Teacher Dashboard",
@@ -1004,7 +1009,8 @@
     "status": "Status",
     "actions": "Actions",
     "delete": "Delete",
-    "errorOccurred": "An error occurred"
+    "errorOccurred": "An error occurred",
+    "teacherName": "Teacher Name"
   },
   "quiz": {
     "title": "Quiz Title",

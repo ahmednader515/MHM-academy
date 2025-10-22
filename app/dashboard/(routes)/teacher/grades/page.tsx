@@ -13,6 +13,7 @@ import { Search, Eye, Award, TrendingUp, Users, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useSession } from "next-auth/react";
 
 interface Course {
     id: string;
@@ -67,6 +68,17 @@ interface QuizAnswer {
 
 const GradesPage = () => {
     const { t, isRTL } = useLanguage();
+    const { data: session } = useSession();
+    
+    // Don't render content if user is not a teacher - check before any hooks
+    if (session?.user?.role !== "TEACHER") {
+        return (
+            <div className="p-6">
+                <div className="text-center">{t('teacher.loading')}</div>
+            </div>
+        );
+    }
+
     const [courses, setCourses] = useState<Course[]>([]);
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
     const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
@@ -85,7 +97,7 @@ const GradesPage = () => {
 
     const fetchCourses = async () => {
         try {
-            const response = await fetch("/api/courses");
+            const response = await fetch("/api/teacher/courses");
             if (response.ok) {
                 const data = await response.json();
                 setCourses(data);

@@ -21,6 +21,11 @@ interface ChildData {
   coursesCount: number;
   completedChapters: number;
   totalChapters: number;
+  totalQuizzes: number;
+  completedQuizzes: number;
+  averageScore: number;
+  courses: any[];
+  userProgress: any[];
   recentQuizResults: any[];
 }
 
@@ -115,7 +120,7 @@ export default function ParentDashboard() {
                   </TabsList>
 
                   <TabsContent value="overview" className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <Card>
                         <CardContent className="p-4">
                           <div className="flex items-center gap-2">
@@ -143,10 +148,57 @@ export default function ParentDashboard() {
                       <Card>
                         <CardContent className="p-4">
                           <div className="flex items-center gap-2">
-                            <Award className="h-5 w-5 text-yellow-500" />
+                            <Award className="h-5 w-5 text-purple-500" />
+                            <div>
+                              <p className="text-sm font-medium">{t('parent.averageScore') || 'Average Score'}</p>
+                              <p className="text-2xl font-bold">{child.averageScore}%</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-2">
+                            <Star className="h-5 w-5 text-yellow-500" />
                             <div>
                               <p className="text-sm font-medium">{t('parent.achievementPoints') || 'Achievement Points'}</p>
                               <p className="text-2xl font-bold">{child.points}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                    
+                    {/* Additional Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Card>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium">{t('parent.chaptersProgress') || 'Chapters Progress'}</p>
+                              <p className="text-lg font-bold">{child.completedChapters} / {child.totalChapters}</p>
+                            </div>
+                            <div className="w-16">
+                              <Progress 
+                                value={child.totalChapters > 0 ? (child.completedChapters / child.totalChapters) * 100 : 0} 
+                                className="h-2"
+                              />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium">{t('parent.quizzesProgress') || 'Quizzes Progress'}</p>
+                              <p className="text-lg font-bold">{child.completedQuizzes} / {child.totalQuizzes}</p>
+                            </div>
+                            <div className="w-16">
+                              <Progress 
+                                value={child.totalQuizzes > 0 ? (child.completedQuizzes / child.totalQuizzes) * 100 : 0} 
+                                className="h-2"
+                              />
                             </div>
                           </div>
                         </CardContent>
@@ -182,13 +234,13 @@ export default function ParentDashboard() {
                         <CardTitle>{t('parent.enrolledCourses') || 'الدورات المسجلة'}</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        {child.coursesCount > 0 ? (
+                        {child.courses && child.courses.length > 0 ? (
                           <div className="space-y-3">
-                            {child.courses?.map((course: any) => {
+                            {child.courses.map((course: any) => {
                               const courseProgress = child.userProgress?.filter(
                                 progress => progress.chapter?.course?.id === course.id && progress.isCompleted
                               ).length || 0;
-                              const totalChapters = course.chapters?.filter((ch: any) => ch.isPublished).length || 0;
+                              const totalChapters = course.chapters?.length || 0;
                               const progressPercentage = totalChapters > 0 ? (courseProgress / totalChapters) * 100 : 0;
                               
                               return (
@@ -220,6 +272,44 @@ export default function ParentDashboard() {
                   </TabsContent>
 
                   <TabsContent value="quizzes" className="space-y-4">
+                    {/* Quiz Statistics */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Card>
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-2">
+                            <Award className="h-5 w-5 text-blue-500" />
+                            <div>
+                              <p className="text-sm font-medium">{t('parent.totalQuizzes') || 'Total Quizzes'}</p>
+                              <p className="text-2xl font-bold">{child.totalQuizzes}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5 text-green-500" />
+                            <div>
+                              <p className="text-sm font-medium">{t('parent.completedQuizzes') || 'Completed Quizzes'}</p>
+                              <p className="text-2xl font-bold">{child.completedQuizzes}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-2">
+                            <Star className="h-5 w-5 text-purple-500" />
+                            <div>
+                              <p className="text-sm font-medium">{t('parent.averageScore') || 'Average Score'}</p>
+                              <p className="text-2xl font-bold">{child.averageScore}%</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Recent Quiz Results */}
                     <Card>
                       <CardHeader>
                         <CardTitle>{t('parent.recentQuizResults') || 'نتائج الاختبارات الأخيرة'}</CardTitle>

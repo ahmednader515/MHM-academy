@@ -18,7 +18,15 @@ interface Quiz {
   courseId: string;
   position: number;
   isPublished: boolean;
-  course: { id: string; title: string };
+  course: { 
+    id: string; 
+    title: string;
+    user: {
+      id: string;
+      fullName: string;
+      role: string;
+    };
+  };
   questions: { id: string }[];
   createdAt: string;
 }
@@ -50,7 +58,7 @@ export default function AdminQuizzesPage() {
   }, []);
 
   const filteredQuizzes = quizzes.filter((quiz) =>
-    [quiz.title, quiz.course.title].some((v) => v.toLowerCase().includes(searchTerm.toLowerCase()))
+    [quiz.title, quiz.course.title, quiz.course.user.fullName].some((v) => v.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   if (loading) {
@@ -85,6 +93,7 @@ export default function AdminQuizzesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className={isRTL ? "text-right" : "text-left"}>{t('dashboard.quizTitle')}</TableHead>
+                <TableHead className={isRTL ? "text-right" : "text-left"}>{t('admin.teacherName')}</TableHead>
                 <TableHead className={isRTL ? "text-right" : "text-left"}>{t('dashboard.course')}</TableHead>
                 <TableHead className={isRTL ? "text-right" : "text-left"}>{t('dashboard.position')}</TableHead>
                 <TableHead className={isRTL ? "text-right" : "text-left"}>{t('dashboard.status')}</TableHead>
@@ -95,6 +104,12 @@ export default function AdminQuizzesPage() {
               {filteredQuizzes.map((quiz) => (
                 <TableRow key={quiz.id}>
                   <TableCell className={`font-medium ${isRTL ? "text-right" : "text-left"}`}>{quiz.title}</TableCell>
+                  <TableCell className={isRTL ? "text-right" : "text-left"}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{quiz.course.user.fullName}</span>
+                      <span className="text-xs text-muted-foreground capitalize">{quiz.course.user.role}</span>
+                    </div>
+                  </TableCell>
                   <TableCell className={isRTL ? "text-right" : "text-left"}>
                     <Badge variant="outline">{quiz.course.title}</Badge>
                   </TableCell>

@@ -4,12 +4,16 @@ import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
     try {
-        const { userId } = await auth();
+        const { userId, user } = await auth();
         const { searchParams } = new URL(req.url);
         const quizId = searchParams.get('quizId');
 
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        if (user?.role !== "TEACHER") {
+            return new NextResponse("Forbidden - Only teachers can access this resource", { status: 403 });
         }
 
         // Build the where clause
@@ -67,7 +71,8 @@ export async function GET(req: Request) {
             },
             orderBy: {
                 submittedAt: "desc"
-            }
+            },
+            cacheStrategy: { ttl: 120 }, // Cache for 2 minutes (quiz results change more frequently)
         });
 
         return NextResponse.json(quizResults);

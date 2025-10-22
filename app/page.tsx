@@ -242,7 +242,7 @@ export default function HomePage() {
                 <div className="text-center md:text-right">
                   <h3 className="text-lg font-bold" suppressHydrationWarning>{t('home.joinUsInvitation')}</h3>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-row gap-2">
                   <Button 
                     asChild
                     size="sm"

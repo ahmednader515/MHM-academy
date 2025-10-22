@@ -51,12 +51,38 @@ export async function POST(req: Request) {
       return new NextResponse("Parent phone number is already registered as a student", { status: 400 });
     }
 
+    // Check if parent phone number is the same as student phone number
+    if (phoneNumber === parentPhoneNumber) {
+      return new NextResponse("Parent phone number cannot be the same as student phone number", { status: 400 });
+    }
+
     // Hash password (no complexity requirements)
     const hashedPassword = await bcrypt.hash(password, 10);
     
     // Create user and parent account in a transaction
     await db.$transaction(async (tx) => {
-      // Create the student account
+      // Check if parent account already exists
+      const existingParent = await tx.user.findFirst({
+        where: {
+          phoneNumber: parentPhoneNumber,
+          role: "PARENT"
+        }
+      });
+
+      // Create parent account if it doesn't exist (MUST be created first)
+      if (!existingParent) {
+        await tx.user.create({
+          data: {
+            fullName: `${fullName.split(' ')[0]}'s Parent`, // Use first name + 's Parent
+            phoneNumber: parentPhoneNumber,
+            email: `parent_${parentPhoneNumber.replace('+', '')}@mhm.academy`, // Generate email
+            hashedPassword: hashedPassword, // Use the same password as the student
+            role: "PARENT",
+          },
+        });
+      }
+
+      // Create the student account (after parent exists)
       const student = await tx.user.create({
         data: {
           fullName,
@@ -71,32 +97,16 @@ export async function POST(req: Request) {
           role: "USER",
         },
       });
-
-      // Check if parent account already exists
-      const existingParent = await tx.user.findFirst({
-        where: {
-          phoneNumber: parentPhoneNumber,
-          role: "PARENT"
-        }
-      });
-
-      // Create parent account if it doesn't exist
-      if (!existingParent) {
-        await tx.user.create({
-          data: {
-            fullName: `${fullName.split(' ')[0]}'s Parent`, // Use first name + 's Parent
-            phoneNumber: parentPhoneNumber,
-            email: `parent_${parentPhoneNumber.replace('+', '')}@mhm.academy`, // Generate email
-            hashedPassword: hashedPassword, // Use the same password as the student
-            role: "PARENT",
-          },
-        });
-      }
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[REGISTER]", error);
+    
+    // Handle foreign key constraint violation
+    if (error instanceof Error && error.message.includes("Foreign key constraint violated")) {
+      return new NextResponse("Invalid parent phone number. Please ensure the parent phone number is valid.", { status: 400 });
+    }
     
     // If the table doesn't exist or there's a database connection issue,
     // return a specific error message

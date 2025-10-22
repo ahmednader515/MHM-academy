@@ -7,23 +7,17 @@ export async function GET() {
   try {
     const { userId, user } = await auth();
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (user?.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (user?.role !== "TEACHER") return NextResponse.json({ error: "Forbidden - Only teachers can access this resource" }, { status: 403 });
 
+    // Teachers can only see live streams for their own courses
     const liveStreams = await db.liveStream.findMany({
+      where: {
+        course: {
+          userId: userId
+        }
+      },
       include: {
-        course: { 
-          select: { 
-            id: true, 
-            title: true,
-            user: {
-              select: {
-                id: true,
-                fullName: true,
-                role: true,
-              }
-            }
-          } 
-        },
+        course: { select: { id: true, title: true } },
       },
       orderBy: { createdAt: "desc" },
       cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
@@ -31,7 +25,7 @@ export async function GET() {
 
     return NextResponse.json(liveStreams);
   } catch (e) {
-    console.error("[ADMIN_LIVESTREAMS]", e);
+    console.error("[TEACHER_LIVESTREAMS]", e);
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }
 }
@@ -40,7 +34,7 @@ export async function POST(req: Request) {
   try {
     const { userId, user } = await auth();
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (user?.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (user?.role !== "TEACHER") return NextResponse.json({ error: "Forbidden - Only teachers can access this resource" }, { status: 403 });
 
     const { title, description, meetingUrl, courseId, scheduledAt, duration } = await req.json();
 
@@ -64,13 +58,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Could not extract meeting ID" }, { status: 400 });
     }
 
-    // Validate course exists
-    const course = await db.course.findUnique({
-      where: { id: courseId }
+    // Validate course exists and belongs to the teacher
+    const course = await db.course.findFirst({
+      where: { 
+        id: courseId,
+        userId: userId
+      }
     });
 
     if (!course) {
-      return NextResponse.json({ error: "Course not found" }, { status: 404 });
+      return NextResponse.json({ error: "Course not found or access denied" }, { status: 404 });
     }
 
     const liveStream = await db.liveStream.create({
@@ -91,7 +88,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(liveStream);
   } catch (e) {
-    console.error("[ADMIN_LIVESTREAMS_CREATE]", e);
+    console.error("[TEACHER_LIVESTREAMS_CREATE]", e);
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }
 }

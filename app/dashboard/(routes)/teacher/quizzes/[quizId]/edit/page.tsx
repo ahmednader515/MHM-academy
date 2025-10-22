@@ -91,7 +91,7 @@ const EditQuizPage = () => {
 
     const fetchCourses = async () => {
         try {
-            const response = await fetch("/api/courses");
+            const response = await fetch("/api/teacher/courses");
             if (response.ok) {
                 const data = await response.json();
                 const teacherCourses = data.filter((course: Course) => course.isPublished);

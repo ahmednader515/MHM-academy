@@ -10,10 +10,15 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { TeacherCoursesContent } from "./_components/teacher-courses-content";
 
 const CoursesPage = async () => {
-    const { userId } = await auth();
+    const { userId, user } = await auth();
 
     if (!userId) {
         return redirect("/");
+    }
+
+    // Ensure only teachers can access this page
+    if (user?.role !== "TEACHER") {
+        return redirect("/dashboard");
     }
 
     const courses = await db.course.findMany({
@@ -45,6 +50,7 @@ const CoursesPage = async () => {
         orderBy: {
             createdAt: "desc",
         },
+        cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
     }).then(courses => courses.map(course => ({
         ...course,
         price: course.price || 0,
@@ -57,7 +63,8 @@ const CoursesPage = async () => {
     const totalEnrolledStudents = await db.purchase.count({
         where: {
             status: "ACTIVE"
-        }
+        },
+        cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
     });
 
     const unpublishedCourses = courses.filter(course => !course.isPublished);

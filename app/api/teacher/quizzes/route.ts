@@ -5,10 +5,14 @@ import { parseQuizOptions, stringifyQuizOptions } from "@/lib/utils";
 
 export async function GET(req: Request) {
     try {
-        const { userId } = await auth();
+        const { userId, user } = await auth();
 
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        if (user?.role !== "TEACHER") {
+            return NextResponse.json({ error: "Forbidden - Only teachers can access this resource" }, { status: 403 });
         }
 
         const quizzes = await db.quiz.findMany({
@@ -42,7 +46,8 @@ export async function GET(req: Request) {
             },
             orderBy: {
                 position: "asc"
-            }
+            },
+            cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
         });
 
         // Parse options for multiple choice questions
@@ -63,13 +68,17 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
-        const { userId } = await auth();
+        const { userId, user } = await auth();
         const { title, description, courseId, questions, position, timer, maxAttempts } = await req.json();
 
         console.log("Received position:", position, "Type:", typeof position);
 
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        if (user?.role !== "TEACHER") {
+            return NextResponse.json({ error: "Forbidden - Only teachers can access this resource" }, { status: 403 });
         }
 
         // Validate required fields

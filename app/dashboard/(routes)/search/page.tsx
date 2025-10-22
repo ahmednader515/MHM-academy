@@ -40,7 +40,8 @@ export default async function SearchPage({
             level: true,
             language: true,
             grade: true,
-        }
+        },
+        cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
     });
 
     // Build the where clause for course filtering
@@ -167,7 +168,8 @@ export default async function SearchPage({
         },
         orderBy: {
             createdAt: "desc",
-        }
+        },
+        cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
     });
 
     const coursesWithProgress = await Promise.all(

@@ -1,7 +1,7 @@
 "use client";
 
 import { IconBadge } from "@/components/icon-badge";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, ArrowLeft } from "lucide-react";
 import { TitleForm } from "./title-form";
 import { DescriptionForm } from "./description-form";
 import { ImageForm } from "./image-form";
@@ -12,6 +12,8 @@ import { IsFreeForm } from "./is-free-form";
 import { Banner } from "@/components/banner";
 import { Actions } from "./actions";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface Course {
     id: string;
@@ -44,15 +46,25 @@ interface CourseEditContentProps {
         price: boolean;
         publishedChapters: boolean;
     };
+    userRole?: string;
 }
 
 export const CourseEditContent = ({
     course,
     completionText,
     isComplete,
-    completionStatus
+    completionStatus,
+    userRole
 }: CourseEditContentProps) => {
-    const { t } = useLanguage();
+    const { t, isRTL } = useLanguage();
+
+    // Determine the back route based on user role
+    const getBackRoute = () => {
+        if (userRole === "ADMIN") {
+            return "/dashboard/admin/courses";
+        }
+        return "/dashboard/teacher/courses";
+    };
 
     return (
         <>
@@ -65,12 +77,18 @@ export const CourseEditContent = ({
             <div className="p-6">
                 <div className="flex items-center justify-between">
                     <div className="flex flex-col gap-y-2">
+                        <Link href={getBackRoute()}>
+                            <Button variant="ghost" className="mb-4">
+                                <ArrowLeft className="h-4 w-4 mr-2" />
+                                {t('common.back')}
+                            </Button>
+                        </Link>
                         <h1 className="text-2xl font-medium">
                             {t('teacher.courseSetup')}
                         </h1>
-                        <span className="text-sm text-slate-700">
-                            {t('teacher.completeAllFields')} {completionText}
-                        </span>
+                            <span className="text-sm text-slate-700">
+                                {t('teacher.completeAllFields')} {completionText}
+                            </span>
                         {!isComplete && (
                             <div className="text-xs text-muted-foreground mt-2">
                                 <div className="grid grid-cols-2 gap-2">
@@ -97,6 +115,7 @@ export const CourseEditContent = ({
                                 </div>
                             </div>
                         )}
+                        </div>
                     </div>
                     <Actions
                         disabled={!isComplete}

@@ -22,6 +22,11 @@ type Course = {
     publishedChaptersCount: number;
     publishedQuizzesCount: number;
     enrolledStudentsCount: number;
+    user?: {
+        id: string;
+        fullName: string;
+        role: string;
+    };
 };
 
 interface TeacherCoursesContentProps {
@@ -33,7 +38,7 @@ interface TeacherCoursesContentProps {
 
 export const TeacherCoursesContent = ({ courses, hasUnpublishedCourses, totalEnrolledStudents, isAdmin = false }: TeacherCoursesContentProps) => {
     const { t } = useLanguage();
-    const columns = useColumns();
+    const columns = useColumns(isAdmin);
 
     return (
         <div className="p-6">

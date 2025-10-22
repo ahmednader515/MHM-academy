@@ -10,6 +10,7 @@ import { Search, Plus, Edit, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useSession } from "next-auth/react";
 
 interface Quiz {
     id: string;
@@ -39,10 +40,28 @@ interface Question {
 const QuizzesPage = () => {
     const router = useRouter();
     const { t, isRTL } = useLanguage();
+    const { data: session } = useSession();
+    
+    // Don't render content if user is not a teacher - check before any hooks
+    if (session?.user?.role !== "TEACHER") {
+        return (
+            <div className="p-6">
+                <div className="text-center">{t('teacher.loading')}</div>
+            </div>
+        );
+    }
+
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+    // Check if user is authorized
+    useEffect(() => {
+        if (session?.user?.role !== "TEACHER") {
+            router.push("/dashboard");
+        }
+    }, [session?.user?.role, router]);
 
     useEffect(() => {
         fetchQuizzes();

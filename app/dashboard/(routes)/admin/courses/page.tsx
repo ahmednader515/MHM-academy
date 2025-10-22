@@ -4,11 +4,23 @@ import { redirect } from "next/navigation";
 import { TeacherCoursesContent } from "@/app/dashboard/(routes)/teacher/courses/_components/teacher-courses-content";
 
 const AdminCoursesPage = async () => {
-  const { userId } = await auth();
+  const { userId, user } = await auth();
   if (!userId) return redirect("/");
+
+  // Ensure only admins can access this page
+  if (user?.role !== "ADMIN") {
+    return redirect("/dashboard");
+  }
 
   const courses = await db.course.findMany({
     include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          role: true,
+        }
+      },
       chapters: {
         select: {
           id: true,
@@ -33,6 +45,7 @@ const AdminCoursesPage = async () => {
     orderBy: {
       createdAt: "desc",
     },
+    cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
   }).then(courses => courses.map(course => ({
     ...course,
     price: course.price || 0,
@@ -45,7 +58,8 @@ const AdminCoursesPage = async () => {
   const totalEnrolledStudents = await db.purchase.count({
     where: {
       status: "ACTIVE"
-    }
+    },
+    cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
   });
 
   const unpublishedCourses = courses.filter(course => !course.isPublished);

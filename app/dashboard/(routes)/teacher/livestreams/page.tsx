@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/contexts/language-context";
 import { format } from "date-fns";
+import { useSession } from "next-auth/react";
 
 interface LiveStream {
   id: string;
@@ -22,29 +23,49 @@ interface LiveStream {
   isPublished: boolean;
   scheduledAt: Date | null;
   duration: number | null;
-  course: { 
-    id: string; 
-    title: string;
-    user: {
-      id: string;
-      fullName: string;
-      role: string;
-    };
-  };
+  course: { id: string; title: string };
   createdAt: string;
 }
 
-export default function AdminLiveStreamsPage() {
+export default function TeacherLiveStreamsPage() {
   const router = useRouter();
   const { t, isRTL } = useLanguage();
+  const { data: session, status } = useSession();
   const [liveStreams, setLiveStreams] = useState<LiveStream[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Check if user is authorized
+  useEffect(() => {
+    if (status === "loading") return; // Still loading session
+    
+    if (session?.user?.role !== "TEACHER") {
+      router.push("/dashboard");
+    }
+  }, [session?.user?.role, router, status]);
+
+  // Show loading while session is being fetched
+  if (status === "loading") {
+    return (
+      <div className="p-6">
+        <div className="text-center">{t('dashboard.loading')}</div>
+      </div>
+    );
+  }
+
+  // Don't render content if user is not a teacher
+  if (session?.user?.role !== "TEACHER") {
+    return (
+      <div className="p-6">
+        <div className="text-center">{t('dashboard.loading')}</div>
+      </div>
+    );
+  }
+
   useEffect(() => {
     const fetchLiveStreams = async () => {
       try {
-        const response = await fetch("/api/admin/livestreams");
+        const response = await fetch("/api/teacher/livestreams");
         if (response.ok) {
           const data = await response.json();
           setLiveStreams(data);
@@ -61,12 +82,12 @@ export default function AdminLiveStreamsPage() {
   }, []);
 
   const filteredLiveStreams = liveStreams.filter((liveStream) =>
-    [liveStream.title, liveStream.course.title, liveStream.course.user.fullName].some((v) => v.toLowerCase().includes(searchTerm.toLowerCase()))
+    [liveStream.title, liveStream.course.title].some((v) => v.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handlePublish = async (liveStreamId: string, currentStatus: boolean) => {
     try {
-      const response = await fetch(`/api/admin/livestreams/${liveStreamId}/publish`, {
+      const response = await fetch(`/api/teacher/livestreams/${liveStreamId}/publish`, {
         method: 'PATCH',
       });
 
@@ -91,7 +112,7 @@ export default function AdminLiveStreamsPage() {
     if (!confirm(t('admin.confirmDeleteLiveStream'))) return;
 
     try {
-      const response = await fetch(`/api/admin/livestreams/${liveStreamId}`, {
+      const response = await fetch(`/api/teacher/livestreams/${liveStreamId}`, {
         method: 'DELETE',
       });
 
@@ -118,7 +139,7 @@ export default function AdminLiveStreamsPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">{t('admin.allLiveStreams')}</h1>
-        <Button onClick={() => router.push('/dashboard/admin/livestreams/create')} className="bg-[#090919] hover:bg-[#090919]/90 text-white">
+        <Button onClick={() => router.push('/dashboard/teacher/livestreams/create')} className="bg-[#090919] hover:bg-[#090919]/90 text-white">
           <Plus className="h-4 w-4 mr-2" />
           {t('admin.createLiveStream')}
         </Button>
@@ -142,7 +163,6 @@ export default function AdminLiveStreamsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className={isRTL ? "text-right" : "text-left"}>{t('admin.liveStreamTitle')}</TableHead>
-                <TableHead className={isRTL ? "text-right" : "text-left"}>{t('admin.teacherName')}</TableHead>
                 <TableHead className={isRTL ? "text-right" : "text-left"}>{t('admin.course')}</TableHead>
                 <TableHead className={isRTL ? "text-right" : "text-left"}>{t('admin.scheduledAt')}</TableHead>
                 <TableHead className={isRTL ? "text-right" : "text-left"}>{t('admin.duration')}</TableHead>
@@ -157,12 +177,6 @@ export default function AdminLiveStreamsPage() {
                     <div className="flex items-center gap-2">
                       <Video className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">{liveStream.title}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className={isRTL ? "text-right" : "text-left"}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{liveStream.course.user.fullName}</span>
-                      <span className="text-xs text-muted-foreground capitalize">{liveStream.course.user.role}</span>
                     </div>
                   </TableCell>
                   <TableCell className={isRTL ? "text-right" : "text-left"}>
@@ -198,7 +212,7 @@ export default function AdminLiveStreamsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => router.push(`/dashboard/admin/livestreams/${liveStream.id}`)}
+                        onClick={() => router.push(`/dashboard/teacher/livestreams/${liveStream.id}`)}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>

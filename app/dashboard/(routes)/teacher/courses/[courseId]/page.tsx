@@ -17,6 +17,11 @@ export default async function CourseIdPage({
         return redirect("/");
     }
 
+    // Ensure only teachers can access this page
+    if (user?.role !== "TEACHER") {
+        return redirect("/dashboard");
+    }
+
     const course = await db.course.findUnique({
         where: {
             id: courseId,
@@ -32,7 +37,8 @@ export default async function CourseIdPage({
                     position: "asc",
                 },
             },
-        }
+        },
+        cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
     });
 
     if (!course) {
@@ -74,6 +80,7 @@ export default async function CourseIdPage({
             completionText={completionText}
             isComplete={isComplete}
             completionStatus={completionStatus}
+            userRole={user?.role}
         />
     );
 }

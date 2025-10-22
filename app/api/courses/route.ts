@@ -74,6 +74,7 @@ export async function GET(req: Request) {
       orderBy: {
         createdAt: "desc",
       },
+      cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
     });
 
     if (includeProgress && userId) {
@@ -95,7 +96,8 @@ export async function GET(req: Request) {
                   in: course.chapters.map(chapter => chapter.id)
                 },
                 isCompleted: true
-              }
+              },
+              cacheStrategy: { ttl: 60 }, // Cache for 1 minute
             });
 
             // Get completed quizzes
@@ -108,7 +110,8 @@ export async function GET(req: Request) {
                 },
                 select: {
                     quizId: true
-                }
+                },
+                cacheStrategy: { ttl: 60 }, // Cache for 1 minute
             });
 
             // Count unique quizIds

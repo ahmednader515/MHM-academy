@@ -39,6 +39,11 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             href: "/dashboard/teacher/quizzes",
         },
         {
+            icon: Video,
+            label: t('admin.liveStreams'),
+            href: "/dashboard/teacher/livestreams",
+        },
+        {
             icon: Award,
             label: t('dashboard.grades'),
             href: "/dashboard/teacher/grades",

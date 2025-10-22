@@ -3,6 +3,7 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
   // directUrl is optional - only needed for migrations when using Accelerate
+  // Uncomment the line below when you need to run migrations with Accelerate
   // directUrl = env("DIRECT_URL")
 }
 
