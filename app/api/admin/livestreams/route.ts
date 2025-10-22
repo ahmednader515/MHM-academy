@@ -26,7 +26,6 @@ export async function GET() {
         },
       },
       orderBy: { createdAt: "desc" },
-      cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
     });
 
     return NextResponse.json(liveStreams);

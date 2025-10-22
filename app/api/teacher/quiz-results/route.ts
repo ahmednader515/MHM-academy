@@ -72,7 +72,6 @@ export async function GET(req: Request) {
             orderBy: {
                 submittedAt: "desc"
             },
-            cacheStrategy: { ttl: 120 }, // Cache for 2 minutes (quiz results change more frequently)
         });
 
         return NextResponse.json(quizResults);

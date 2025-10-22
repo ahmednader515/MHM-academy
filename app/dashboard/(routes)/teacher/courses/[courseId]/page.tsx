@@ -38,7 +38,6 @@ export default async function CourseIdPage({
                 },
             },
         },
-        cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
     });
 
     if (!course) {

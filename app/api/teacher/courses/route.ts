@@ -55,7 +55,6 @@ export async function GET(req: Request) {
             orderBy: {
                 createdAt: "desc"
             },
-            cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
         });
 
         return NextResponse.json(courses);

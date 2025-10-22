@@ -47,7 +47,6 @@ export async function GET(req: Request) {
             orderBy: {
                 position: "asc"
             },
-            cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
         });
 
         // Parse options for multiple choice questions

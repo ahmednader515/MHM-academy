@@ -20,7 +20,6 @@ export async function GET() {
         course: { select: { id: true, title: true } },
       },
       orderBy: { createdAt: "desc" },
-      cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
     });
 
     return NextResponse.json(liveStreams);

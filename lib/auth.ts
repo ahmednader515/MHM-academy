@@ -47,7 +47,6 @@ export const authOptions: AuthOptions = {
           where: {
             phoneNumber: credentials.phoneNumber,
           },
-          cacheStrategy: { ttl: 60 }, // Cache for 1 minute
         });
 
         if (!user || !user.hashedPassword) {

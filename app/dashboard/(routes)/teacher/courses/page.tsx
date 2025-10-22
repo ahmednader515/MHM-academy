@@ -50,7 +50,6 @@ const CoursesPage = async () => {
         orderBy: {
             createdAt: "desc",
         },
-        cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
     }).then(courses => courses.map(course => ({
         ...course,
         price: course.price || 0,
@@ -64,7 +63,6 @@ const CoursesPage = async () => {
         where: {
             status: "ACTIVE"
         },
-        cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
     });
 
     const unpublishedCourses = courses.filter(course => !course.isPublished);
