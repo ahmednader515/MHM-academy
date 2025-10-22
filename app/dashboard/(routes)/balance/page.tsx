@@ -9,6 +9,7 @@ import { useSession } from "next-auth/react";
 import { Wallet, Plus, History, ArrowUpRight } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/language-context";
 import { Icons } from "@/components/icons";
+import Image from "next/image";
 
 interface BalanceTransaction {
   id: string;
@@ -144,7 +145,13 @@ export default function BalancePage() {
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0">
                 <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
-                  <Icons.whatsapp className="h-6 w-6 text-green-600 dark:text-green-400" />
+                  <Image 
+                    src="/whatsapp.png" 
+                    alt="WhatsApp" 
+                    width={24} 
+                    height={24} 
+                    className="h-6 w-6"
+                  />
                 </div>
               </div>
               <div className="flex-1">
@@ -163,7 +170,13 @@ export default function BalancePage() {
                   }}
                   className="bg-green-600 hover:bg-green-700 text-white"
                 >
-                  <Icons.whatsapp className="h-4 w-4 mr-2" />
+                  <Image 
+                    src="/whatsapp.png" 
+                    alt="WhatsApp" 
+                    width={16} 
+                    height={16} 
+                    className="h-4 w-4 mr-2"
+                  />
                   {t('dashboard.contactWhatsApp')}
                 </Button>
               </div>
