@@ -216,7 +216,7 @@ export default function BalancePage() {
                          {transaction.description.includes("Added") && transaction.type === "DEPOSIT" 
                            ? transaction.description.replace(/Added (\d+(?:\.\d+)?) EGP to balance/, "تم إضافة $1 جنيه إلى الرصيد")
                            : transaction.description.includes("Purchased course:") && transaction.type === "PURCHASE"
-                           ? transaction.description.replace(/Purchased course: (.+)/, "تم شراء الكورس: $1")
+                           ? transaction.description.replace(/Purchased course: (.+)/, "تم شراء المادة: $1")
                            : transaction.description
                          }
                        </p>

@@ -90,6 +90,6 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|hero-img.jpg|logo.png|male.png|egypt.png|egypt.jpg|saudi.jpg|idea.png|saudi-arabia.png|summer.jpg|$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|hero-img.jpg|logo.png|male.png|egypt.png|egypt.jpg|saudi.jpg|idea.png|saudi-arabia.png|summer.jpg|whatsapp.png|$).*)",
   ],
 };

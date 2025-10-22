@@ -97,7 +97,7 @@ export const ChaptersForm = ({
                 <div className="mt-4 space-y-4">
                     <Input
                         disabled={isUpdating}
-                        placeholder="e.g. 'المقدمة في الكورس'"
+                        placeholder="e.g. 'المقدمة في المادة'"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                     />

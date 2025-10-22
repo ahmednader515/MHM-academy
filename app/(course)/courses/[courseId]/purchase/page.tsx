@@ -44,11 +44,11 @@ export default function PurchasePage({
         const data = await response.json();
         setCourse(data);
       } else {
-        toast.error("حدث خطأ أثناء تحميل الكورس");
+        toast.error("حدث خطأ أثناء تحميل المادة");
       }
     } catch (error) {
       console.error("Error fetching course:", error);
-      toast.error("حدث خطأ أثناء تحميل الكورس");
+      toast.error("حدث خطأ أثناء تحميل المادة");
     } finally {
       setIsLoading(false);
     }
@@ -79,14 +79,14 @@ export default function PurchasePage({
 
       if (response.ok) {
         const data = await response.json();
-        toast.success("تم شراء الكورس بنجاح!");
+        toast.success("تم شراء المادة بنجاح!");
         router.push("/dashboard");
       } else {
         const error = await response.text();
         if (error.includes("Insufficient balance")) {
           toast.error("رصيد غير كافي. يرجى إضافة رصيد إلى حسابك");
         } else if (error.includes("already purchased")) {
-          toast.error("لقد قمت بشراء هذه الكورس مسبقاً");
+          toast.error("لقد قمت بشراء هذه المادة مسبقاً");
         } else {
           toast.error(error || "حدث خطأ أثناء الشراء");
         }
@@ -113,7 +113,7 @@ export default function PurchasePage({
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">الكورس غير موجودة</h1>
+          <h1 className="text-2xl font-bold mb-4">المادة غير موجودة</h1>
           <Button asChild>
             <Link href="/dashboard">العودة إلى لوحة التحكم</Link>
           </Button>
@@ -136,7 +136,7 @@ export default function PurchasePage({
               <ArrowLeft className="h-4 w-4" />
               رجوع
             </Button>
-            <h1 className="text-2xl font-bold">شراء الكورس</h1>
+            <h1 className="text-2xl font-bold">شراء المادة</h1>
           </div>
 
           {/* Course Details */}
@@ -144,7 +144,7 @@ export default function PurchasePage({
             <CardHeader>
               <CardTitle>{course.title}</CardTitle>
               <CardDescription>
-                {course.description || "لا يوجد وصف للكورس"}
+                {course.description || "لا يوجد وصف للمادة"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -182,7 +182,7 @@ export default function PurchasePage({
                   {!hasSufficientBalance && (
                     <div className="flex items-center gap-2 text-amber-600">
                       <AlertCircle className="h-4 w-4" />
-                      <span>رصيد غير كافي لشراء هذه الكورس</span>
+                      <span>رصيد غير كافي لشراء هذه المادة</span>
                     </div>
                   )}
                 </div>
@@ -200,7 +200,7 @@ export default function PurchasePage({
                     <span className="font-medium">رصيد غير كافي</span>
                   </div>
                   <p className="text-amber-700 mb-4">
-                    تحتاج إلى {(course.price || 0) - userBalance} جنيه إضافية لشراء هذه الكورس
+                    تحتاج إلى {(course.price || 0) - userBalance} جنيه إضافية لشراء هذه المادة
                   </p>
                   <Button asChild className="bg-[#090919] hover:bg-[#090919]/90">
                     <Link href="/dashboard/balance">إضافة رصيد</Link>
@@ -220,14 +220,14 @@ export default function PurchasePage({
               ) : (
                 <div className="flex items-center gap-2">
                   <CreditCard className="h-5 w-5" />
-                  شراء الكورس
+                  شراء المادة
                 </div>
               )}
             </Button>
 
             <div className="text-center text-sm text-muted-foreground">
               <p>سيتم خصم {course.price?.toFixed(2) || "0.00"} جنيه من رصيدك</p>
-              <p>ستتمكن من الوصول إلى الكورس فوراً بعد الشراء</p>
+              <p>ستتمكن من الوصول إلى المادة فوراً بعد الشراء</p>
             </div>
           </div>
         </div>

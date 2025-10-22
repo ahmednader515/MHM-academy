@@ -12,7 +12,7 @@ const CreatePage = async () => {
     const course = await db.course.create({
         data: {
             userId,
-            title: "كورس غير معرفة",
+            title: "مادة غير معرفة",
         }
     });
 

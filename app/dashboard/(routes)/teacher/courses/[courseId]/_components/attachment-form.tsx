@@ -114,7 +114,7 @@ export const AttachmentForm = ({
                         }}
                     />
                     <div className="text-xs text-muted-foreground mt-4">
-                        أضف أي شيء قد يحتاجه الطلاب لإكمال الكورس.
+                        أضف أي شيء قد يحتاجه الطلاب لإكمال المادة.
                     </div>
                 </div>
             )}

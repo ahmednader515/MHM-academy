@@ -160,7 +160,7 @@ const PaymentStatusPage = () => {
           <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">تم الدفع بنجاح!</h1>
           <p className="text-muted-foreground mb-6">
-              تمت معالجة دفعتك بنجاح. لديك الآن وصول كامل إلى الكورس.
+              تمت معالجة دفعتك بنجاح. لديك الآن وصول كامل إلى المادة.
           </p>
           <Button asChild size="lg" className="w-full">
             <Link href="/dashboard">

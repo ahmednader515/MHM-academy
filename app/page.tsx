@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Star, Users, BookOpen, Award, ChevronDown, Facebook } from "lucide-react";
+import { Icons } from "@/components/icons";
 import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/navbar";
@@ -241,15 +242,34 @@ export default function HomePage() {
                 <div className="text-center md:text-right">
                   <h3 className="text-lg font-bold" suppressHydrationWarning>{t('home.joinUsInvitation')}</h3>
                 </div>
-                <Button 
-                  asChild
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
-                >
-                  <Link href="https://www.facebook.com/MHM.academy100/" target="_blank" rel="noopener noreferrer">
-                    <Facebook className="h-4 w-4" />
-                    <span suppressHydrationWarning>{t('home.followUsOnFacebook')}</span>
-                  </Link>
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button 
+                    asChild
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-1.5 rounded-md transition-colors duration-200 flex items-center gap-1.5"
+                  >
+                    <Link href="https://www.facebook.com/MHM.academy100/" target="_blank" rel="noopener noreferrer">
+                      <Facebook className="h-3.5 w-3.5" />
+                      <span suppressHydrationWarning>{t('home.followUsOnFacebook')}</span>
+                    </Link>
+                  </Button>
+                  <Button 
+                    asChild
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-1.5 rounded-md transition-colors duration-200 flex items-center gap-1.5"
+                  >
+                    <Link href="https://wa.me/201002095452" target="_blank" rel="noopener noreferrer">
+                      <Image 
+                        src="/whatsapp.png" 
+                        alt="WhatsApp" 
+                        width={14} 
+                        height={14} 
+                        className="h-3.5 w-3.5"
+                      />
+                      <span suppressHydrationWarning>{t('home.contactUsOnWhatsApp')}</span>
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

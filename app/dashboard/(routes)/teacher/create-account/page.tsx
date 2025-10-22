@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Eye, EyeOff, UserPlus, ArrowLeft, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, UserPlus, ArrowLeft, CheckCircle, Check, X } from "lucide-react";
 import Link from "next/link";
 import axios, { AxiosError } from "axios";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { CurriculumSelector } from "@/components/curriculum-selector";
 
 interface CreatedUser {
   id: string;
@@ -19,23 +19,6 @@ interface CreatedUser {
   phoneNumber: string;
   role: string;
 }
-
-// Dropdown options
-const collegeOptions = [
-  "الجامعة المصرية الصينية",
-  "جامعة الدلتا",
-  "جامعة القاهرة الأهلية",
-  "جامعة المنوفية الأهلية",
-  "جامعة سفنكس",
-  "جامعة السادات الأهلية"
-];
-
-const facultyOptions = [
-  "كلية الطب البيطري",
-  "كلية العلاج الطبيعي",
-  "كلية الصيدلة",
-  "كلية طب أسنان"
-];
 
 export default function CreateAccountPage() {
   const router = useRouter();
@@ -48,8 +31,11 @@ export default function CreateAccountPage() {
     fullName: "",
     phoneNumber: "",
     email: "",
-    college: "",
-    faculty: "",
+    parentPhoneNumber: "",
+    curriculum: null as 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy' | null,
+    level: null as 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels' | null,
+    language: null as 'arabic' | 'languages' | null,
+    grade: null as string | null,
     password: "",
     confirmPassword: "",
   });
@@ -62,27 +48,50 @@ export default function CreateAccountPage() {
     }));
   };
 
-  const handleSelectChange = (name: string, value: string) => {
+  const handleCurriculumChange = (curriculum: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy' | null) => {
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      curriculum,
+      level: null, // Reset level when curriculum changes
+      language: null, // Reset language when curriculum changes
+      grade: null, // Reset grade when curriculum changes
     }));
   };
 
-  const validatePasswords = () => {
-    return {
-      match: formData.password === formData.confirmPassword,
-      isValid: formData.password === formData.confirmPassword && formData.password.length > 0,
-    };
+  const handleLevelChange = (level: 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels' | null) => {
+    setFormData((prev) => ({
+      ...prev,
+      level,
+      language: null, // Reset language when level changes
+      grade: null, // Reset grade when level changes
+    }));
   };
 
-  const passwordChecks = validatePasswords();
+  const handleLanguageChange = (language: 'arabic' | 'languages' | null) => {
+    setFormData((prev) => ({
+      ...prev,
+      language,
+      grade: null, // Reset grade when language changes
+    }));
+  };
+
+  const handleGradeChange = (grade: string | null) => {
+    setFormData((prev) => ({
+      ...prev,
+      grade,
+    }));
+  };
+
+  const formValidation = {
+    passwordMatch: formData.password === formData.confirmPassword,
+    isValid: formData.password === formData.confirmPassword && formData.password.length > 0,
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
-    if (!passwordChecks.isValid) {
+    if (!formValidation.isValid) {
       toast.error(t('teacher.passwordsDoNotMatch'));
       setIsLoading(false);
       return;
@@ -99,9 +108,11 @@ export default function CreateAccountPage() {
           fullName: "",
           phoneNumber: "",
           email: "",
-          college: "",
-          faculty: "",
-          level: "",
+          parentPhoneNumber: "",
+          curriculum: null,
+          level: null,
+          language: null,
+          grade: null,
           password: "",
           confirmPassword: "",
         });
@@ -134,9 +145,11 @@ export default function CreateAccountPage() {
       fullName: "",
       phoneNumber: "",
       email: "",
-      college: "",
-      faculty: "",
-      level: "",
+      parentPhoneNumber: "",
+      curriculum: null,
+      level: null,
+      language: null,
+      grade: null,
       password: "",
       confirmPassword: "",
     });
@@ -200,180 +213,162 @@ export default function CreateAccountPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">{t('teacher.fullName')} *</Label>
-                    <Input
-                      id="fullName"
-                      name="fullName"
-                      type="text"
-                      value={formData.fullName}
-                      onChange={handleInputChange}
-                      placeholder={t('teacher.enterFullName')}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phoneNumber">{t('teacher.phoneNumber')} *</Label>
-                    <Input
-                      id="phoneNumber"
-                      name="phoneNumber"
-                      type="tel"
-                      value={formData.phoneNumber}
-                      onChange={handleInputChange}
-                      placeholder={t('teacher.enterPhoneNumber')}
-                      required
-                    />
-                  </div>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">{t('teacher.fullName')}</Label>
+                  <Input
+                    id="fullName"
+                    name="fullName"
+                    type="text"
+                    autoComplete="name"
+                    required
+                    disabled={isLoading}
+                    className="h-10"
+                    value={formData.fullName}
+                    onChange={handleInputChange}
+                  />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">{t('teacher.email')} *</Label>
+                  <Label htmlFor="phoneNumber">{t('teacher.phoneNumber')}</Label>
+                  <Input
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    type="tel"
+                    autoComplete="tel"
+                    required
+                    disabled={isLoading}
+                    className="h-10"
+                    value={formData.phoneNumber}
+                    onChange={handleInputChange}
+                    placeholder="+20XXXXXXXXXX"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">{t('teacher.email')}</Label>
                   <Input
                     id="email"
                     name="email"
                     type="email"
+                    autoComplete="email"
+                    required
+                    disabled={isLoading}
+                    className="h-10"
                     value={formData.email}
                     onChange={handleInputChange}
-                    placeholder={t('teacher.enterEmail')}
-                    required
+                    placeholder="student@example.com"
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="college">{t('teacher.college')}</Label>
-                    <Select
-                      value={formData.college}
-                      onValueChange={(value) => handleSelectChange("college", value)}
-                      disabled={isLoading}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('teacher.selectCollege')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {collegeOptions.map((college) => (
-                          <SelectItem key={college} value={college}>
-                            {college}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="parentPhoneNumber">{t('teacher.parentPhoneNumber')}</Label>
+                  <Input
+                    id="parentPhoneNumber"
+                    name="parentPhoneNumber"
+                    type="tel"
+                    autoComplete="tel"
+                    required
+                    disabled={isLoading}
+                    className="h-10"
+                    value={formData.parentPhoneNumber}
+                    onChange={handleInputChange}
+                    placeholder="+20XXXXXXXXXX"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t('teacher.parentPhoneNumberHelp')}
+                  </p>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="faculty">{t('teacher.faculty')}</Label>
-                    <Select
-                      value={formData.faculty}
-                      onValueChange={(value) => handleSelectChange("faculty", value)}
+                <CurriculumSelector
+                  selectedCurriculum={formData.curriculum}
+                  selectedLevel={formData.level}
+                  selectedLanguage={formData.language}
+                  selectedGrade={formData.grade}
+                  onCurriculumChange={handleCurriculumChange}
+                  onLevelChange={handleLevelChange}
+                  onLanguageChange={handleLanguageChange}
+                  onGradeChange={handleGradeChange}
+                />
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">{t('teacher.password')}</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      required
                       disabled={isLoading}
+                      className="h-10"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute rtl:left-0 ltr:right-0 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('teacher.selectFaculty')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {facultyOptions.map((faculty) => (
-                          <SelectItem key={faculty} value={faculty}>
-                            {faculty}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="password">{t('teacher.password')} *</Label>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        name="password"
-                        type={showPassword ? "text" : "password"}
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        placeholder={t('teacher.enterPassword')}
-                        required
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute rtl:left-0 ltr:right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">{t('teacher.confirmPassword')} *</Label>
-                    <div className="relative">
-                      <Input
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
-                        value={formData.confirmPassword}
-                        onChange={handleInputChange}
-                        placeholder={t('teacher.confirmPasswordPlaceholder')}
-                        required
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute rtl:left-0 ltr:right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">{t('teacher.confirmPassword')}</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      required
+                      disabled={isLoading}
+                      className="h-10"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute rtl:left-0 ltr:right-0 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
                   </div>
                 </div>
 
-                {formData.password && formData.confirmPassword && (
-                  <div className={`text-sm ${passwordChecks.match ? 'text-green-600' : 'text-red-600'}`}>
-                    {passwordChecks.match ? (
-                      <span className="flex items-center gap-1">
-                        <span className="w-2 h-2 bg-green-600 rounded-full"></span>
-                        {t('teacher.passwordsMatch')}
-                      </span>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    {formValidation.passwordMatch ? (
+                      <Check className="h-4 w-4 text-green-500" />
                     ) : (
-                      <span className="flex items-center gap-1">
-                        <span className="w-2 h-2 bg-red-600 rounded-full"></span>
-                        {t('teacher.passwordsDoNotMatch')}
-                      </span>
+                      <X className="h-4 w-4 text-red-500" />
                     )}
+                    <span className="text-sm text-muted-foreground">{t('teacher.passwordsMatch')}</span>
                   </div>
-                )}
-
-                <div className="flex gap-4">
-                  <Button
-                    type="submit"
-                    disabled={isLoading || !passwordChecks.isValid}
-                    className="flex-1 bg-[#090919] hover:bg-[#090919]/90 text-white"
-                  >
-                    {isLoading ? t('teacher.creating') : t('teacher.createAccount')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={resetForm}
-                  >
-                    {t('teacher.resetForm')}
-                  </Button>
                 </div>
+
+                <Button
+                  type="submit"
+                  className="w-full h-10 bg-[#090919] hover:bg-[#090919]/90 text-white"
+                  disabled={isLoading || !formValidation.isValid}
+                >
+                  {isLoading ? t('teacher.creating') : t('teacher.createAccount')}
+                </Button>
               </form>
             </CardContent>
           </Card>

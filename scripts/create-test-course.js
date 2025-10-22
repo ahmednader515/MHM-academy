@@ -20,8 +20,8 @@ async function main() {
         const course = await prisma.course.create({
             data: {
                 userId: userId,
-                title: "كورس الرياضيات للصف الأول الثانوي",
-                description: "كورس شامل في الرياضيات للصف الأول الثانوي يغطي جميع أجزاء المنهج",
+                title: "مادة الرياضيات للصف الأول الثانوي",
+                description: "مادة شامل في الرياضيات للصف الأول الثانوي يغطي جميع أجزاء المنهج",
                 imageUrl: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&h=600&fit=crop",
                 price: 0,
                 isPublished: true,

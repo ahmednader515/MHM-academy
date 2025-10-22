@@ -178,7 +178,7 @@ const QuizResultsContent = () => {
                                 <p className="text-sm text-muted-foreground">{quizDetails.title}</p>
                             </div>
                             <div>
-                                <h4 className="font-medium mb-1">الكورس</h4>
+                                <h4 className="font-medium mb-1">المادة</h4>
                                 <p className="text-sm text-muted-foreground">{quizDetails.course?.title}</p>
                             </div>
                             <div>
