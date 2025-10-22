@@ -474,7 +474,11 @@
     "completionRate": "معدل الاكتمال",
     "searchPlaceholder": "ابحث عن مواد تعليمية...",
     "searchButton": "بحث",
-    "loggingOut": "جاري تسجيل الخروج..."
+    "loggingOut": "جاري تسجيل الخروج...",
+    "whatsappSupport": "تحتاج لزيادة رصيدك؟",
+    "whatsappSupportDescription": "تواصل مع المدراء عبر واتساب لإضافة أموال إلى حسابك",
+    "contactWhatsApp": "تواصل عبر واتساب",
+    "whatsappIcon": "واتساب"
   },
   "student": {
     "loading": "جاري التحميل...",

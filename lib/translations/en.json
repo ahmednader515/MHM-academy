@@ -467,7 +467,11 @@
     "completionRate": "Completion Rate",
     "searchPlaceholder": "Search for educational courses...",
     "searchButton": "Search",
-    "loggingOut": "Logging out..."
+    "loggingOut": "Logging out...",
+    "whatsappSupport": "Need to increase your balance?",
+    "whatsappSupportDescription": "Contact our administrators via WhatsApp to add funds to your account",
+    "contactWhatsApp": "Contact via WhatsApp",
+    "whatsappIcon": "WhatsApp"
   },
   "student": {
     "loading": "Loading...",

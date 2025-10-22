@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { Wallet, Plus, History, ArrowUpRight } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { Icons } from "@/components/icons";
 
 interface BalanceTransaction {
   id: string;
@@ -135,6 +136,41 @@ export default function BalancePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* WhatsApp Support Indicator - Only for students */}
+      {isStudent && (
+        <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0">
+                <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
+                  <Icons.whatsapp className="h-6 w-6 text-green-600 dark:text-green-400" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-green-800 dark:text-green-200 mb-1">
+                  {t('dashboard.whatsappSupport')}
+                </h3>
+                <p className="text-sm text-green-700 dark:text-green-300 mb-3">
+                  {t('dashboard.whatsappSupportDescription')}
+                </p>
+                <Button
+                  onClick={() => {
+                    const whatsappNumber = "201002095452"; // Admin WhatsApp number
+                    const userInfo = session?.user?.name ? ` (${session.user.name})` : '';
+                    const message = encodeURIComponent(`Hello! I need to increase my account balance${userInfo}. Please help me add funds to my account.`);
+                    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Icons.whatsapp className="h-4 w-4 mr-2" />
+                  {t('dashboard.contactWhatsApp')}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Add Balance Section - Only for non-students */}
       {!isStudent && (
