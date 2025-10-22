@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { IconBadge } from "@/components/icon-badge";
 import { LayoutDashboard, ArrowLeft } from "lucide-react";
 import { TitleForm } from "./title-form";
@@ -67,7 +68,7 @@ export const CourseEditContent = ({
     };
 
     return (
-        <>
+        <div>
             {!course.isPublished && (
                 <Banner
                     variant="warning"
@@ -86,9 +87,9 @@ export const CourseEditContent = ({
                         <h1 className="text-2xl font-medium">
                             {t('teacher.courseSetup')}
                         </h1>
-                            <span className="text-sm text-slate-700">
-                                {t('teacher.completeAllFields')} {completionText}
-                            </span>
+                        <span className="text-sm text-slate-700">
+                            {t('teacher.completeAllFields')} {completionText}
+                        </span>
                         {!isComplete && (
                             <div className="text-xs text-muted-foreground mt-2">
                                 <div className="grid grid-cols-2 gap-2">
@@ -115,7 +116,6 @@ export const CourseEditContent = ({
                                 </div>
                             </div>
                         )}
-                        </div>
                     </div>
                     <Actions
                         disabled={!isComplete}
@@ -180,6 +180,6 @@ export const CourseEditContent = ({
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
