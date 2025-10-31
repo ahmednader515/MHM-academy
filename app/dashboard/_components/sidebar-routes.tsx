@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart, Compass, Layout, List, Wallet, Shield, Users, Eye, TrendingUp, BookOpen, FileText, Award, PlusSquare, Video } from "lucide-react";
+import { BarChart, Compass, Layout, List, Wallet, Shield, Users, Eye, TrendingUp, BookOpen, FileText, Award, PlusSquare, Video, GraduationCap } from "lucide-react";
 import { SidebarItem } from "./sidebar-item";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/contexts/language-context";
@@ -24,6 +24,11 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             icon: Wallet,
             label: t('dashboard.balance'),
             href: "/dashboard/balance",
+        },
+        {
+            icon: Award,
+            label: t('certificates.myCertificates') || 'My Certificates',
+            href: "/dashboard/certificates",
         },
     ];
 
@@ -57,6 +62,16 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             icon: Wallet,
             label: t('dashboard.balance'),
             href: "/dashboard/teacher/balance",
+        },
+        {
+            icon: Eye,
+            label: t('dashboard.studentProgress') || 'Student Progress',
+            href: "/dashboard/teacher/progress",
+        },
+        {
+            icon: Award,
+            label: t('certificates.certificates') || 'Certificates',
+            href: "/dashboard/teacher/certificates",
         },
         {
             icon: Shield,
@@ -113,6 +128,16 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             icon: BookOpen,
             label: t('admin.addRemoveCourses'),
             href: "/dashboard/admin/add-courses",
+        },
+        {
+            icon: GraduationCap,
+            label: t('admin.teachersManagement') || 'Teachers',
+            href: "/dashboard/admin/teachers",
+        },
+        {
+            icon: Award,
+            label: t('certificates.certificates') || 'Certificates',
+            href: "/dashboard/admin/certificates",
         },
     ];
 

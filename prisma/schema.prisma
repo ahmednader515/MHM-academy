@@ -32,6 +32,10 @@ model User {
   purchases           Purchase[]
   quizResults         QuizResult[]
   userProgress        UserProgress[]
+  homeworkSubmissions HomeworkSubmission[]
+  activitySubmissions ActivitySubmission[]
+  certificates        Certificate[]
+  assignedCertificates Certificate[]      @relation("CertificateAssigner")
   // Parent-child relationships
   parent              User?                @relation("ParentChild", fields: [parentPhoneNumber], references: [phoneNumber])
   children            User[]               @relation("ParentChild")
@@ -73,23 +77,25 @@ model Attachment {
 }
 
 model Chapter {
-  id             String              @id @default(uuid())
-  title          String
-  description    String?
-  videoUrl       String?
-  videoType      String?             @default("UPLOAD")
-  youtubeVideoId String?
-  documentUrl    String?
-  documentName   String?
-  position       Int
-  isPublished    Boolean             @default(false)
-  isFree         Boolean             @default(false)
-  courseId       String
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  course         Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  attachments    ChapterAttachment[]
-  userProgress   UserProgress[]
+  id                 String               @id @default(uuid())
+  title              String
+  description        String?
+  videoUrl           String?
+  videoType          String?               @default("UPLOAD")
+  youtubeVideoId     String?
+  documentUrl        String?
+  documentName       String?
+  position           Int
+  isPublished        Boolean               @default(false)
+  isFree             Boolean               @default(false)
+  courseId           String
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  course             Course                @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  attachments        ChapterAttachment[]
+  userProgress       UserProgress[]
+  homeworkSubmissions HomeworkSubmission[]
+  activities         Activity[]
 
   @@index([courseId])
 }
@@ -236,4 +242,64 @@ model LiveStream {
   course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@index([courseId])
+}
+
+model HomeworkSubmission {
+  id        String   @id @default(uuid())
+  studentId String
+  chapterId String
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([chapterId])
+  @@index([studentId, chapterId])
+}
+
+model Activity {
+  id          String   @id @default(uuid())
+  chapterId   String
+  title       String
+  description String?
+  isRequired  Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  chapter     Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  submissions ActivitySubmission[]
+
+  @@index([chapterId])
+}
+
+model ActivitySubmission {
+  id        String   @id @default(uuid())
+  studentId String
+  activityId String
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  activity  Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([activityId])
+  @@index([studentId, activityId])
+}
+
+model Certificate {
+  id          String   @id @default(uuid())
+  studentId   String
+  assignedBy  String
+  imageUrl    String
+  title       String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  student     User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assigner    User     @relation("CertificateAssigner", fields: [assignedBy], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([assignedBy])
 }

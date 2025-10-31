@@ -24,6 +24,24 @@ export const ourFileRouter = {
     chapterVideo: f({ video: {maxFileCount: 1, maxFileSize: "512GB"} })
     .middleware(() => handleAuth())
     .onUploadComplete(() => {}),
+
+    homeworkImage: f({ image: {maxFileSize: "10MB", maxFileCount: 1} })
+    .middleware(() => handleAuth())
+    .onUploadComplete(async ({ file }) => {
+        return { url: file.url, name: file.name };
+    }),
+
+    activityImage: f({ image: {maxFileSize: "10MB", maxFileCount: 1} })
+    .middleware(() => handleAuth())
+    .onUploadComplete(async ({ file }) => {
+        return { url: file.url, name: file.name };
+    }),
+
+    certificateImage: f({ image: {maxFileSize: "10MB", maxFileCount: 1} })
+    .middleware(() => handleAuth())
+    .onUploadComplete(async ({ file }) => {
+        return { url: file.url, name: file.name };
+    }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

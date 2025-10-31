@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import axios, { AxiosError } from "axios";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Lock, FileText, Download } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Lock, FileText, Download, Upload, Image as ImageIcon, ClipboardList } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { PlyrVideoPlayer } from "@/components/plyr-video-player";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { FileUpload } from "@/components/file-upload";
 
 interface Chapter {
   id: string;
@@ -45,6 +47,11 @@ const ChapterPage = () => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [courseProgress, setCourseProgress] = useState(0);
   const [hasAccess, setHasAccess] = useState(false);
+  const [homework, setHomework] = useState<{ id: string; imageUrl: string; createdAt: string } | null>(null);
+  const [uploadingHomework, setUploadingHomework] = useState(false);
+  const [activities, setActivities] = useState<Array<{ id: string; title: string; description: string | null; isRequired: boolean }>>([]);
+  const [activitySubmissions, setActivitySubmissions] = useState<{ [activityId: string]: { id: string; imageUrl: string; createdAt: string } | null }>({});
+  const [uploadingActivities, setUploadingActivities] = useState<{ [activityId: string]: boolean }>({});
 
   console.log("🔍 ChapterPage render:", {
     chapterId: routeParams.chapterId,
@@ -159,6 +166,41 @@ const ChapterPage = () => {
         setIsCompleted(chapterResponse.data.userProgress?.[0]?.isCompleted || false);
         setCourseProgress(progressResponse.data.progress);
         setHasAccess(accessResponse.data.hasAccess);
+
+        // Fetch homework submission
+        try {
+          const homeworkResponse = await axios.get(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/homework`);
+          setHomework(homeworkResponse.data);
+        } catch (error) {
+          // Homework might not exist yet, that's ok
+          setHomework(null);
+        }
+
+        // Fetch activities and their submissions
+        try {
+          const activitiesResponse = await axios.get(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/activities`);
+          const activitiesList = activitiesResponse.data || [];
+          setActivities(activitiesList);
+          
+          // Fetch submissions for each activity
+          const submissionPromises = activitiesList.map(async (activity: { id: string }) => {
+            try {
+              const submissionResponse = await axios.get(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/activities/${activity.id}/submission`);
+              return { activityId: activity.id, submission: submissionResponse.data };
+            } catch (error) {
+              return { activityId: activity.id, submission: null };
+            }
+          });
+          const submissionResults = await Promise.all(submissionPromises);
+          const submissionsMap: { [activityId: string]: { id: string; imageUrl: string; createdAt: string } | null } = {};
+          submissionResults.forEach(result => {
+            submissionsMap[result.activityId] = result.submission;
+          });
+          setActivitySubmissions(submissionsMap);
+        } catch (error) {
+          console.error("Error fetching activities:", error);
+          setActivities([]);
+        }
       } catch (error) {
         const axiosError = error as AxiosError;
         console.error("🔍 Error fetching data:", axiosError);
@@ -337,6 +379,221 @@ const ChapterPage = () => {
             <div className="prose max-w-none">
               <div dangerouslySetInnerHTML={{ __html: chapter.description || "" }} />
             </div>
+
+            {/* Homework Upload Section */}
+            <div className="mt-6 p-4 border rounded-lg bg-card">
+              <div className="flex items-center gap-2 mb-3">
+                <Upload className="h-5 w-5 text-muted-foreground" />
+                <h3 className="text-lg font-semibold">{t('student.homework') || 'Submit Homework'}</h3>
+              </div>
+              
+              {homework ? (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4 p-4 bg-secondary/50 border rounded-md">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">{t('student.submittedHomework') || 'Submitted Homework'}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        {t('student.submittedOn') || 'Submitted on'}: {new Date(homework.createdAt).toLocaleDateString()}
+                      </p>
+                      <div className="relative w-full max-w-md">
+                        <img 
+                          src={homework.imageUrl} 
+                          alt="Homework submission"
+                          className="w-full h-auto rounded-md border"
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.open(homework.imageUrl, '_blank')}
+                      className="flex items-center gap-1"
+                    >
+                      <ImageIcon className="h-4 w-4" />
+                      {t('student.viewFullSize') || 'View Full Size'}
+                    </Button>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {t('student.homeworkSubmittedMessage') || 'You can update your submission by uploading a new image.'}
+                  </div>
+                  <FileUpload
+                    endpoint="homeworkImage"
+                    onChange={async (res) => {
+                      if (res?.url) {
+                        setUploadingHomework(true);
+                        try {
+                          await axios.post(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/homework`, {
+                            imageUrl: res.url,
+                          });
+                          toast.success(t('student.homeworkSubmittedSuccess') || 'Homework submitted successfully!');
+                          // Refresh homework data
+                          const homeworkResponse = await axios.get(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/homework`);
+                          setHomework(homeworkResponse.data);
+                        } catch (error) {
+                          toast.error(t('student.homeworkSubmitFailed') || 'Failed to submit homework');
+                          console.error("Error submitting homework:", error);
+                        } finally {
+                          setUploadingHomework(false);
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {t('student.uploadHomeworkMessage') || 'Upload an image of your homework for this chapter.'}
+                  </p>
+                  <FileUpload
+                    endpoint="homeworkImage"
+                    onChange={async (res) => {
+                      if (res?.url) {
+                        setUploadingHomework(true);
+                        try {
+                          await axios.post(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/homework`, {
+                            imageUrl: res.url,
+                          });
+                          toast.success(t('student.homeworkSubmittedSuccess') || 'Homework submitted successfully!');
+                          // Refresh homework data
+                          const homeworkResponse = await axios.get(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/homework`);
+                          setHomework(homeworkResponse.data);
+                        } catch (error) {
+                          toast.error(t('student.homeworkSubmitFailed') || 'Failed to submit homework');
+                          console.error("Error submitting homework:", error);
+                        } finally {
+                          setUploadingHomework(false);
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Required Activities Section */}
+            {activities.length > 0 && (
+              <div className="mt-6 p-4 border rounded-lg bg-card">
+                <div className="flex items-center gap-2 mb-4">
+                  <ClipboardList className="h-5 w-5 text-muted-foreground" />
+                  <h3 className="text-lg font-semibold">{t('student.requiredActivities') || 'Required Activities'}</h3>
+                </div>
+                
+                <div className="space-y-6">
+                  {activities.map((activity) => {
+                    const submission = activitySubmissions[activity.id];
+                    const isUploading = uploadingActivities[activity.id] || false;
+                    
+                    return (
+                      <div key={activity.id} className="p-4 border rounded-md space-y-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-semibold">{activity.title}</h4>
+                            {activity.isRequired && (
+                              <Badge variant="destructive" className="text-xs">
+                                {t('student.required') || 'Required'}
+                              </Badge>
+                            )}
+                          </div>
+                          {activity.description && (
+                            <p className="text-sm text-muted-foreground mb-3">
+                              {activity.description}
+                            </p>
+                          )}
+                        </div>
+
+                        {submission ? (
+                          <div className="space-y-4">
+                            <div className="flex items-start gap-4 p-4 bg-secondary/50 border rounded-md">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                                  <span className="text-sm font-medium">{t('student.submittedActivity') || 'Submitted Activity'}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground mb-3">
+                                  {t('student.submittedOn') || 'Submitted on'}: {new Date(submission.createdAt).toLocaleDateString()}
+                                </p>
+                                <div className="relative w-full max-w-md">
+                                  <img 
+                                    src={submission.imageUrl} 
+                                    alt={`Activity submission for ${activity.title}`}
+                                    className="w-full h-auto rounded-md border"
+                                  />
+                                </div>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => window.open(submission.imageUrl, '_blank')}
+                                className="flex items-center gap-1"
+                              >
+                                <ImageIcon className="h-4 w-4" />
+                                {t('student.viewFullSize') || 'View Full Size'}
+                              </Button>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {t('student.activitySubmittedMessage') || 'You can update your submission by uploading a new image.'}
+                            </div>
+                            <FileUpload
+                              endpoint="activityImage"
+                              onChange={async (res) => {
+                                if (res?.url) {
+                                  setUploadingActivities(prev => ({ ...prev, [activity.id]: true }));
+                                  try {
+                                    await axios.post(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/activities/${activity.id}/submission`, {
+                                      imageUrl: res.url,
+                                    });
+                                    toast.success(t('student.activitySubmittedSuccess') || 'Activity submitted successfully!');
+                                    // Refresh submission
+                                    const submissionResponse = await axios.get(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/activities/${activity.id}/submission`);
+                                    setActivitySubmissions(prev => ({ ...prev, [activity.id]: submissionResponse.data }));
+                                  } catch (error) {
+                                    toast.error(t('student.activitySubmitFailed') || 'Failed to submit activity');
+                                    console.error("Error submitting activity:", error);
+                                  } finally {
+                                    setUploadingActivities(prev => ({ ...prev, [activity.id]: false }));
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            <p className="text-sm text-muted-foreground">
+                              {t('student.uploadActivityMessage') || 'Upload an image of your completed activity work.'}
+                            </p>
+                            <FileUpload
+                              endpoint="activityImage"
+                              onChange={async (res) => {
+                                if (res?.url) {
+                                  setUploadingActivities(prev => ({ ...prev, [activity.id]: true }));
+                                  try {
+                                    await axios.post(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/activities/${activity.id}/submission`, {
+                                      imageUrl: res.url,
+                                    });
+                                    toast.success(t('student.activitySubmittedSuccess') || 'Activity submitted successfully!');
+                                    // Refresh submission
+                                    const submissionResponse = await axios.get(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/activities/${activity.id}/submission`);
+                                    setActivitySubmissions(prev => ({ ...prev, [activity.id]: submissionResponse.data }));
+                                  } catch (error) {
+                                    toast.error(t('student.activitySubmitFailed') || 'Failed to submit activity');
+                                    console.error("Error submitting activity:", error);
+                                  } finally {
+                                    setUploadingActivities(prev => ({ ...prev, [activity.id]: false }));
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             
             {/* Attachments Section */}
             {(chapter.attachments && chapter.attachments.length > 0) && (

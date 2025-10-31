@@ -1,29 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+
 
 export async function GET(req: NextRequest) {
     try {
-        console.log("[TEACHER_USERS_GET] Starting request");
-        
-        const session = await getServerSession(authOptions);
-        console.log("[TEACHER_USERS_GET] Session:", { 
-            userId: session?.user?.id, 
-            role: session?.user?.role,
-            hasSession: !!session,
-            hasUser: !!session?.user
-        });
+        const { userId, user } = await auth();
 
-        if (!session?.user) {
-            console.log("[TEACHER_USERS_GET] No session or user");
+        if (!userId || !user) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        if (session.user.role !== "TEACHER") {
-            console.log("[TEACHER_USERS_GET] Access denied:", { userId: session.user.id, role: session.user.role });
+        // Check if user is teacher or admin
+        if (user.role !== "TEACHER" && user.role !== "ADMIN") {
             return new NextResponse("Forbidden", { status: 403 });
         }
+
 
         console.log("[TEACHER_USERS_GET] User is teacher, fetching users from database");
         
