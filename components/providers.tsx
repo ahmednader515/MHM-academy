@@ -3,6 +3,7 @@
 import { SessionProvider, useSession } from "next-auth/react";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ToastProvider } from "@/components/providers/toaster-provider";
+import { QueryProvider } from "@/components/providers/query-provider";
 import { Toaster } from "sonner";
 import { RTLProvider } from "@/components/providers/rtl-provider";
 import { LanguageProvider } from "@/lib/contexts/language-context";
@@ -32,24 +33,26 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
       refetchWhenOffline={false} // Don't refetch when offline
     >
       <SessionHandler>
-        <NavigationProvider>
-          <LanguageProvider>
-            <CurrencyProvider>
-              <RTLProvider>
-                <ThemeProvider
-                  attribute="class"
-                  defaultTheme="light"
-                  enableSystem={false}
-                  disableTransitionOnChange
-                >
-                  <ToastProvider />
-                  {children}
-                  <Toaster />
-                </ThemeProvider>
-              </RTLProvider>
-            </CurrencyProvider>
-          </LanguageProvider>
-        </NavigationProvider>
+        <QueryProvider>
+          <NavigationProvider>
+            <LanguageProvider>
+              <CurrencyProvider>
+                <RTLProvider>
+                  <ThemeProvider
+                    attribute="class"
+                    defaultTheme="light"
+                    enableSystem={false}
+                    disableTransitionOnChange
+                  >
+                    <ToastProvider />
+                    {children}
+                    <Toaster />
+                  </ThemeProvider>
+                </RTLProvider>
+              </CurrencyProvider>
+            </LanguageProvider>
+          </NavigationProvider>
+        </QueryProvider>
       </SessionHandler>
     </SessionProvider>
   );
