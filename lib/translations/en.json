@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "Loading...",
+    "pleaseWait": "Please wait",
     "error": "Error occurred",
     "success": "Success",
     "direction": "ltr",

@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "جاري التحميل...",
+    "pleaseWait": "يرجى الانتظار",
     "error": "حدث خطأ",
     "success": "تم بنجاح",
     "direction": "rtl",
