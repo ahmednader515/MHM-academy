@@ -5,6 +5,7 @@ import { LucideIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { SheetClose } from "@/components/ui/sheet";
+import { useNavigation } from "@/lib/contexts/navigation-context";
 
 interface SidebarItemProps {
     icon: LucideIcon;
@@ -22,12 +23,16 @@ export const SidebarItem = ({
 
     const pathName = usePathname();
     const router = useRouter();
+    const { startNavigating } = useNavigation();
     
 
     const isActive = pathName === href;
 
     const onClick = () => {
-        if (!isActive) router.push(href);
+        if (!isActive) {
+            startNavigating();
+            router.push(href);
+        }
     }
 
     const ButtonEl = (

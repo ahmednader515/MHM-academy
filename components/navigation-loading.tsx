@@ -1,31 +1,67 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useNavigation } from "@/lib/contexts/navigation-context";
 
 export const NavigationLoading = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { t } = useLanguage();
-  const [isLoading, setIsLoading] = useState(false);
+  const { isNavigating, startNavigating, stopNavigating } = useNavigation();
+  const prevPathnameRef = useRef(pathname);
 
   useEffect(() => {
-    // Start loading
-    setIsLoading(true);
+    // Function to handle all clicks
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      
+      // Check if click is on or inside a link or button
+      const link = target.closest('a');
+      const button = target.closest('button');
+      
+      if (link && link.href && !link.href.startsWith('#') && !link.target && !link.getAttribute('download')) {
+        try {
+          const url = new URL(link.href);
+          // Check if it's an internal navigation to a different page
+          if (url.origin === window.location.origin && url.pathname !== pathname) {
+            startNavigating();
+          }
+        } catch (e) {
+          // Invalid URL, ignore
+        }
+      } else if (button) {
+        // Handle button clicks that might trigger navigation
+        const onClick = button.getAttribute('onclick');
+        if (onClick && (onClick.includes('router.push') || onClick.includes('navigate'))) {
+          startNavigating();
+        }
+      }
+    };
 
-    // Complete loading after a short delay (route has changed)
-    const completeTimer = setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
+    // Listen for clicks
+    document.addEventListener('click', handleClick, true);
+    
+    // Listen for popstate (back/forward buttons)
+    window.addEventListener('popstate', startNavigating);
 
     return () => {
-      clearTimeout(completeTimer);
+      document.removeEventListener('click', handleClick, true);
+      window.removeEventListener('popstate', startNavigating);
     };
-  }, [pathname, searchParams]);
+  }, [pathname, startNavigating]);
 
-  if (!isLoading) return null;
+  useEffect(() => {
+    // Only stop loading if the pathname has actually changed
+    if (isNavigating && prevPathnameRef.current !== pathname) {
+      stopNavigating();
+      prevPathnameRef.current = pathname;
+    }
+  }, [pathname, searchParams, isNavigating, stopNavigating]);
+
+  if (!isNavigating) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-black/60 via-black/50 to-black/60 backdrop-blur-md animate-in fade-in duration-200">

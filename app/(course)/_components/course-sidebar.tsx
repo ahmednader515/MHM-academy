@@ -6,6 +6,7 @@ import { CheckCircle, Circle } from "lucide-react";
 import axios from "axios";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useNavigation } from "@/lib/contexts/navigation-context";
 
 interface Chapter {
   id: string;
@@ -58,6 +59,7 @@ interface CourseSidebarProps {
 export const CourseSidebar = ({ course }: CourseSidebarProps) => {
   const router = useRouter();
   const params = useParams();
+  const { startNavigating } = useNavigation();
   const pathname = usePathname();
   const { t } = useLanguage();
   const [courseContent, setCourseContent] = useState<CourseContent[]>([]);
@@ -107,6 +109,7 @@ export const CourseSidebar = ({ course }: CourseSidebarProps) => {
     const courseId = course?.id || params.courseId;
     if (courseId) {
       setSelectedContentId(content.id);
+      startNavigating();
       if (content.type === 'chapter') {
         router.push(`/courses/${courseId}/chapters/${content.id}`);
       } else if (content.type === 'quiz') {
