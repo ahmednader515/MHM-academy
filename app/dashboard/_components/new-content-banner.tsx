@@ -194,7 +194,7 @@ export const NewContentBanner = () => {
                 {getTypeLabel(currentItem.type)}
               </span>
               <span className="text-white/80 text-xs">
-                {format(new Date(currentItem.createdAt), 'PPp', { 
+                {format(new Date(currentItem.createdAt), 'PPP', { 
                   locale: language === 'ar' ? ar : undefined 
                 })}
               </span>
@@ -218,7 +218,7 @@ export const NewContentBanner = () => {
 
             {currentItem.description && (
               <p className="text-white/80 text-sm line-clamp-2 mb-3">
-                {currentItem.description}
+                {currentItem.description.replace(/<[^>]*>/g, '')}
               </p>
             )}
 

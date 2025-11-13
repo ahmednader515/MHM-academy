@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Eye } from "lucide-react";
+import { Search, Eye, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/contexts/language-context";
@@ -73,6 +73,10 @@ export default function AdminQuizzesPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">{t('dashboard.allQuizzes')}</h1>
+        <Button onClick={() => router.push("/dashboard/admin/quizzes/create")}>
+          <Plus className="h-4 w-4 mr-2" />
+          {t('quiz.createNewQuiz')}
+        </Button>
       </div>
 
       <Card>

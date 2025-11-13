@@ -62,7 +62,15 @@ export const PlyrVideoPlayer = ({
         ],
         settings: ["speed", "quality", "loop"],
         speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
-        youtube: { rel: 0, modestbranding: 1 },
+        youtube: { 
+          rel: 0, 
+          modestbranding: 1,
+          controls: 0,
+          showinfo: 0,
+          iv_load_policy: 3,
+          fs: 0,
+          disablekb: 1
+        },
         ratio: "16:9"
       });
 
