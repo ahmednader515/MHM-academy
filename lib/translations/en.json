@@ -221,6 +221,11 @@
     "balance": "Balance",
     "currentBalance": "Current Balance",
     "points": "Points",
+    "howPointsWork": "How Points Work",
+    "earnPoints": "Earn Points",
+    "earnPointsDesc": "Watch lessons and complete chapters to earn points",
+    "usePoints": "Use Points",
+    "usePointsDesc": "Contact your teacher to redeem points for discounts on courses",
     "purchasedCourses": "Purchased Courses",
     "enrolledCourses": "Enrolled Courses",
     "enrollInFreeCourse": "Enroll in Free Course",
@@ -1248,5 +1253,16 @@
     "fillRequired": "Please fill in all required fields",
     "createdSuccess": "Certificate created successfully!",
     "createError": "Failed to create certificate"
+  },
+  "newContent": {
+    "title": "What's New",
+    "newChapter": "New Chapter",
+    "newQuiz": "New Quiz",
+    "newLivestream": "New Livestream",
+    "newCertificate": "New Certificate",
+    "newContent": "New Content",
+    "checkItOut": "Check it out",
+    "viewNow": "View Now",
+    "from": "From"
   }
 }

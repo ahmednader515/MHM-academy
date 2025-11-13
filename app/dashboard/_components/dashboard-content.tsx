@@ -2,10 +2,17 @@
 
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Play, Clock, Trophy, Wallet, TrendingUp, BookOpen as BookOpenIcon } from "lucide-react";
+import { BookOpen, Play, Clock, Trophy, Wallet, TrendingUp, BookOpen as BookOpenIcon, Star, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useLanguage } from "@/lib/contexts/language-context";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { NewContentBanner } from "./new-content-banner";
 
 type Course = {
   id: string;
@@ -62,7 +69,7 @@ type StudentStats = {
 };
 
 interface DashboardContentProps {
-  user: { balance?: number | null } | null;
+  user: { balance?: number | null; points?: number | null } | null;
   lastWatchedChapter: LastWatchedChapter | null;
   studentStats: StudentStats;
   coursesWithProgress: CourseWithProgress[];
@@ -78,11 +85,62 @@ export const DashboardContent = ({
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
+      {/* Header with Points */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{t('dashboard.welcomeToDashboard')}</h1>
-        <p className="text-muted-foreground">{t('dashboard.continueLearning')}</p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">{t('dashboard.welcomeToDashboard')}</h1>
+            <p className="text-muted-foreground">{t('dashboard.continueLearning')}</p>
+          </div>
+          {/* Points Display */}
+          <div className="bg-gradient-to-br from-yellow-400 via-yellow-500 to-amber-500 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 min-w-[200px]">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <p className="text-yellow-900 text-sm font-medium flex items-center gap-1">
+                    <Star className="h-4 w-4 fill-yellow-900" />
+                    {t('navigation.points')}
+                  </p>
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button className="focus:outline-none">
+                          <HelpCircle className="h-4 w-4 text-yellow-900/70 hover:text-yellow-900 transition-colors cursor-help" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs bg-white text-gray-900 border-2 border-yellow-400 shadow-lg" side="bottom">
+                        <div className="text-sm space-y-2 p-2">
+                          <p className="font-semibold text-yellow-700 flex items-center gap-1">
+                            <Star className="h-4 w-4 fill-yellow-600" />
+                            {t('dashboard.howPointsWork')}
+                          </p>
+                          <div className="space-y-1.5">
+                            <p className="text-xs">
+                              <span className="font-medium">📚 {t('dashboard.earnPoints')}:</span> {t('dashboard.earnPointsDesc')}
+                            </p>
+                            <p className="text-xs">
+                              <span className="font-medium">🎁 {t('dashboard.usePoints')}:</span> {t('dashboard.usePointsDesc')}
+                            </p>
+                          </div>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <p className="text-3xl font-bold text-white drop-shadow-lg">
+                  {user?.points || 0}
+                </p>
+              </div>
+              <div className="bg-white/20 backdrop-blur-sm rounded-full p-3">
+                <Trophy className="h-8 w-8 text-white" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* New Content Banner */}
+      <NewContentBanner />
 
       {/* Stats and Balance Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

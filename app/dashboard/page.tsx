@@ -81,7 +81,8 @@ const CoursesPage = async () => {
       email: true,
       image: true,
       role: true,
-      balance: true
+      balance: true,
+      points: true
     },
   });
 

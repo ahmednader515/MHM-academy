@@ -228,6 +228,11 @@
     "balance": "الرصيد",
     "currentBalance": "الرصيد الحالي",
     "points": "النقاط",
+    "howPointsWork": "كيف تعمل النقاط",
+    "earnPoints": "احصل على النقاط",
+    "earnPointsDesc": "شاهد الدروس وأكمل الفصول للحصول على النقاط",
+    "usePoints": "استخدم النقاط",
+    "usePointsDesc": "تواصل مع معلمك لاستبدال النقاط بخصومات على المواد",
     "purchasedCourses": "المواد المشتراة",
     "enrolledCourses": "المواد المسجلة",
     "enrollInFreeCourse": "الاشتراك في المادة المجاني",
@@ -1251,5 +1256,16 @@
     "fillRequired": "يرجى ملء جميع الحقول المطلوبة",
     "createdSuccess": "تم إنشاء الشهادة بنجاح!",
     "createError": "فشل في إنشاء الشهادة"
+  },
+  "newContent": {
+    "title": "ما الجديد",
+    "newChapter": "فصل جديد",
+    "newQuiz": "اختبار جديد",
+    "newLivestream": "بث مباشر جديد",
+    "newCertificate": "شهادة جديدة",
+    "newContent": "محتوى جديد",
+    "checkItOut": "شاهده الآن",
+    "viewNow": "عرض الآن",
+    "from": "من"
   }
 }
