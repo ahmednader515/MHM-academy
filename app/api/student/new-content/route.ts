@@ -161,8 +161,8 @@ export async function GET() {
       ...newCertificates.map(cert => ({
         id: cert.id,
         type: 'certificate' as const,
-        title: cert.title || 'Certificate',
-        description: cert.description,
+        title: cert.title || 'New Certificate',
+        description: cert.description || `Certificate assigned by ${cert.assigner.fullName}`,
         assignerName: cert.assigner.fullName,
         imageUrl: cert.imageUrl,
         createdAt: cert.createdAt,
