@@ -24,11 +24,32 @@ export async function GET() {
             }
           } 
         },
+        attendance: {
+          select: {
+            id: true,
+            studentId: true,
+            clickedAt: true
+          }
+        }
       },
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(liveStreams);
+    // Add attendance count and expired status
+    const now = new Date();
+    const liveStreamsWithStatus = liveStreams.map(stream => {
+      const isExpired = stream.scheduledAt && stream.duration
+        ? now > new Date(new Date(stream.scheduledAt).getTime() + stream.duration * 60 * 1000)
+        : false;
+      
+      return {
+        ...stream,
+        attendanceCount: stream.attendance.length,
+        isExpired
+      };
+    });
+
+    return NextResponse.json(liveStreamsWithStatus);
   } catch (e) {
     console.error("[ADMIN_LIVESTREAMS]", e);
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });

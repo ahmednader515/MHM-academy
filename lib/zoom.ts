@@ -33,25 +33,24 @@ export const getZoomIframeUrl = (meetingId: string): string => {
 
 // Google Meet utilities
 export const extractGoogleMeetId = (url: string): string | null => {
-    const patterns = [
-        /meet\.google\.com\/([a-z0-9-]+)/i, // Standard Google Meet URL
-        /meet\.google\.com\/[a-z0-9-]+\?authuser=([a-z0-9-]+)/i, // With authuser parameter
-        /meet\.google\.com\/[a-z0-9-]+&authuser=([a-z0-9-]+)/i, // With authuser parameter (ampersand)
-    ];
-
-    for (const pattern of patterns) {
-        const match = url.match(pattern);
-        if (match && match[1]) {
-            return match[1];
-        }
+    // Google Meet URLs are like: https://meet.google.com/abc-defg-hij
+    const pattern = /meet\.google\.com\/([a-z0-9-]+)/i;
+    const match = url.match(pattern);
+    
+    if (match && match[1]) {
+        // Extract just the meeting code, removing any query parameters
+        const meetingCode = match[1].split('?')[0].split('&')[0];
+        return meetingCode;
     }
+    
     return null;
 };
 
 export const isValidGoogleMeetUrl = (url: string): boolean => {
     const meetingId = extractGoogleMeetId(url);
-    // Google Meet IDs are typically 10-11 characters with letters, numbers, and hyphens
-    return meetingId !== null && /^[a-z0-9-]{10,11}$/i.test(meetingId);
+    // Google Meet IDs are typically 10-15 characters with letters, numbers, and hyphens
+    // Format is usually: xxx-xxxx-xxx (with hyphens)
+    return meetingId !== null && meetingId.length >= 8 && /^[a-z0-9-]+$/i.test(meetingId);
 };
 
 export const getGoogleMeetEmbedUrl = (meetingId: string): string => {

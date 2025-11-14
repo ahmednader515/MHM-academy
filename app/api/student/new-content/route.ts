@@ -32,16 +32,16 @@ export async function GET() {
       return NextResponse.json({ newContent: [] });
     }
 
-    // Define "new" as published in the last 7 days
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    // Define "new" as published in the last 24 hours
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
     // Fetch new chapters
     const newChapters = await db.chapter.findMany({
       where: {
         courseId: { in: courseIds },
         isPublished: true,
-        updatedAt: { gte: sevenDaysAgo }
+        updatedAt: { gte: twentyFourHoursAgo }
       },
       include: {
         course: {
@@ -63,7 +63,7 @@ export async function GET() {
       where: {
         courseId: { in: courseIds },
         isPublished: true,
-        updatedAt: { gte: sevenDaysAgo }
+        updatedAt: { gte: twentyFourHoursAgo }
       },
       include: {
         course: {
@@ -85,7 +85,7 @@ export async function GET() {
       where: {
         courseId: { in: courseIds },
         isPublished: true,
-        updatedAt: { gte: sevenDaysAgo }
+        updatedAt: { gte: twentyFourHoursAgo }
       },
       include: {
         course: {
@@ -106,7 +106,7 @@ export async function GET() {
     const newCertificates = await db.certificate.findMany({
       where: {
         studentId: userId,
-        createdAt: { gte: sevenDaysAgo }
+        createdAt: { gte: twentyFourHoursAgo }
       },
       include: {
         assigner: {
@@ -146,18 +146,27 @@ export async function GET() {
         createdAt: quiz.updatedAt,
         link: `/courses/${quiz.courseId}/quizzes/${quiz.id}`
       })),
-      ...newLiveStreams.map(stream => ({
-        id: stream.id,
-        type: 'livestream' as const,
-        title: stream.title,
-        description: stream.description,
-        courseId: stream.courseId,
-        courseTitle: stream.course.title,
-        courseImage: stream.course.imageUrl,
-        createdAt: stream.updatedAt,
-        scheduledAt: stream.scheduledAt,
-        link: `/courses/${stream.courseId}/livestreams/${stream.id}`
-      })),
+      ...newLiveStreams.map(stream => {
+        // Check if livestream is expired
+        const now = new Date();
+        const isExpired = stream.scheduledAt && stream.duration
+          ? now > new Date(new Date(stream.scheduledAt).getTime() + stream.duration * 60 * 1000)
+          : false;
+        
+        return {
+          id: stream.id,
+          type: 'livestream' as const,
+          title: stream.title,
+          description: stream.description,
+          courseId: stream.courseId,
+          courseTitle: stream.course.title,
+          courseImage: stream.course.imageUrl,
+          createdAt: stream.updatedAt,
+          scheduledAt: stream.scheduledAt,
+          isExpired,
+          link: `/courses/${stream.courseId}/livestreams/${stream.id}`
+        };
+      }),
       ...newCertificates.map(cert => ({
         id: cert.id,
         type: 'certificate' as const,

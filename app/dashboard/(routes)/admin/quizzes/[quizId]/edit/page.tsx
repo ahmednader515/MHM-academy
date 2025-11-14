@@ -91,18 +91,11 @@ const EditQuizPage = () => {
 
     const fetchCourses = async () => {
         try {
-            const response = await fetch("/api/admin/users?role=TEACHER");
+            const response = await fetch("/api/admin/courses");
             if (response.ok) {
-                const teachers = await response.json();
-                const allCourses: Course[] = [];
-                for (const teacher of teachers) {
-                    const coursesResponse = await fetch(`/api/courses?userId=${teacher.id}`);
-                    if (coursesResponse.ok) {
-                        const teacherCourses = await coursesResponse.json();
-                        allCourses.push(...teacherCourses.filter((c: Course) => c.isPublished));
-                    }
-                }
-                setCourses(allCourses);
+                const data = await response.json();
+                const adminCourses = data.filter((course: Course) => course.isPublished);
+                setCourses(adminCourses);
             }
         } catch (error) {
             console.error("Error fetching courses:", error);
@@ -283,8 +276,12 @@ const EditQuizPage = () => {
                 toast.success(t('quiz.quizUpdatedSuccessfully'));
                 router.push("/dashboard/admin/quizzes");
             } else {
-                const error = await response.json();
-                toast.error(error.message || t('quiz.errorUpdatingQuiz'));
+                try {
+                    const error = await response.json();
+                    toast.error(error.error || error.message || t('quiz.errorUpdatingQuiz'));
+                } catch (e) {
+                    toast.error(t('quiz.errorUpdatingQuiz'));
+                }
             }
         } catch (error) {
             console.error("Error updating quiz:", error);

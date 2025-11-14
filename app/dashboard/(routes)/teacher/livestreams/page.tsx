@@ -25,6 +25,8 @@ interface LiveStream {
   duration: number | null;
   course: { id: string; title: string };
   createdAt: string;
+  attendanceCount?: number;
+  isExpired?: boolean;
 }
 
 export default function TeacherLiveStreamsPage() {
@@ -167,6 +169,7 @@ export default function TeacherLiveStreamsPage() {
                 <TableHead className={isRTL ? "text-right" : "text-left"}>{t('admin.scheduledAt')}</TableHead>
                 <TableHead className={isRTL ? "text-right" : "text-left"}>{t('admin.duration')}</TableHead>
                 <TableHead className={isRTL ? "text-right" : "text-left"}>{t('admin.status')}</TableHead>
+                <TableHead className={isRTL ? "text-right" : "text-left"}>{t('admin.attendance')}</TableHead>
                 <TableHead className={isRTL ? "text-right" : "text-left"}>{t('admin.actions')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -203,8 +206,20 @@ export default function TeacherLiveStreamsPage() {
                     )}
                   </TableCell>
                   <TableCell className={isRTL ? "text-right" : "text-left"}>
-                    <Badge variant={liveStream.isPublished ? "default" : "secondary"}>
-                      {liveStream.isPublished ? t('admin.published') : t('admin.draft')}
+                    <div className="flex flex-col gap-1">
+                      <Badge variant={liveStream.isPublished ? "default" : "secondary"}>
+                        {liveStream.isPublished ? t('admin.published') : t('admin.draft')}
+                      </Badge>
+                      {liveStream.isExpired && (
+                        <Badge variant="destructive" className="text-xs">
+                          {t('admin.expired')}
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className={isRTL ? "text-right" : "text-left"}>
+                    <Badge variant="outline">
+                      {liveStream.attendanceCount || 0} {t('admin.students')}
                     </Badge>
                   </TableCell>
                   <TableCell className={isRTL ? "text-right" : "text-left"}>

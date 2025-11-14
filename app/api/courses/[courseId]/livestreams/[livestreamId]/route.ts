@@ -55,7 +55,61 @@ export async function GET(
       return new NextResponse("Live stream not found", { status: 404 });
     }
 
-    return NextResponse.json(liveStream);
+    // Check if livestream is expired (for students only)
+    const isExpired = liveStream.scheduledAt && liveStream.duration
+      ? new Date() > new Date(new Date(liveStream.scheduledAt).getTime() + liveStream.duration * 60 * 1000)
+      : false;
+
+    if (isExpired) {
+      return new NextResponse("Live stream has ended", { status: 410 });
+    }
+
+    // Get all course content to determine navigation
+    const [chapters, quizzes, liveStreams] = await Promise.all([
+      db.chapter.findMany({
+        where: { courseId, isPublished: true },
+        select: { id: true, position: true },
+        orderBy: { position: 'asc' }
+      }),
+      db.quiz.findMany({
+        where: { courseId, isPublished: true },
+        select: { id: true, position: true },
+        orderBy: { position: 'asc' }
+      }),
+      db.liveStream.findMany({
+        where: { courseId, isPublished: true },
+        select: { id: true, position: true },
+        orderBy: { position: 'asc' }
+      })
+    ]);
+
+    // Combine and sort all content by position
+    const allContent = [
+      ...chapters.map(c => ({ id: c.id, position: c.position, type: 'chapter' as const })),
+      ...quizzes.map(q => ({ id: q.id, position: q.position, type: 'quiz' as const })),
+      ...liveStreams.map(l => ({ id: l.id, position: l.position, type: 'livestream' as const }))
+    ].sort((a, b) => a.position - b.position);
+
+    // Find current livestream position
+    const currentIndex = allContent.findIndex(c => c.id === livestreamId && c.type === 'livestream');
+    
+    const nextContent = currentIndex >= 0 && currentIndex < allContent.length - 1
+      ? allContent[currentIndex + 1]
+      : null;
+    
+    const previousContent = currentIndex > 0
+      ? allContent[currentIndex - 1] 
+      : null;
+
+    const response = {
+      ...liveStream,
+      nextChapterId: nextContent?.id || null,
+      previousChapterId: previousContent?.id || null,
+      nextContentType: nextContent?.type || null,
+      previousContentType: previousContent?.type || null,
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error("[COURSE_LIVESTREAM_GET]", error);
     return new NextResponse("Internal Error", { status: 500 });

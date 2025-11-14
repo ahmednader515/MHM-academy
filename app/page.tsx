@@ -12,7 +12,6 @@ import { CurrencySelector } from "@/components/currency-selector";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/db"; // Import db client
 import { useLanguage } from "@/lib/contexts/language-context";
-import { useCurrency } from "@/lib/contexts/currency-context";
 
 // Define types based on Prisma schema
 type Course = {
@@ -51,7 +50,6 @@ type CourseWithProgress = Course & {
 
 export default function HomePage() {
   const { t } = useLanguage();
-  const { formatPrice } = useCurrency();
   const [courses, setCourses] = useState<CourseWithProgress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);

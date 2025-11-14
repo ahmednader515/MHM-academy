@@ -93,6 +93,7 @@ export async function GET(req: Request) {
         quizResults: {
           select: {
             id: true,
+            quizId: true,
             score: true,
             totalPoints: true,
             percentage: true,
@@ -101,6 +102,7 @@ export async function GET(req: Request) {
             createdAt: true,
             quiz: {
               select: {
+                id: true,
                 title: true,
                 course: {
                   select: {
@@ -146,15 +148,15 @@ export async function GET(req: Request) {
         course.quizzes.map(quiz => quiz.id)
       );
       const relevantQuizResults = child.quizResults.filter(result => 
-        purchasedQuizIds.includes(result.quiz.id)
+        result.quizId && purchasedQuizIds.includes(result.quizId)
       );
 
       // Calculate average score from best attempts
       const bestAttempts = new Map();
       relevantQuizResults.forEach(result => {
-        if (!bestAttempts.has(result.quiz.id) || 
-            result.percentage > bestAttempts.get(result.quiz.id)) {
-          bestAttempts.set(result.quiz.id, result.percentage);
+        if (!bestAttempts.has(result.quizId) || 
+            result.percentage > bestAttempts.get(result.quizId)) {
+          bestAttempts.set(result.quizId, result.percentage);
         }
       });
       

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { stringifyQuizOptions } from "@/lib/utils";
 
 export async function GET(req: Request) {
     try {
@@ -84,18 +85,40 @@ export async function POST(req: Request) {
                 position: position || 1,
                 timer: timer || null,
                 maxAttempts: maxAttempts || 1,
+                isPublished: true,
                 questions: {
-                    create: questions.map((q: any, index: number) => ({
-                        text: q.text,
-                        imageUrl: q.imageUrl || null,
-                        type: q.type,
-                        options: q.options || [],
-                        correctAnswer: q.type === "MULTIPLE_CHOICE" && typeof q.correctAnswer === 'number'
-                            ? q.options[q.correctAnswer]
-                            : q.correctAnswer.toString(),
-                        points: q.points,
-                        position: index + 1,
-                    })),
+                    create: questions.map((q: any, index: number) => {
+                        const rawOptions = Array.isArray(q.options) ? q.options : [];
+                        const cleanedOptions = rawOptions
+                            .filter((option: string) => typeof option === "string" && option.trim().length > 0)
+                            .map((option: string) => option.trim());
+
+                        const optionsString = q.type === "MULTIPLE_CHOICE"
+                            ? stringifyQuizOptions(cleanedOptions)
+                            : null;
+
+                        let correctAnswerValue = q.correctAnswer;
+
+                        // For multiple choice questions, convert index/value to actual option text
+                        if (q.type === "MULTIPLE_CHOICE") {
+                            if (typeof q.correctAnswer === "number") {
+                                correctAnswerValue = cleanedOptions[q.correctAnswer] ?? "";
+                            } else if (typeof q.correctAnswer === "string") {
+                                const match = cleanedOptions.find((option) => option === q.correctAnswer);
+                                correctAnswerValue = match ?? q.correctAnswer;
+                            }
+                        }
+
+                        return {
+                            text: q.text,
+                            imageUrl: q.imageUrl || null,
+                            type: q.type,
+                            options: optionsString,
+                            correctAnswer: correctAnswerValue?.toString() ?? "",
+                            points: q.points,
+                            position: index + 1,
+                        };
+                    }),
                 },
             },
             include: {

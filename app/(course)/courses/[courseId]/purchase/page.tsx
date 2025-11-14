@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { auth } from "@/lib/auth";
 import { ArrowLeft, CreditCard, Wallet, AlertCircle } from "lucide-react";
 import Link from "next/link";
-import { useCurrency } from "@/lib/contexts/currency-context";
 
 interface Course {
   id: string;
@@ -25,7 +24,6 @@ export default function PurchasePage({
 }) {
   const router = useRouter();
   const { courseId } = use(params);
-  const { formatPrice } = useCurrency();
   const [course, setCourse] = useState<Course | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -158,7 +156,7 @@ export default function PurchasePage({
                 </div>
               )}
               <div className="text-2xl font-bold text-[#211FC3]">
-                {formatPrice(course.price || 0)}
+                {course.price || 0} EGP
               </div>
             </CardContent>
           </Card>

@@ -23,6 +23,10 @@ interface LiveStream {
   courseId: string;
   createdAt: string;
   updatedAt: string;
+  nextChapterId?: string | null;
+  previousChapterId?: string | null;
+  nextContentType?: string | null;
+  previousContentType?: string | null;
 }
 
 const LiveStreamPage = () => {
@@ -65,17 +69,38 @@ const LiveStreamPage = () => {
   }, [routeParams.courseId, routeParams.livestreamId, t]);
 
   const onNext = () => {
-    // Navigate to next content (this would need to be implemented based on course content order)
-    router.push(`/courses/${routeParams.courseId}`);
+    if (liveStream?.nextChapterId) {
+      if (liveStream.nextContentType === 'quiz') {
+        router.push(`/courses/${routeParams.courseId}/quizzes/${liveStream.nextChapterId}`);
+      } else if (liveStream.nextContentType === 'livestream') {
+        router.push(`/courses/${routeParams.courseId}/livestreams/${liveStream.nextChapterId}`);
+      } else {
+        router.push(`/courses/${routeParams.courseId}/chapters/${liveStream.nextChapterId}`);
+      }
+    }
   };
 
   const onPrevious = () => {
-    // Navigate to previous content (this would need to be implemented based on course content order)
-    router.push(`/courses/${routeParams.courseId}`);
+    if (liveStream?.previousChapterId) {
+      if (liveStream.previousContentType === 'quiz') {
+        router.push(`/courses/${routeParams.courseId}/quizzes/${liveStream.previousChapterId}`);
+      } else if (liveStream.previousContentType === 'livestream') {
+        router.push(`/courses/${routeParams.courseId}/livestreams/${liveStream.previousChapterId}`);
+      } else {
+        router.push(`/courses/${routeParams.courseId}/chapters/${liveStream.previousChapterId}`);
+      }
+    }
   };
 
-  const openMeeting = () => {
+  const openMeeting = async () => {
     if (liveStream?.meetingUrl) {
+      // Track attendance
+      try {
+        await axios.post(`/api/courses/${routeParams.courseId}/livestreams/${routeParams.livestreamId}/attend`);
+      } catch (error) {
+        console.error("Error tracking attendance:", error);
+      }
+      
       window.open(liveStream.meetingUrl, '_blank');
     }
   };
@@ -195,6 +220,7 @@ const LiveStreamPage = () => {
             <Button
               variant="outline"
               onClick={onPrevious}
+              disabled={!liveStream.previousChapterId}
               className="flex items-center gap-2"
             >
               {isRTL ? (
@@ -207,6 +233,7 @@ const LiveStreamPage = () => {
 
             <Button
               onClick={onNext}
+              disabled={!liveStream.nextChapterId}
               className="flex items-center gap-2"
             >
               {t('student.nextChapter')}

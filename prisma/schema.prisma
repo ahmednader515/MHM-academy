@@ -37,7 +37,8 @@ model User {
   homeworkSubmissions HomeworkSubmission[]
   activitySubmissions ActivitySubmission[]
   certificates        Certificate[]
-  assignedCertificates Certificate[]      @relation("CertificateAssigner")
+  assignedCertificates Certificate[]       @relation("CertificateAssigner")
+  liveStreamAttendance LiveStreamAttendance[]
   // Parent-child relationships
   parent              User?                @relation("ParentChild", fields: [parentPhoneNumber], references: [phoneNumber])
   children            User[]               @relation("ParentChild")
@@ -229,21 +230,35 @@ model QuizAnswer {
 }
 
 model LiveStream {
-  id          String    @id @default(uuid())
+  id          String                 @id @default(uuid())
   title       String
   description String?
   meetingUrl  String
   meetingId   String
   meetingType String
-  isPublished Boolean   @default(false)
+  isPublished Boolean                @default(false)
   scheduledAt DateTime?
   duration    Int?
   courseId    String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  course      Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  attendance  LiveStreamAttendance[]
 
   @@index([courseId])
+}
+
+model LiveStreamAttendance {
+  id           String     @id @default(uuid())
+  liveStreamId String
+  studentId    String
+  clickedAt    DateTime   @default(now())
+  liveStream   LiveStream @relation(fields: [liveStreamId], references: [id], onDelete: Cascade)
+  student      User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([liveStreamId, studentId])
+  @@index([liveStreamId])
+  @@index([studentId])
 }
 
 model HomeworkSubmission {

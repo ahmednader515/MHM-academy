@@ -58,6 +58,16 @@ export async function GET(
             }
         });
 
+        // Filter out expired livestreams for students
+        const now = new Date();
+        const activeLiveStreams = liveStreams.filter(stream => {
+            if (!stream.scheduledAt || !stream.duration) {
+                return true; // Show if no schedule is set
+            }
+            const endTime = new Date(new Date(stream.scheduledAt).getTime() + stream.duration * 60 * 1000);
+            return now <= endTime; // Only show if not expired
+        });
+
         // Combine and sort by position
         const allContent = [
             ...chapters.map(chapter => ({
@@ -68,7 +78,7 @@ export async function GET(
                 ...quiz,
                 type: 'quiz' as const
             })),
-            ...liveStreams.map(liveStream => ({
+            ...activeLiveStreams.map(liveStream => ({
                 ...liveStream,
                 type: 'livestream' as const,
                 position: 999 // Live streams appear at the end

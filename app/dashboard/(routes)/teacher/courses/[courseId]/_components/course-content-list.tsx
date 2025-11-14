@@ -5,6 +5,7 @@ import { Chapter, Quiz } from "@prisma/client";
 import { Grip, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/language-context";
 
@@ -82,28 +83,42 @@ export const CourseContentList = ({
                                                 <Badge variant="outline" className="text-xs">
                                                     {item.type === "chapter" ? t('teacher.chapter') : t('teacher.quiz')}
                                                 </Badge>
+                                                <Badge
+                                                    className={cn(
+                                                        "bg-muted text-muted-foreground text-xs",
+                                                        item.isPublished && "bg-primary text-primary-foreground"
+                                                    )}
+                                                >
+                                                    {item.isPublished ? t('teacher.published') : t('teacher.draft')}
+                                                </Badge>
                                             </div>
                                         </div>
                                         <div className="ml-auto pr-2 flex items-center gap-x-2">
-                                                                                        {item.type === "chapter" && item.isFree && (
-                                                 <Badge>
-                                                     {t('teacher.free')}
-                                                 </Badge>
-                                             )}
-                                            <Badge
-                                                className={cn(
-                                                    "bg-muted text-muted-foreground",
-                                                    item.isPublished && "bg-primary text-primary-foreground"
-                                                )}
-                                            >
-                                                {item.isPublished ? t('teacher.published') : t('teacher.draft')}
-                                            </Badge>
-                                            <button
-                                                onClick={() => onEdit(item.id, item.type)}
-                                                className="hover:opacity-75 transition"
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </button>
+                                            {item.type === "chapter" && item.isFree && (
+                                                <Badge>
+                                                    {t('teacher.free')}
+                                                </Badge>
+                                            )}
+                                            {item.isPublished ? (
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => onEdit(item.id, item.type)}
+                                                    className="hover:opacity-75 transition"
+                                                >
+                                                    <Pencil className="h-4 w-4 mr-2" />
+                                                    {t('common.edit')}
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => onEdit(item.id, item.type)}
+                                                    className="hover:opacity-75 transition"
+                                                >
+                                                    {item.type === "chapter" ? t('teacher.addVideo') : t('teacher.addQuestions')}
+                                                </Button>
+                                            )}
                                             <Trash2
                                                 onClick={() => onDelete(item.id, item.type)}
                                                 className="w-4 h-4 cursor-pointer hover:opacity-75 transition"

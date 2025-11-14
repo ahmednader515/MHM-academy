@@ -4,7 +4,6 @@ import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useCurrency } from "@/lib/contexts/currency-context";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useLanguage } from "@/lib/contexts/language-context";
@@ -25,7 +24,6 @@ export type Course = {
 
 export const useColumns = (isAdmin: boolean = false): ColumnDef<Course>[] => {
     const { t } = useLanguage();
-    const { formatPrice } = useCurrency();
     
     const columns: ColumnDef<Course>[] = [
         {
@@ -81,7 +79,7 @@ export const useColumns = (isAdmin: boolean = false): ColumnDef<Course>[] => {
             },
             cell: ({ row }) => {
                 const price = parseFloat(row.getValue("price"));
-                return <div>{formatPrice(price)}</div>;
+                return <div>{price} EGP</div>;
             },
         },
         {

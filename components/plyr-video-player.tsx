@@ -69,7 +69,10 @@ export const PlyrVideoPlayer = ({
           showinfo: 0,
           iv_load_policy: 3,
           fs: 0,
-          disablekb: 1
+          disablekb: 1,
+          noCookie: true,
+          cc_load_policy: 0,
+          playsinline: 1
         },
         ratio: "16:9"
       });
@@ -110,12 +113,36 @@ export const PlyrVideoPlayer = ({
           data-plyr-provider="youtube"
           data-plyr-embed-id={youtubeVideoId}
           className="w-full h-full"
+          style={{
+            position: 'relative',
+            pointerEvents: 'auto'
+          }}
         />
       ) : (
         <video ref={html5VideoRef} className="w-full h-full" playsInline crossOrigin="anonymous">
           {videoUrl ? <source src={videoUrl} type="video/mp4" /> : null}
         </video>
       )}
+      <style jsx global>{`
+        /* Hide YouTube logo and controls overlay */
+        .plyr__video-embed iframe {
+          pointer-events: none;
+        }
+        .plyr__video-embed {
+          pointer-events: auto;
+        }
+        .plyr__controls {
+          pointer-events: auto !important;
+        }
+        /* Hide YouTube branding */
+        .ytp-chrome-top,
+        .ytp-show-cards-title,
+        .ytp-watermark,
+        .ytp-gradient-top,
+        .ytp-chrome-top-buttons {
+          display: none !important;
+        }
+      `}</style>
     </div>
   );
 };

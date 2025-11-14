@@ -20,7 +20,6 @@ import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import { Course } from "@prisma/client";
 import { Input } from "@/components/ui/input";
-import { useCurrency } from "@/lib/contexts/currency-context";
 import { useLanguage } from "@/lib/contexts/language-context";
 
 interface PriceFormProps {
@@ -40,7 +39,6 @@ export const PriceForm = ({
     isAdmin = false
 }: PriceFormProps) => {
     const { t } = useLanguage();
-    const { formatPrice } = useCurrency();
     const [isEditing, setIsEditing] = useState(false);
 
     const toggleEdit = () => setIsEditing((current) => !current);
@@ -93,7 +91,7 @@ export const PriceForm = ({
                           : initialData.price === 0
                           ? t('teacher.free')
                           : initialData.price
-                          ? formatPrice(initialData.price)
+                          ? `${initialData.price} EGP`
                           : t('teacher.noPrice')
                         }
                     </p>

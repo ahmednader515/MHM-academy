@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { X, BookOpen, Trophy, Video, Award, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { BookOpen, Trophy, Video, Award, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/contexts/language-context";
 import { format } from "date-fns";
@@ -22,13 +22,13 @@ type NewContentItem = {
   imageUrl?: string;
   createdAt: string;
   scheduledAt?: string | null;
+  isExpired?: boolean;
   link: string;
 };
 
 export const NewContentBanner = () => {
   const { t, language } = useLanguage();
   const [newContent, setNewContent] = useState<NewContentItem[]>([]);
-  const [isVisible, setIsVisible] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -38,19 +38,6 @@ export const NewContentBanner = () => {
         const response = await axios.get('/api/student/new-content');
         setNewContent(response.data.newContent);
         setIsLoading(false);
-
-        // Check if user has dismissed the banner
-        const dismissed = localStorage.getItem('newContentBannerDismissed');
-        if (dismissed) {
-          const dismissedTime = new Date(dismissed).getTime();
-          const now = new Date().getTime();
-          // Show again after 24 hours
-          if (now - dismissedTime < 24 * 60 * 60 * 1000) {
-            setIsVisible(false);
-          } else {
-            localStorage.removeItem('newContentBannerDismissed');
-          }
-        }
       } catch (error) {
         console.error('Error fetching new content:', error);
         setIsLoading(false);
@@ -59,11 +46,6 @@ export const NewContentBanner = () => {
 
     fetchNewContent();
   }, []);
-
-  const handleDismiss = () => {
-    setIsVisible(false);
-    localStorage.setItem('newContentBannerDismissed', new Date().toISOString());
-  };
 
   const handleNext = () => {
     setCurrentIndex((prev) => (prev + 1) % newContent.length);
@@ -118,7 +100,7 @@ export const NewContentBanner = () => {
     }
   };
 
-  if (isLoading || !isVisible || newContent.length === 0) {
+  if (isLoading || newContent.length === 0) {
     return null;
   }
 
@@ -131,15 +113,6 @@ export const NewContentBanner = () => {
         <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-60 h-60 bg-white rounded-full translate-x-1/3 translate-y-1/3" />
       </div>
-
-      {/* Close button */}
-      <button
-        onClick={handleDismiss}
-        className="absolute top-4 right-4 z-10 text-white/80 hover:text-white transition-colors"
-        aria-label="Close"
-      >
-        <X className="h-5 w-5" />
-      </button>
 
       <div className="relative z-10">
         {/* Header */}
@@ -188,11 +161,16 @@ export const NewContentBanner = () => {
 
           {/* Details */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1">
                 {getIcon(currentItem.type)}
                 {getTypeLabel(currentItem.type)}
               </span>
+              {currentItem.type === 'livestream' && currentItem.isExpired && (
+                <span className="bg-red-500/90 backdrop-blur-sm text-white text-xs font-medium px-3 py-1 rounded-full">
+                  {t('admin.expired')}
+                </span>
+              )}
               <span className="text-white/80 text-xs">
                 {format(new Date(currentItem.createdAt), 'PPP', { 
                   locale: language === 'ar' ? ar : undefined 
@@ -223,17 +201,20 @@ export const NewContentBanner = () => {
             )}
 
             <div className="flex items-center gap-2">
-              <Button
-                asChild
-                size="sm"
-                className="bg-white text-gray-900 hover:bg-white/90 font-semibold"
-              >
-                <Link href={currentItem.link}>
-                  {currentItem.type === 'certificate' 
-                    ? t('newContent.viewNow')
-                    : t('newContent.checkItOut')}
-                </Link>
-              </Button>
+              {/* Only show button if not an expired livestream */}
+              {!(currentItem.type === 'livestream' && currentItem.isExpired) && (
+                <Button
+                  asChild
+                  size="sm"
+                  className="bg-white text-gray-900 hover:bg-white/90 font-semibold"
+                >
+                  <Link href={currentItem.link}>
+                    {currentItem.type === 'certificate' 
+                      ? t('newContent.viewNow')
+                      : t('newContent.checkItOut')}
+                  </Link>
+                </Button>
+              )}
 
               {/* Navigation buttons for multiple items */}
               {newContent.length > 1 && (
