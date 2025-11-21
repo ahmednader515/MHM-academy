@@ -65,6 +65,7 @@ model Course {
   liveStreams      LiveStream[]
   purchases        Purchase[]
   quizzes          Quiz[]
+  timetables       Timetable[]
 }
 
 model Attachment {
@@ -319,4 +320,20 @@ model Certificate {
 
   @@index([studentId])
   @@index([assignedBy])
+}
+
+model Timetable {
+  id          String   @id @default(uuid())
+  courseId    String
+  dayOfWeek   Int      // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  startTime   String   // Format: "HH:MM" (e.g., "09:00")
+  endTime     String   // Format: "HH:MM" (e.g., "10:30")
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+  @@index([dayOfWeek])
 }

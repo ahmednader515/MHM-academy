@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart, Compass, Layout, List, Wallet, Shield, Users, Eye, TrendingUp, BookOpen, FileText, Award, PlusSquare, Video, GraduationCap } from "lucide-react";
+import { BarChart, Compass, Layout, List, Wallet, Shield, Users, Eye, TrendingUp, BookOpen, FileText, Award, PlusSquare, Video, GraduationCap, Calendar } from "lucide-react";
 import { SidebarItem } from "./sidebar-item";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/contexts/language-context";
@@ -21,6 +21,11 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             href: "/dashboard/search",
         },
         {
+            icon: Calendar,
+            label: t('dashboard.timetable') || 'Timetable',
+            href: "/dashboard/timetables",
+        },
+        {
             icon: Wallet,
             label: t('dashboard.balance'),
             href: "/dashboard/balance",
@@ -37,6 +42,11 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             icon: List,
             label: t('dashboard.courses'),
             href: "/dashboard/teacher/courses",
+        },
+        {
+            icon: Calendar,
+            label: t('dashboard.timetable') || 'Timetable',
+            href: "/dashboard/teacher/timetables",
         },
         {
             icon: FileText,
@@ -100,6 +110,15 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             href: "/dashboard/admin/courses",
         },
         {
+            icon: Calendar,
+            label: (() => {
+                const translation = t('admin.timetables');
+                // If translation returns the key, use fallback
+                return translation !== 'admin.timetables' ? translation : (t('dashboard.timetable') !== 'dashboard.timetable' ? t('dashboard.timetable') : 'Timetables');
+            })(),
+            href: "/dashboard/admin/timetables",
+        },
+        {
             icon: FileText,
             label: t('dashboard.quizzes'),
             href: "/dashboard/admin/quizzes",
@@ -157,11 +176,11 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
         <div className="flex flex-col w-full pt-0">
             {routes.map((route) => (
                 <SidebarItem
-                  key={route.href}
-                  icon={route.icon}
-                  label={route.label}
-                  href={route.href}
-                  closeOnClick={closeOnClick}
+                    key={route.href}
+                    icon={route.icon}
+                    label={route.label}
+                    href={route.href}
+                    closeOnClick={closeOnClick}
                 />
             ))}
         </div>
