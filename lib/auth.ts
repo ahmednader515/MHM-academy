@@ -88,23 +88,37 @@ export const authOptions: AuthOptions = {
     error: "/sign-in",
   },
   callbacks: {
-    async session({ token, session }) {
+    async session({ token, session, trigger }) {
       if (token) {
-        // If we have a sessionId, validate it
-        if (token.sessionId) {
-          try {
-            // Validate session on each request
-            const { isValid } = await SessionManager.validateSession(token.sessionId as string);
-            
-            if (!isValid) {
-              // Session is invalid, clear the sessionId but don't return null
-              // This will trigger a re-authentication on the next request
+        // Skip validation for certain triggers to reduce queries
+        // Only validate session on regular requests, not on signOut
+        // Use timestamp-based validation to reduce frequency (validate every 2 minutes max)
+        if (token.sessionId && trigger !== "signOut") {
+          const now = Date.now();
+          const lastValidation = (token.lastSessionValidation as number) || 0;
+          const VALIDATION_INTERVAL = 120000; // 2 minutes
+          
+          // Only validate if enough time has passed since last validation
+          if (now - lastValidation > VALIDATION_INTERVAL) {
+            try {
+              // Validate session (but cache the result)
+              const { isValid } = await SessionManager.validateSession(token.sessionId as string);
+              
+              if (!isValid) {
+                // Session is invalid, clear the sessionId but don't return null
+                // This will trigger a re-authentication on the next request
+                token.sessionId = undefined;
+                token.lastSessionValidation = undefined;
+              } else {
+                // Update last validation timestamp
+                token.lastSessionValidation = now;
+              }
+            } catch (error) {
+              console.error("Session validation error:", error);
+              // Clear sessionId on error but don't return null
               token.sessionId = undefined;
+              token.lastSessionValidation = undefined;
             }
-          } catch (error) {
-            console.error("Session validation error:", error);
-            // Clear sessionId on error but don't return null
-            token.sessionId = undefined;
           }
         }
 

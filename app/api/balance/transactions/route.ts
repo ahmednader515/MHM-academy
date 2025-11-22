@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
       orderBy: {
         createdAt: "desc",
       },
+      cacheStrategy: { ttl: 120 } // Cache transactions for 2 minutes
     });
 
     return NextResponse.json(transactions);

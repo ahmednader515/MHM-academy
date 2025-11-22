@@ -33,6 +33,7 @@ export async function GET() {
         }
       },
       orderBy: { createdAt: "desc" },
+      cacheStrategy: { ttl: 60 } // Cache livestreams for 60 seconds (they change frequently)
     });
 
     // Add attendance count and expired status

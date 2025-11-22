@@ -76,6 +76,7 @@ export class SessionManager {
 
   /**
    * Validate session and return user if valid
+   * Uses Prisma Accelerate caching to reduce database queries
    */
   static async validateSession(sessionId: string): Promise<{ user: any; isValid: boolean }> {
     const user = await db.user.findUnique({
@@ -88,7 +89,8 @@ export class SessionManager {
         role: true,
         image: true,
         sessionId: true
-      }
+      },
+      cacheStrategy: { ttl: 30 } // Cache session validation for 30 seconds (reduces queries while maintaining security)
     });
 
     if (!user || user.sessionId !== sessionId) {

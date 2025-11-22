@@ -8,7 +8,13 @@ export async function GET() {
         isPublished: true,
       },
       include: {
-        user: true,
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            image: true
+          }
+        },
         chapters: {
           where: {
             isPublished: true,
@@ -29,6 +35,7 @@ export async function GET() {
       orderBy: {
         createdAt: "desc",
       },
+      cacheStrategy: { ttl: 300 } // Cache public courses for 5 minutes
     });
 
     // Return courses with default progress of 0 for public view

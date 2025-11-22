@@ -32,9 +32,18 @@ export async function GET() {
       },
       include: {
         purchases: {
-                  include: {
-          user: true,
-        },
+          where: {
+            status: "ACTIVE"
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+                phoneNumber: true
+              }
+            },
+          },
         },
         chapters: {
           where: {
@@ -45,6 +54,7 @@ export async function GET() {
           },
         },
       },
+      cacheStrategy: { ttl: 180 } // Cache analytics data for 3 minutes
     }) as CourseWithRelations[];
 
     console.log("[ANALYTICS] Found courses:", courses.length);

@@ -15,19 +15,61 @@ export async function GET() {
       return new NextResponse("Forbidden", { status: 403 });
     }
 
-    // Calculate average score from quiz results (using best attempt for each quiz)
-    const quizResults = await db.quizResult.findMany({
-      where: {
-        studentId: userId
-      },
-      select: {
-        quizId: true,
-        percentage: true
-      },
-      orderBy: {
-        percentage: 'desc'
-      },
-    });
+    // Run initial queries in parallel for better performance
+    const [quizResults, userData, lastWatchedChapter] = await Promise.all([
+      // Calculate average score from quiz results (using best attempt for each quiz)
+      db.quizResult.findMany({
+        where: {
+          studentId: userId
+        },
+        select: {
+          quizId: true,
+          percentage: true
+        },
+        orderBy: {
+          percentage: 'desc'
+        },
+        cacheStrategy: { ttl: 120 } // Cache quiz results for 2 minutes (increased)
+      }),
+      // Get user data
+      db.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          image: true,
+          role: true,
+          balance: true,
+          points: true
+        },
+        cacheStrategy: { ttl: 300 } // Cache user data for 5 minutes
+      }),
+      // Get last watched chapter
+      db.userProgress.findFirst({
+        where: {
+          userId: userId,
+          isCompleted: false
+        },
+        include: {
+          chapter: {
+            include: {
+              course: {
+                select: {
+                  id: true,
+                  title: true,
+                  imageUrl: true
+                }
+              }
+            }
+          }
+        },
+        orderBy: {
+          updatedAt: 'desc'
+        },
+        cacheStrategy: { ttl: 120 } // Cache for 2 minutes (increased)
+      })
+    ]);
 
     // Get only the best attempt for each quiz
     const bestAttempts = new Map();
@@ -40,44 +82,6 @@ export async function GET() {
     const averageScore = bestAttempts.size > 0 
       ? Math.round(Array.from(bestAttempts.values()).reduce((sum, percentage) => sum + percentage, 0) / bestAttempts.size)
       : 0;
-
-    // Get user data
-    const userData = await db.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        fullName: true,
-        email: true,
-        image: true,
-        role: true,
-        balance: true,
-        points: true
-      },
-    });
-
-    // Get last watched chapter
-    const lastWatchedChapter = await db.userProgress.findFirst({
-      where: {
-        userId: userId,
-        isCompleted: false
-      },
-      include: {
-        chapter: {
-          include: {
-            course: {
-              select: {
-                id: true,
-                title: true,
-                imageUrl: true
-              }
-            }
-          }
-        }
-      },
-      orderBy: {
-        updatedAt: 'desc'
-      },
-    });
 
     const lastWatchedChapterData = lastWatchedChapter ? {
       id: lastWatchedChapter.chapter.id,
@@ -131,83 +135,80 @@ export async function GET() {
       orderBy: {
         createdAt: "desc",
       },
+      cacheStrategy: { ttl: 180 } // Cache courses for 3 minutes (increased)
     });
 
-    // Calculate progress for each course
-    const coursesWithProgress = await Promise.all(
-      courses.map(async (course) => {
-        const totalChapters = course.chapters.length;
-        const totalQuizzes = course.quizzes.length;
-        const totalContent = totalChapters + totalQuizzes;
+    // Batch all queries to avoid N+1 problem - run in parallel
+    const allChapterIds = courses.flatMap(course => course.chapters.map(chapter => chapter.id));
+    const allQuizIds = courses.flatMap(course => course.quizzes.map(quiz => quiz.id));
 
-        const completedChapters = await db.userProgress.count({
-          where: {
-            userId: userId,
-            chapterId: {
-              in: course.chapters.map(chapter => chapter.id)
-            },
-            isCompleted: true
-          }
-        });
-
-        const completedQuizResults = await db.quizResult.findMany({
-          where: {
-            studentId: userId,
-            quizId: {
-              in: course.quizzes.map(quiz => quiz.id)
-            }
+    // Run progress queries in parallel
+    const [allCompletedChapters, allCompletedQuizResults] = await Promise.all([
+      db.userProgress.findMany({
+        where: {
+          userId: userId,
+          chapterId: {
+            in: allChapterIds
           },
-          select: {
-            quizId: true
+          isCompleted: true
+        },
+        select: {
+          chapterId: true
+        },
+        cacheStrategy: { ttl: 60 } // Cache for 60s (increased)
+      }),
+      db.quizResult.findMany({
+        where: {
+          studentId: userId,
+          quizId: {
+            in: allQuizIds
           }
-        });
-
-        const uniqueQuizIds = new Set(completedQuizResults.map(result => result.quizId));
-        const completedQuizzes = uniqueQuizIds.size;
-
-        const completedContent = completedChapters + completedQuizzes;
-
-        const progress = totalContent > 0 
-          ? (completedContent / totalContent) * 100 
-          : 0;
-
-        return {
-          ...course,
-          progress
-        };
+        },
+        select: {
+          quizId: true
+        },
+        cacheStrategy: { ttl: 60 } // Cache for 60s (increased)
       })
-    );
+    ]);
+
+    // Create maps for O(1) lookup
+    const completedChapterIds = new Set(allCompletedChapters.map(progress => progress.chapterId));
+    const completedQuizIds = new Set(allCompletedQuizResults.map(result => result.quizId));
+
+    // Calculate progress for each course using the batched data
+    const coursesWithProgress = courses.map((course) => {
+      const totalChapters = course.chapters.length;
+      const totalQuizzes = course.quizzes.length;
+      const totalContent = totalChapters + totalQuizzes;
+
+      const completedChapters = course.chapters.filter(chapter => 
+        completedChapterIds.has(chapter.id)
+      ).length;
+
+      const completedQuizzes = course.quizzes.filter(quiz => 
+        completedQuizIds.has(quiz.id)
+      ).length;
+
+      const completedContent = completedChapters + completedQuizzes;
+
+      const progress = totalContent > 0 
+        ? (completedContent / totalContent) * 100 
+        : 0;
+
+      return {
+        ...course,
+        progress
+      };
+    });
 
     // Calculate overall statistics
     const totalCourses = courses.length;
     const totalChapters = courses.reduce((sum, course) => sum + course.chapters.length, 0);
     const totalQuizzes = courses.reduce((sum, course) => sum + course.quizzes.length, 0);
 
-    const allChapterIds = courses.flatMap(course => course.chapters.map(chapter => chapter.id));
-    const completedChapters = await db.userProgress.count({
-      where: {
-        userId: userId,
-        chapterId: {
-          in: allChapterIds
-        },
-        isCompleted: true
-      }
-    });
-
-    const allQuizIds = courses.flatMap(course => course.quizzes.map(quiz => quiz.id));
-    const completedQuizResults = await db.quizResult.findMany({
-      where: {
-        studentId: userId,
-        quizId: {
-          in: allQuizIds
-        }
-      },
-      select: {
-        quizId: true
-      }
-    });
-    const uniqueCompletedQuizIds = new Set(completedQuizResults.map(result => result.quizId));
-    const completedQuizzes = uniqueCompletedQuizIds.size;
+    // Use the already fetched data instead of querying again
+    const completedChapters = completedChapterIds.size;
+    const completedQuizzes = completedQuizIds.size;
 
     const studentStats = {
       totalCourses,

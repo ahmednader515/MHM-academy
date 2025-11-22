@@ -12,15 +12,16 @@ const TeacherTimetablesPage = async () => {
     return redirect("/dashboard");
   }
 
-  // Get teacher's courses
+  // Get teacher's courses with caching
   const teacherCourses = await db.course.findMany({
     where: { userId },
     select: { id: true },
+    cacheStrategy: { ttl: 300 } // Cache teacher courses for 5 minutes
   });
 
   const courseIds = teacherCourses.map((c) => c.id);
 
-  // Get timetables for teacher's courses
+  // Get timetables for teacher's courses with caching
   const timetables = courseIds.length > 0
     ? await db.timetable.findMany({
         where: {
@@ -44,6 +45,7 @@ const TeacherTimetablesPage = async () => {
           { dayOfWeek: "asc" },
           { startTime: "asc" },
         ],
+        cacheStrategy: { ttl: 300 } // Cache timetables for 5 minutes
       })
     : [];
 

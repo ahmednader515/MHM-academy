@@ -10,30 +10,19 @@ export async function GET() {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    // Combine both queries into one to reduce operations
     const user = await db.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
         role: true,
-        fullName: true
-      }
+        fullName: true,
+        points: true
+      },
+      cacheStrategy: { ttl: 60 } // Cache user points for 60 seconds
     });
-
-    // Check if points column exists by trying to select it
-    let points = 0;
-    try {
-      const userWithPoints = await db.user.findUnique({
-        where: { id: userId },
-        select: {
-          points: true
-        }
-      });
-      points = userWithPoints?.points || 0;
-    } catch (error) {
-      // Points column doesn't exist yet, return 0
-      console.log("Points column doesn't exist yet, returning 0");
-      points = 0;
-    }
+    
+    const points = user?.points || 0;
 
     if (!user) {
       return new NextResponse("User not found", { status: 404 });

@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
       select: {
         balance: true,
       },
+      cacheStrategy: { ttl: 60 } // Cache balance for 60 seconds (balance changes frequently)
     });
 
     if (!user) {

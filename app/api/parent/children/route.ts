@@ -13,7 +13,8 @@ export async function GET(req: Request) {
     // Get the current user to verify they are a parent
     const currentUser = await db.user.findUnique({
       where: { id: userId },
-      select: { role: true, phoneNumber: true }
+      select: { role: true, phoneNumber: true },
+      cacheStrategy: { ttl: 300 } // Cache user data for 5 minutes
     });
 
     if (!currentUser || currentUser.role !== "PARENT") {
@@ -117,7 +118,8 @@ export async function GET(req: Request) {
           },
           take: 10
         }
-      }
+      },
+      cacheStrategy: { ttl: 180 } // Cache children data for 3 minutes
     });
 
     // Transform the data for the parent dashboard

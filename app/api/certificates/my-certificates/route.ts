@@ -26,6 +26,7 @@ export async function GET(req: Request) {
       orderBy: {
         createdAt: "desc",
       },
+      cacheStrategy: { ttl: 300 } // Cache certificates for 5 minutes
     });
 
     return NextResponse.json(certificates);

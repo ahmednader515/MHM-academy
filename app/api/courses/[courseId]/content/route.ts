@@ -8,55 +8,56 @@ export async function GET(
     try {
         const resolvedParams = await params;
 
-        // Get chapters
-        const chapters = await db.chapter.findMany({
-            where: {
-                courseId: resolvedParams.courseId,
-                isPublished: true
-            },
-            include: {
-                userProgress: {
-                    select: {
-                        isCompleted: true
+        // Get chapters, quizzes, and live streams in parallel with caching
+        const [chapters, quizzes, liveStreams] = await Promise.all([
+            db.chapter.findMany({
+                where: {
+                    courseId: resolvedParams.courseId,
+                    isPublished: true
+                },
+                include: {
+                    userProgress: {
+                        select: {
+                            isCompleted: true
+                        }
                     }
-                }
-            },
-            orderBy: {
-                position: "asc"
-            }
-        });
-
-        // Get published quizzes
-        const quizzes = await db.quiz.findMany({
-            where: {
-                courseId: resolvedParams.courseId,
-                isPublished: true
-            },
-            include: {
-                quizResults: {
-                    select: {
-                        id: true,
-                        score: true,
-                        totalPoints: true,
-                        percentage: true
+                },
+                orderBy: {
+                    position: "asc"
+                },
+                cacheStrategy: { ttl: 180 } // Cache course content for 3 minutes
+            }),
+            db.quiz.findMany({
+                where: {
+                    courseId: resolvedParams.courseId,
+                    isPublished: true
+                },
+                include: {
+                    quizResults: {
+                        select: {
+                            id: true,
+                            score: true,
+                            totalPoints: true,
+                            percentage: true
+                        }
                     }
-                }
-            },
-            orderBy: {
-                position: "asc"
-            }
-        });
-
-        // Get published live streams
-        const liveStreams = await db.liveStream.findMany({
-            where: {
-                courseId: resolvedParams.courseId,
-                isPublished: true
-            },
-            orderBy: {
-                createdAt: "asc"
-            }
-        });
+                },
+                orderBy: {
+                    position: "asc"
+                },
+                cacheStrategy: { ttl: 180 }
+            }),
+            db.liveStream.findMany({
+                where: {
+                    courseId: resolvedParams.courseId,
+                    isPublished: true
+                },
+                orderBy: {
+                    createdAt: "asc"
+                },
+                cacheStrategy: { ttl: 60 } // Cache live streams for 1 minute (they change more frequently)
+            })
+        ]);
 
         // Filter out expired livestreams for students
         const now = new Date();

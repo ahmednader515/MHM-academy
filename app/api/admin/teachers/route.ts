@@ -30,103 +30,149 @@ export async function GET(req: Request) {
             },
             orderBy: {
                 createdAt: "desc"
-            }
+            },
+            cacheStrategy: { ttl: 120 } // Cache teachers list for 2 minutes
         });
 
-        // For each teacher, get their courses, quizzes, and live streams
-        const teachersWithContent = await Promise.all(
-            teachers.map(async (teacher) => {
-                const courses = await db.course.findMany({
-                    where: {
-                        userId: teacher.id
-                    },
-                    select: {
-                        id: true,
-                        title: true,
-                        isPublished: true,
-                        price: true,
-                        createdAt: true,
-                        _count: {
-                            select: {
-                                chapters: true,
-                                quizzes: true,
-                                liveStreams: true,
-                                purchases: true
-                            }
-                        }
-                    },
-                    orderBy: {
-                        createdAt: "desc"
-                    }
-                });
+        const teacherIds = teachers.map(t => t.id);
 
-                const quizzes = await db.quiz.findMany({
-                    where: {
-                        course: {
-                            userId: teacher.id
-                        }
-                    },
-                    select: {
-                        id: true,
-                        title: true,
-                        isPublished: true,
-                        position: true,
-                        course: {
-                            select: {
-                                id: true,
-                                title: true
-                            }
-                        },
-                        _count: {
-                            select: {
-                                questions: true,
-                                quizResults: true
-                            }
-                        }
-                    },
-                    orderBy: {
-                        createdAt: "desc"
+        // Batch all queries to avoid N+1 problem
+        const [allCourses, allQuizzes, allLiveStreams] = await Promise.all([
+            db.course.findMany({
+                where: {
+                    userId: {
+                        in: teacherIds
                     }
-                });
-
-                const liveStreams = await db.liveStream.findMany({
-                    where: {
-                        course: {
-                            userId: teacher.id
+                },
+                select: {
+                    id: true,
+                    userId: true,
+                    title: true,
+                    isPublished: true,
+                    price: true,
+                    createdAt: true,
+                    _count: {
+                        select: {
+                            chapters: true,
+                            quizzes: true,
+                            liveStreams: true,
+                            purchases: true
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: "desc"
+                },
+                cacheStrategy: { ttl: 120 }
+            }),
+            db.quiz.findMany({
+                where: {
+                    course: {
+                        userId: {
+                            in: teacherIds
+                        }
+                    }
+                },
+                select: {
+                    id: true,
+                    title: true,
+                    isPublished: true,
+                    position: true,
+                    course: {
+                        select: {
+                            id: true,
+                            title: true,
+                            userId: true
                         }
                     },
-                    select: {
-                        id: true,
-                        title: true,
-                        isPublished: true,
-                        scheduledAt: true,
-                        course: {
-                            select: {
-                                id: true,
-                                title: true
-                            }
-                        },
-                        createdAt: true
-                    },
-                    orderBy: {
-                        createdAt: "desc"
+                    _count: {
+                        select: {
+                            questions: true,
+                            quizResults: true
+                        }
                     }
-                });
-
-                return {
-                    ...teacher,
-                    courses,
-                    quizzes,
-                    liveStreams,
-                    totalCourses: courses.length,
-                    totalQuizzes: quizzes.length,
-                    totalLiveStreams: liveStreams.length,
-                    publishedCourses: courses.filter(c => c.isPublished).length,
-                    publishedQuizzes: quizzes.filter(q => q.isPublished).length,
-                    publishedLiveStreams: liveStreams.filter(l => l.isPublished).length
-                };
+                },
+                orderBy: {
+                    createdAt: "desc"
+                },
+                cacheStrategy: { ttl: 120 }
+            }),
+            db.liveStream.findMany({
+                where: {
+                    course: {
+                        userId: {
+                            in: teacherIds
+                        }
+                    }
+                },
+                select: {
+                    id: true,
+                    title: true,
+                    isPublished: true,
+                    scheduledAt: true,
+                    course: {
+                        select: {
+                            id: true,
+                            title: true,
+                            userId: true
+                        }
+                    },
+                    createdAt: true
+                },
+                orderBy: {
+                    createdAt: "desc"
+                },
+                cacheStrategy: { ttl: 120 }
             })
-        );
+        ]);
+
+        // Group content by teacher ID
+        const coursesByTeacher = new Map<string, typeof allCourses>();
+        const quizzesByTeacher = new Map<string, typeof allQuizzes>();
+        const liveStreamsByTeacher = new Map<string, typeof allLiveStreams>();
+
+        allCourses.forEach(course => {
+            if (!coursesByTeacher.has(course.userId)) {
+                coursesByTeacher.set(course.userId, []);
+            }
+            coursesByTeacher.get(course.userId)!.push(course);
+        });
+
+        allQuizzes.forEach(quiz => {
+            const teacherId = quiz.course.userId;
+            if (!quizzesByTeacher.has(teacherId)) {
+                quizzesByTeacher.set(teacherId, []);
+            }
+            quizzesByTeacher.get(teacherId)!.push(quiz);
+        });
+
+        allLiveStreams.forEach(stream => {
+            const teacherId = stream.course.userId;
+            if (!liveStreamsByTeacher.has(teacherId)) {
+                liveStreamsByTeacher.set(teacherId, []);
+            }
+            liveStreamsByTeacher.get(teacherId)!.push(stream);
+        });
+
+        // Map teachers with their content
+        const teachersWithContent = teachers.map((teacher) => {
+            const courses = coursesByTeacher.get(teacher.id) || [];
+            const quizzes = quizzesByTeacher.get(teacher.id) || [];
+            const liveStreams = liveStreamsByTeacher.get(teacher.id) || [];
+
+            return {
+                ...teacher,
+                courses,
+                quizzes,
+                liveStreams,
+                totalCourses: courses.length,
+                totalQuizzes: quizzes.length,
+                totalLiveStreams: liveStreams.length,
+                publishedCourses: courses.filter(c => c.isPublished).length,
+                publishedQuizzes: quizzes.filter(q => q.isPublished).length,
+                publishedLiveStreams: liveStreams.filter(l => l.isPublished).length
+            };
+        });
 
         return NextResponse.json(teachersWithContent);
     } catch (error) {

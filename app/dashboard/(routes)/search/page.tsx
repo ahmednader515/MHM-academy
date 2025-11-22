@@ -41,6 +41,7 @@ export default async function SearchPage({
             language: true,
             grade: true,
         },
+        cacheStrategy: { ttl: 300 } // Cache user data for 5 minutes
     });
 
     // Build the where clause for course filtering
@@ -168,31 +169,44 @@ export default async function SearchPage({
         orderBy: {
             createdAt: "desc",
         },
+        cacheStrategy: { ttl: 180 } // Cache search results for 3 minutes (increased)
     });
 
-    const coursesWithProgress = await Promise.all(
-        courses.map(async (course) => {
-            const totalChapters = course.chapters.length;
-            const completedChapters = await db.userProgress.count({
-                where: {
-                    userId: session.user.id,
-                    chapterId: {
-                        in: course.chapters.map(chapter => chapter.id)
-                    },
-                    isCompleted: true
-                }
-            });
+    // Batch all progress queries to avoid N+1 problem
+    const allChapterIds = courses.flatMap(course => course.chapters.map(chapter => chapter.id));
+    
+    const allCompletedChapters = await db.userProgress.findMany({
+        where: {
+            userId: session.user.id,
+            chapterId: {
+                in: allChapterIds
+            },
+            isCompleted: true
+        },
+        select: {
+            chapterId: true
+        },
+        cacheStrategy: { ttl: 60 } // Cache progress for 60s (increased)
+    });
 
-            const progress = totalChapters > 0 
-                ? (completedChapters / totalChapters) * 100 
-                : 0;
+    const completedChapterIds = new Set(allCompletedChapters.map(progress => progress.chapterId));
 
-            return {
-                ...course,
-                progress
-            } as CourseWithDetails;
-        })
-    );
+    // Calculate progress for each course using the batched data
+    const coursesWithProgress = courses.map((course) => {
+        const totalChapters = course.chapters.length;
+        const completedChapters = course.chapters.filter(chapter => 
+            completedChapterIds.has(chapter.id)
+        ).length;
+
+        const progress = totalChapters > 0 
+            ? (completedChapters / totalChapters) * 100 
+            : 0;
+
+        return {
+            ...course,
+            progress
+        } as CourseWithDetails;
+    });
 
     return (
         <SearchPageContent 

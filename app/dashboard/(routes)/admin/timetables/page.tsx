@@ -12,27 +12,29 @@ const AdminTimetablesPage = async () => {
     return redirect("/dashboard");
   }
 
-  const courses = await db.course.findMany({
-    select: {
-      id: true,
-      title: true,
-      targetCurriculum: true,
-      targetLevel: true,
-      targetLanguage: true,
-      targetGrade: true,
-      user: {
-        select: {
-          id: true,
-          fullName: true,
+  // Fetch courses and timetables in parallel with caching
+  const [courses, timetables] = await Promise.all([
+    db.course.findMany({
+      select: {
+        id: true,
+        title: true,
+        targetCurriculum: true,
+        targetLevel: true,
+        targetLanguage: true,
+        targetGrade: true,
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+          },
         },
       },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  const timetables = await db.timetable.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      cacheStrategy: { ttl: 300 } // Cache courses for 5 minutes
+    }),
+    db.timetable.findMany({
     include: {
       course: {
         select: {
@@ -47,11 +49,13 @@ const AdminTimetablesPage = async () => {
         },
       },
     },
-    orderBy: [
-      { dayOfWeek: "asc" },
-      { startTime: "asc" },
-    ],
-  });
+      orderBy: [
+        { dayOfWeek: "asc" },
+        { startTime: "asc" },
+      ],
+      cacheStrategy: { ttl: 300 } // Cache timetables for 5 minutes
+    })
+  ]);
 
   return <TimetablesContent courses={courses} timetables={timetables} />;
 };

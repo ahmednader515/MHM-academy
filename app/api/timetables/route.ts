@@ -36,6 +36,7 @@ export async function GET(req: Request) {
       const teacherCourses = await db.course.findMany({
         where: { userId },
         select: { id: true },
+        cacheStrategy: { ttl: 300 } // Cache teacher courses for 5 minutes
       });
       const courseIds = teacherCourses.map((c) => c.id);
       whereClause.courseId = { in: courseIds };
@@ -53,6 +54,7 @@ export async function GET(req: Request) {
           status: "ACTIVE",
         },
         select: { courseId: true },
+        cacheStrategy: { ttl: 300 } // Cache purchases for 5 minutes
       });
       const courseIds = enrolledCourses.map((p) => p.courseId);
       whereClause.courseId = { in: courseIds };
@@ -86,6 +88,7 @@ export async function GET(req: Request) {
         { dayOfWeek: "asc" },
         { startTime: "asc" },
       ],
+      cacheStrategy: { ttl: 300 } // Cache timetables for 5 minutes
     });
 
     return NextResponse.json(timetables);

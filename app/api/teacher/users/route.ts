@@ -50,7 +50,8 @@ export async function GET(req: NextRequest) {
             },
             orderBy: {
                 createdAt: "desc"
-            }
+            },
+            cacheStrategy: { ttl: 120 } // Cache users list for 2 minutes
         });
 
         console.log("[TEACHER_USERS_GET] Found users:", users.length);

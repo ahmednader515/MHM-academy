@@ -18,7 +18,13 @@ function createPrismaClient() {
     if (accelerateUrl) {
         return new PrismaClientEdge({
             datasourceUrl: accelerateUrl,
-        }).$extends(withAccelerate());
+        }).$extends(
+            withAccelerate({
+                cache: {
+                    ttl: 60, // Cache for 60 seconds by default
+                },
+            })
+        );
     }
 
     if (isEdgeRuntime) {
