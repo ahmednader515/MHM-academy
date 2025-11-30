@@ -31,7 +31,6 @@ export async function GET(req: Request) {
             orderBy: {
                 createdAt: "desc"
             },
-            cacheStrategy: { ttl: 120 } // Cache teachers list for 2 minutes
         });
 
         const teacherIds = teachers.map(t => t.id);
@@ -63,7 +62,6 @@ export async function GET(req: Request) {
                 orderBy: {
                     createdAt: "desc"
                 },
-                cacheStrategy: { ttl: 120 }
             }),
             db.quiz.findMany({
                 where: {
@@ -95,7 +93,6 @@ export async function GET(req: Request) {
                 orderBy: {
                     createdAt: "desc"
                 },
-                cacheStrategy: { ttl: 120 }
             }),
             db.liveStream.findMany({
                 where: {
@@ -122,7 +119,6 @@ export async function GET(req: Request) {
                 orderBy: {
                     createdAt: "desc"
                 },
-                cacheStrategy: { ttl: 120 }
             })
         ]);
 

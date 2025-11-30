@@ -29,7 +29,6 @@ export async function GET() {
         orderBy: {
           percentage: 'desc'
         },
-        cacheStrategy: { ttl: 120 } // Cache quiz results for 2 minutes (increased)
       }),
       // Get user data
       db.user.findUnique({
@@ -43,7 +42,6 @@ export async function GET() {
           balance: true,
           points: true
         },
-        cacheStrategy: { ttl: 300 } // Cache user data for 5 minutes
       }),
       // Get last watched chapter
       db.userProgress.findFirst({
@@ -67,7 +65,6 @@ export async function GET() {
         orderBy: {
           updatedAt: 'desc'
         },
-        cacheStrategy: { ttl: 120 } // Cache for 2 minutes (increased)
       })
     ]);
 
@@ -135,7 +132,6 @@ export async function GET() {
       orderBy: {
         createdAt: "desc",
       },
-      cacheStrategy: { ttl: 180 } // Cache courses for 3 minutes (increased)
     });
 
     // Batch all queries to avoid N+1 problem - run in parallel
@@ -155,7 +151,6 @@ export async function GET() {
         select: {
           chapterId: true
         },
-        cacheStrategy: { ttl: 60 } // Cache for 60s (increased)
       }),
       db.quizResult.findMany({
         where: {
@@ -167,7 +162,6 @@ export async function GET() {
         select: {
           quizId: true
         },
-        cacheStrategy: { ttl: 60 } // Cache for 60s (increased)
       })
     ]);
 

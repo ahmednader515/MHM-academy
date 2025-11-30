@@ -54,7 +54,6 @@ export async function GET() {
           },
         },
       },
-      cacheStrategy: { ttl: 180 } // Cache analytics data for 3 minutes
     }) as CourseWithRelations[];
 
     console.log("[ANALYTICS] Found courses:", courses.length);

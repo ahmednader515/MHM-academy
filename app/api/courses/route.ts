@@ -80,7 +80,6 @@ export async function GET(req: Request) {
       orderBy: {
         createdAt: "desc",
       },
-      cacheStrategy: { ttl: 180 } // Cache published courses for 3 minutes (increased)
     });
 
     if (includeProgress && userId) {
@@ -101,7 +100,6 @@ export async function GET(req: Request) {
           select: {
             chapterId: true
           },
-          cacheStrategy: { ttl: 60 } // Cache for 60s (increased)
         }),
         db.quizResult.findMany({
           where: {
@@ -113,7 +111,6 @@ export async function GET(req: Request) {
           select: {
             quizId: true
           },
-          cacheStrategy: { ttl: 60 } // Cache for 60s (increased)
         })
       ]);
 

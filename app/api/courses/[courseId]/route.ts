@@ -40,7 +40,6 @@ export async function GET(
                     },
                 },
             },
-            cacheStrategy: { ttl: 180 } // Cache course details for 3 minutes
         });
 
         if (!course) {

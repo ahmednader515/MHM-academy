@@ -40,7 +40,6 @@ export async function GET(req: Request) {
             orderBy: {
                 createdAt: "desc"
             },
-            cacheStrategy: { ttl: 120 } // Cache quizzes for 2 minutes
         });
 
         return NextResponse.json(quizzes);

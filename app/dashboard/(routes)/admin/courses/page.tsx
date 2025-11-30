@@ -37,7 +37,6 @@ const AdminCoursesPage = async () => {
     orderBy: {
       createdAt: "desc",
     },
-    cacheStrategy: { ttl: 180 } // Cache admin courses for 3 minutes (increased)
   }).then(courses => courses.map(course => ({
     ...course,
     price: course.price || 0,

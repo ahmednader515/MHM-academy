@@ -32,7 +32,6 @@ const AdminTimetablesPage = async () => {
       orderBy: {
         createdAt: "desc",
       },
-      cacheStrategy: { ttl: 300 } // Cache courses for 5 minutes
     }),
     db.timetable.findMany({
     include: {
@@ -53,7 +52,6 @@ const AdminTimetablesPage = async () => {
         { dayOfWeek: "asc" },
         { startTime: "asc" },
       ],
-      cacheStrategy: { ttl: 300 } // Cache timetables for 5 minutes
     })
   ]);
 

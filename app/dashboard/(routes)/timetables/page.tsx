@@ -12,14 +12,13 @@ const StudentTimetablesPage = async () => {
     return redirect("/dashboard");
   }
 
-  // Get student's enrolled courses with caching
+  // Get student's enrolled courses
   const enrolledCourses = await db.purchase.findMany({
     where: {
       userId,
       status: "ACTIVE",
     },
     select: { courseId: true },
-    cacheStrategy: { ttl: 300 } // Cache purchases for 5 minutes
   });
 
   const courseIds = enrolledCourses.map((p) => p.courseId);
@@ -48,7 +47,6 @@ const StudentTimetablesPage = async () => {
           { dayOfWeek: "asc" },
           { startTime: "asc" },
         ],
-        cacheStrategy: { ttl: 300 } // Cache timetables for 5 minutes
       })
     : [];
 

@@ -25,7 +25,6 @@ export async function GET(
                 orderBy: {
                     position: "asc"
                 },
-                cacheStrategy: { ttl: 180 } // Cache course content for 3 minutes
             }),
             db.quiz.findMany({
                 where: {
@@ -45,7 +44,6 @@ export async function GET(
                 orderBy: {
                     position: "asc"
                 },
-                cacheStrategy: { ttl: 180 }
             }),
             db.liveStream.findMany({
                 where: {
@@ -55,7 +53,6 @@ export async function GET(
                 orderBy: {
                     createdAt: "asc"
                 },
-                cacheStrategy: { ttl: 60 } // Cache live streams for 1 minute (they change more frequently)
             })
         ]);
 

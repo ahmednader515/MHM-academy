@@ -35,7 +35,6 @@ export async function GET() {
       orderBy: {
         createdAt: "desc",
       },
-      cacheStrategy: { ttl: 300 } // Cache public courses for 5 minutes
     });
 
     // Return courses with default progress of 0 for public view

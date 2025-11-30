@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "prisma:seed": "ts-node prisma/seed.ts",
+    "prisma:studio": "node scripts/prisma-studio.js",
     "fix:quiz-options": "node scripts/fix-quiz-options.js",
     "test:quiz-options": "node scripts/test-quiz-options.js",
     "postinstall": "prisma generate"
