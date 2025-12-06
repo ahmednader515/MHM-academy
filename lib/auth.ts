@@ -1,38 +1,25 @@
-import { getServerSession } from "next-auth";
+import NextAuth from "next-auth";
 import { redirect } from "next/navigation";
-import { AuthOptions } from "next-auth";
+import type { NextAuthConfig } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
-import GoogleProvider from "next-auth/providers/google";
-import { Adapter } from "next-auth/adapters";
-import CredentialsProvider from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { SessionManager } from "@/lib/session-manager";
 
-export const auth = async () => {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user) {
-    redirect("/sign-in");
-  }
-
-  return {
-    userId: session.user.id,
-    user: session.user,
-  };
-};
-
-export const authOptions: AuthOptions = {
-  adapter: PrismaAdapter(db) as Adapter,
+// Next-auth v5 configuration
+const config: NextAuthConfig = {
+  adapter: PrismaAdapter(db) as any,
   secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-development",
   providers: [
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? [
-      GoogleProvider({
+      Google({
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       })
     ] : []),
-    CredentialsProvider({
+    Credentials({
       name: "credentials",
       credentials: {
         phoneNumber: { label: "Phone Number", type: "text" },
@@ -45,7 +32,7 @@ export const authOptions: AuthOptions = {
 
         const user = await db.user.findUnique({
           where: {
-            phoneNumber: credentials.phoneNumber,
+            phoneNumber: credentials.phoneNumber as string,
           },
         });
 
@@ -54,7 +41,7 @@ export const authOptions: AuthOptions = {
         }
 
         const isPasswordValid = await bcrypt.compare(
-          credentials.password,
+          credentials.password as string,
           user.hashedPassword
         );
 
@@ -174,4 +161,24 @@ export const authOptions: AuthOptions = {
     },
   },
   debug: process.env.NODE_ENV === "development",
-}; 
+};
+
+// Create NextAuth instance - this returns handlers and auth
+export const { handlers, auth, signIn, signOut } = NextAuth(config);
+
+// Export config for reference if needed
+export const authConfig = config;
+
+// Helper function for server-side auth check
+export const getAuthSession = async () => {
+  const session = await auth();
+  
+  if (!session?.user) {
+    redirect("/sign-in");
+  }
+
+  return {
+    userId: session.user.id,
+    user: session.user,
+  };
+};

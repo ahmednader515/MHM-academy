@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
     // Check if user is teacher
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     
     if (!session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });

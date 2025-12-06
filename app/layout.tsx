@@ -86,6 +86,14 @@ const playpenSansArabic = localFont({
 export const metadata: Metadata = {
   title: "MHM Academy",
   description: "منصة تعليمية متكاملة",
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icon.png', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/icon.png',
+  },
 };
 
 export default function RootLayout({

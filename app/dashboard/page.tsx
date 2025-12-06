@@ -1,11 +1,10 @@
-import { getServerSession } from "next-auth";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { authOptions } from "@/lib/auth";
 import { getDashboardUrlByRole } from "@/lib/utils";
 import { DashboardWrapper } from "./_components/dashboard-wrapper";
 
 const CoursesPage = async () => {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session?.user?.id) {
     return redirect("/");

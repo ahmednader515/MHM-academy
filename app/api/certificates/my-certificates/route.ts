@@ -5,11 +5,13 @@ import { db } from "@/lib/db";
 // GET - Get certificates for the current user (student)
 export async function GET(req: Request) {
   try {
-    const { userId } = await auth();
+    const session = await auth();
 
-    if (!userId) {
+    if (!session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
 
     const certificates = await db.certificate.findMany({
       where: {

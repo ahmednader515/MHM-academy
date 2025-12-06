@@ -4,11 +4,14 @@ import { redirect } from "next/navigation";
 import { TimetableViewContent } from "../teacher/timetables/_components/timetable-view-content";
 
 const StudentTimetablesPage = async () => {
-  const { userId, user } = await auth();
-  if (!userId) return redirect("/");
+  const session = await auth();
+  if (!session?.user) return redirect("/");
+
+  const userId = session.user.id;
+  const user = session.user;
 
   // Ensure only students can access this page
-  if (user?.role !== "USER") {
+  if (user.role !== "USER") {
     return redirect("/dashboard");
   }
 

@@ -4,11 +4,14 @@ import { db } from "@/lib/db";
 
 export async function GET() {
   try {
-    const { userId, user } = await auth();
+    const session = await auth();
 
-    if (!userId || !user) {
+    if (!session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
+    const user = session.user;
 
     // Only for students
     if (user.role !== "USER") {

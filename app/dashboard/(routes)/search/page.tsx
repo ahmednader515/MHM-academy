@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { authOptions } from "@/lib/auth";
 import { SearchInput } from "./_components/search-input";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Clock, Users } from "lucide-react";
@@ -21,7 +20,7 @@ export default async function SearchPage({
 }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user?.id) {
         return redirect("/");
