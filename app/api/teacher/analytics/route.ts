@@ -18,10 +18,18 @@ type CourseWithRelations = Course & {
 
 export async function GET() {
   try {
-    const { userId } = await auth();
+    const session = await auth();
 
-    if (!userId) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const userId = session.user.id;
+    const user = session.user;
+
+    // Only for teachers
+    if (user.role !== "TEACHER") {
+      return new NextResponse("Forbidden", { status: 403 });
     }
 
     // Get all published courses by the user

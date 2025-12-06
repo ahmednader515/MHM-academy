@@ -8,13 +8,16 @@ export async function GET(
     { params }: { params: Promise<{ quizId: string }> }
 ) {
     try {
-        const { userId, user } = await auth();
+        const session = await auth();
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        if (user?.role !== "ADMIN") {
+        const userId = session.user.id;
+        const user = session.user;
+
+        if (user.role !== "ADMIN") {
             return NextResponse.json({ error: "Forbidden - Only admins can access this resource" }, { status: 403 });
         }
 
@@ -62,13 +65,16 @@ export async function PATCH(
     { params }: { params: Promise<{ quizId: string }> }
 ) {
     try {
-        const { userId, user } = await auth();
+        const session = await auth();
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        if (user?.role !== "ADMIN") {
+        const userId = session.user.id;
+        const user = session.user;
+
+        if (user.role !== "ADMIN") {
             return NextResponse.json({ error: "Forbidden - Only admins can access this resource" }, { status: 403 });
         }
 
@@ -87,7 +93,7 @@ export async function PATCH(
         }
 
         // Delete existing questions
-        await db.quizQuestion.deleteMany({
+        await db.question.deleteMany({
             where: { quizId },
         });
 
@@ -158,10 +164,17 @@ export async function DELETE(
     { params }: { params: Promise<{ quizId: string }> }
 ) {
     try {
-        const { userId, user } = await auth();
+        const session = await auth();
 
-        if (!userId || user?.role !== "ADMIN") {
+        if (!session?.user?.id || !session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const userId = session.user.id;
+        const user = session.user;
+
+        if (user.role !== "ADMIN") {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
         const resolvedParams = await params;

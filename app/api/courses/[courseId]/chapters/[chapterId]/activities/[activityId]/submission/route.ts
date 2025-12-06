@@ -8,12 +8,14 @@ export async function POST(
   { params }: { params: Promise<{ courseId: string; chapterId: string; activityId: string }> }
 ) {
   try {
-    const { userId } = await auth();
+    const session = await auth();
     const resolvedParams = await params;
 
-    if (!userId) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
 
     const { imageUrl } = await req.json();
 
@@ -91,12 +93,14 @@ export async function GET(
   { params }: { params: Promise<{ courseId: string; chapterId: string; activityId: string }> }
 ) {
   try {
-    const { userId } = await auth();
+    const session = await auth();
     const resolvedParams = await params;
 
-    if (!userId) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
 
     const submission = await db.activitySubmission.findFirst({
       where: {

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, BookOpen, User, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 
 interface User {
     id: string;
@@ -31,6 +32,7 @@ interface Course {
 
 const AddCoursesPage = () => {
     const { t, isRTL } = useLanguage();
+    const { formatPrice } = useCurrency();
     const [users, setUsers] = useState<User[]>([]);
     const [courses, setCourses] = useState<Course[]>([]);
     const [ownedCourses, setOwnedCourses] = useState<Course[]>([]);
@@ -293,7 +295,7 @@ const AddCoursesPage = () => {
                                                 <span>{course.title}</span>
                                                 {typeof course.price === "number" && (
                                                     <Badge variant="outline" className="mr-2">
-                                                        {course.price} {t('dashboard.egp')}
+                                                        {formatPrice(course.price)}
                                                     </Badge>
                                                 )}
                                             </div>

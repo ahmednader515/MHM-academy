@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Calendar } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/language-context";
@@ -53,10 +53,19 @@ export const TimetablesContent = ({ courses, timetables: initialTimetables }: Ti
   const [timetables, setTimetables] = useState<Timetable[]>(initialTimetables);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTimetable, setEditingTimetable] = useState<Timetable | null>(null);
+  const justUpdatedRef = useRef(false);
 
   // Sync local state with props when they change (after router.refresh())
+  // But only if we haven't just updated via API to avoid overwriting fresh data
   useEffect(() => {
-    setTimetables(initialTimetables);
+    if (!justUpdatedRef.current) {
+      setTimetables(initialTimetables);
+    } else {
+      // Reset the flag after a short delay
+      setTimeout(() => {
+        justUpdatedRef.current = false;
+      }, 1000);
+    }
   }, [initialTimetables]);
 
   const handleCreate = () => {
@@ -81,20 +90,47 @@ export const TimetablesContent = ({ courses, timetables: initialTimetables }: Ti
     }
   };
 
-  const handleDialogClose = async () => {
+  const handleDialogClose = async (newTimetable?: any) => {
     setIsDialogOpen(false);
     setEditingTimetable(null);
     
-    // Fetch updated timetables to show the new/updated entry immediately
+    // Mark that we're updating via API to prevent useEffect from overwriting
+    justUpdatedRef.current = true;
+    
+    // Always fetch updated timetables to ensure we have the latest data from server
+    // This ensures consistency and includes any server-side processing
     try {
       const response = await axios.get("/api/timetables");
-      setTimetables(response.data);
+      if (response.data && Array.isArray(response.data)) {
+        setTimetables(response.data);
+        // Don't call router.refresh() here since we already have fresh data
+        // It would cause unnecessary re-renders and potential race conditions
+      } else {
+        console.error("[TIMETABLES_CONTENT] Invalid response format:", response.data);
+        // If fetch fails but we have newTimetable, add it optimistically
+        if (newTimetable) {
+          if (editingTimetable) {
+            setTimetables(timetables.map(t => t.id === newTimetable.id ? newTimetable : t));
+          } else {
+            setTimetables([...timetables, newTimetable]);
+          }
+        }
+        // Fallback: refresh the router to get updated data from server
+        router.refresh();
+      }
     } catch (error) {
-      console.error("Failed to fetch updated timetables:", error);
+      console.error("[TIMETABLES_CONTENT] Failed to fetch updated timetables:", error);
+      // If fetch fails but we have newTimetable, add it optimistically
+      if (newTimetable) {
+        if (editingTimetable) {
+          setTimetables(timetables.map(t => t.id === newTimetable.id ? newTimetable : t));
+        } else {
+          setTimetables([...timetables, newTimetable]);
+        }
+      }
+      // Fallback: refresh the router to get updated data from server
+      router.refresh();
     }
-    
-    // Also refresh the router to sync with server state
-    router.refresh();
   };
 
   return (
@@ -112,6 +148,7 @@ export const TimetablesContent = ({ courses, timetables: initialTimetables }: Ti
         </Button>
       </div>
 
+      {/* Always show calendar if we have timetables, or show empty state */}
       {timetables.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -123,6 +160,7 @@ export const TimetablesContent = ({ courses, timetables: initialTimetables }: Ti
         </Card>
       ) : (
         <AdminTimetableCalendar
+          key={`calendar-${timetables.length}-${timetables.map(t => t.id).join('-')}`} // Force re-render when timetables change
           timetables={timetables}
           onEdit={handleEdit}
           onDelete={handleDelete}

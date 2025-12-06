@@ -5,13 +5,16 @@ import { parseQuizOptions, stringifyQuizOptions } from "@/lib/utils";
 
 export async function GET(req: Request) {
     try {
-        const { userId, user } = await auth();
+        const session = await auth();
 
-        if (!userId) {
+        if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        if (user?.role !== "TEACHER") {
+        const userId = session.user.id;
+        const user = session.user;
+
+        if (user.role !== "TEACHER") {
             return NextResponse.json({ error: "Forbidden - Only teachers can access this resource" }, { status: 403 });
         }
 
@@ -67,16 +70,19 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
-        const { userId, user } = await auth();
+        const session = await auth();
         const { title, description, courseId, questions, position, timer, maxAttempts } = await req.json();
 
         console.log("Received position:", position, "Type:", typeof position);
 
-        if (!userId) {
+        if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        if (user?.role !== "TEACHER") {
+        const userId = session.user.id;
+        const user = session.user;
+
+        if (user.role !== "TEACHER") {
             return NextResponse.json({ error: "Forbidden - Only teachers can access this resource" }, { status: 403 });
         }
 

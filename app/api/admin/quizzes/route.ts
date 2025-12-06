@@ -5,13 +5,16 @@ import { stringifyQuizOptions } from "@/lib/utils";
 
 export async function GET(req: Request) {
     try {
-        const { userId, user } = await auth();
+        const session = await auth();
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        if (user?.role !== "ADMIN") {
+        const userId = session.user.id;
+        const user = session.user;
+
+        if (user.role !== "ADMIN") {
             return NextResponse.json({ error: "Forbidden - Only admins can access this resource" }, { status: 403 });
         }
 
@@ -51,13 +54,16 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
-        const { userId, user } = await auth();
+        const session = await auth();
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        if (user?.role !== "ADMIN") {
+        const userId = session.user.id;
+        const user = session.user;
+
+        if (user.role !== "ADMIN") {
             return NextResponse.json({ error: "Forbidden - Only admins can access this resource" }, { status: 403 });
         }
 

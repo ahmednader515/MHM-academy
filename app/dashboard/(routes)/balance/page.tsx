@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { Wallet, Plus, History, ArrowUpRight } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 import { Icons } from "@/components/icons";
 import Image from "next/image";
 
@@ -22,6 +23,7 @@ interface BalanceTransaction {
 export default function BalancePage() {
   const { data: session } = useSession();
   const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
   const [balance, setBalance] = useState(0);
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -133,7 +135,7 @@ export default function BalancePage() {
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-[#211FC3]">
-            {balance.toFixed(2)} {t('dashboard.egyptianPound')}
+            {formatPrice(balance)}
           </div>
         </CardContent>
       </Card>
@@ -281,7 +283,7 @@ export default function BalancePage() {
                      transaction.type === "DEPOSIT" ? "text-green-600" : "text-red-600"
                    }`}>
                      {transaction.type === "DEPOSIT" ? "+" : "-"}
-                     {Math.abs(transaction.amount).toFixed(2)} {t('dashboard.egyptianPound')}
+                     {formatPrice(Math.abs(transaction.amount))}
                    </div>
                 </div>
               ))}

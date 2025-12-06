@@ -5,9 +5,13 @@ import { detectMeetingType, extractMeetingId, isValidMeetingUrl } from "@/lib/zo
 
 export async function GET() {
   try {
-    const { userId, user } = await auth();
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (user?.role !== "TEACHER") return NextResponse.json({ error: "Forbidden - Only teachers can access this resource" }, { status: 403 });
+    const session = await auth();
+    if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    
+    const userId = session.user.id;
+    const user = session.user;
+    
+    if (user.role !== "TEACHER") return NextResponse.json({ error: "Forbidden - Only teachers can access this resource" }, { status: 403 });
 
     // Teachers can only see live streams for their own courses
     const liveStreams = await db.liveStream.findMany({
@@ -52,9 +56,13 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { userId, user } = await auth();
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (user?.role !== "TEACHER") return NextResponse.json({ error: "Forbidden - Only teachers can access this resource" }, { status: 403 });
+    const session = await auth();
+    if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    
+    const userId = session.user.id;
+    const user = session.user;
+    
+    if (user.role !== "TEACHER") return NextResponse.json({ error: "Forbidden - Only teachers can access this resource" }, { status: 403 });
 
     const { title, description, meetingUrl, courseId, scheduledAt, duration } = await req.json();
 

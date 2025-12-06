@@ -8,12 +8,14 @@ export async function GET(
     { params }: { params: Promise<{ courseId: string; quizId: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const session = await auth();
         const resolvedParams = await params;
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
+
+        const userId = session.user.id;
 
         // Check if user has access to the course
         const course = await db.course.findUnique({
@@ -115,13 +117,15 @@ export async function PATCH(
     { params }: { params: Promise<{ courseId: string; quizId: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const session = await auth();
         const resolvedParams = await params;
         const { title, description, questions, position } = await req.json();
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
+
+        const userId = session.user.id;
 
         // Verify the course belongs to the teacher
         const course = await db.course.findUnique({
@@ -184,12 +188,14 @@ export async function DELETE(
     { params }: { params: Promise<{ courseId: string; quizId: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const session = await auth();
         const resolvedParams = await params;
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
+
+        const userId = session.user.id;
 
         // Verify the course belongs to the teacher
         const course = await db.course.findUnique({

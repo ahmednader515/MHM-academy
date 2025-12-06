@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from 'react';
-import { useCurrency, CURRENCIES } from '@/lib/contexts/currency-context';
+import { useCurrency } from '@/lib/contexts/currency-context';
 
 export const CurrencySelector = () => {
-  const { selectedCurrency, setSelectedCurrency } = useCurrency();
+  const { selectedCurrency, setSelectedCurrency, currencies } = useCurrency();
   const [isHovered, setIsHovered] = useState(false);
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
 
-  const handleCurrencySelect = (currency: typeof CURRENCIES[0]) => {
+  const handleCurrencySelect = (currency: typeof currencies[0]) => {
     setSelectedCurrency(currency);
     setIsMobileExpanded(false); // Close on mobile after selection
   };
@@ -31,7 +31,7 @@ export const CurrencySelector = () => {
             {/* Collapsed View - Only Currency Letters */}
             {!isHovered && (
               <div className="py-1">
-                {CURRENCIES.map((currency) => (
+                {currencies.map((currency) => (
                   <button
                     key={currency.code}
                     onClick={() => handleCurrencySelect(currency)}
@@ -57,7 +57,7 @@ export const CurrencySelector = () => {
                 
                 {/* Currency Options */}
                 <div className="py-2">
-                  {CURRENCIES.map((currency) => (
+                  {currencies.map((currency) => (
                     <button
                       key={currency.code}
                       onClick={() => handleCurrencySelect(currency)}
@@ -95,7 +95,7 @@ export const CurrencySelector = () => {
             {/* Collapsed View - Only Currency Letters */}
             {!isMobileExpanded && (
               <div className="py-0.5">
-                {CURRENCIES.map((currency) => (
+                {currencies.map((currency) => (
                   <button
                     key={currency.code}
                     onClick={(e) => {
@@ -124,7 +124,7 @@ export const CurrencySelector = () => {
                 
                 {/* Currency Options */}
                 <div className="py-0.5">
-                  {CURRENCIES.map((currency) => (
+                  {currencies.map((currency) => (
                     <button
                       key={currency.code}
                       onClick={() => handleCurrencySelect(currency)}

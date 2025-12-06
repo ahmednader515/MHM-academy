@@ -7,13 +7,15 @@ export async function POST(
   { params }: { params: Promise<{ courseId: string; livestreamId: string }> }
 ) {
   try {
-    const { userId } = await auth();
+    const session = await auth();
     const resolvedParams = await params;
     const { livestreamId } = resolvedParams;
 
-    if (!userId) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
 
     // Record attendance (upsert to avoid duplicates)
     await db.liveStreamAttendance.upsert({

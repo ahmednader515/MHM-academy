@@ -8,10 +8,12 @@ export async function GET(
   { params }: { params: Promise<{ livestreamId: string }> }
 ) {
   try {
-    const { userId, user } = await auth();
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (user?.role !== "TEACHER") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const session = await auth();
+    if (!session?.user?.id || !session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (session.user.role !== "TEACHER") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+    const userId = session.user.id;
+    const user = session.user;
     const resolvedParams = await params;
     const { livestreamId } = resolvedParams;
 
@@ -43,10 +45,12 @@ export async function PATCH(
   { params }: { params: Promise<{ livestreamId: string }> }
 ) {
   try {
-    const { userId, user } = await auth();
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (user?.role !== "TEACHER") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const session = await auth();
+    if (!session?.user?.id || !session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (session.user.role !== "TEACHER") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+    const userId = session.user.id;
+    const user = session.user;
     const resolvedParams = await params;
     const { livestreamId } = resolvedParams;
     const { title, description, meetingUrl, scheduledAt, duration, isPublished } = await req.json();
@@ -118,10 +122,12 @@ export async function DELETE(
   { params }: { params: Promise<{ livestreamId: string }> }
 ) {
   try {
-    const { userId, user } = await auth();
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (user?.role !== "TEACHER") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const session = await auth();
+    if (!session?.user?.id || !session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (session.user.role !== "TEACHER") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+    const userId = session.user.id;
+    const user = session.user;
     const resolvedParams = await params;
     const { livestreamId } = resolvedParams;
 

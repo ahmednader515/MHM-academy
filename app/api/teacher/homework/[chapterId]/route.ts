@@ -8,20 +8,18 @@ export async function GET(
   { params }: { params: Promise<{ chapterId: string }> }
 ) {
   try {
-    const { userId } = await auth();
+    const session = await auth();
     const resolvedParams = await params;
 
-    if (!userId) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Check if user is teacher or admin
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    });
+    const userId = session.user.id;
+    const user = session.user;
 
-    if (!user || (user.role !== "TEACHER" && user.role !== "ADMIN")) {
+    // Check if user is teacher or admin
+    if (user.role !== "TEACHER" && user.role !== "ADMIN") {
       return new NextResponse("Forbidden", { status: 403 });
     }
 

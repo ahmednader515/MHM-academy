@@ -26,39 +26,56 @@ const config: NextAuthConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.phoneNumber || !credentials?.password) {
-          throw new Error("Missing credentials");
+        try {
+          if (!credentials?.phoneNumber || !credentials?.password) {
+            throw new Error("MissingCredentials");
+          }
+
+          const user = await db.user.findUnique({
+            where: {
+              phoneNumber: credentials.phoneNumber as string,
+            },
+          });
+
+          if (!user) {
+            throw new Error("UserNotFound");
+          }
+
+          if (!user.hashedPassword) {
+            throw new Error("UserNotFound");
+          }
+
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password as string,
+            user.hashedPassword
+          );
+
+          if (!isPasswordValid) {
+            throw new Error("WrongPassword");
+          }
+
+          // Allow multiple device logins - no restriction
+
+          return {
+            id: user.id,
+            name: user.fullName,
+            phoneNumber: user.phoneNumber,
+            role: user.role,
+            points: user.points,
+            parentPhoneNumber: user.parentPhoneNumber,
+          } as any;
+        } catch (error) {
+          // Re-throw known errors
+          if (error instanceof Error && 
+              (error.message === "MissingCredentials" || 
+               error.message === "UserNotFound" || 
+               error.message === "WrongPassword")) {
+            throw error;
+          }
+          // For database errors or other unexpected errors, throw server error
+          console.error("Authentication error:", error);
+          throw new Error("ServerError");
         }
-
-        const user = await db.user.findUnique({
-          where: {
-            phoneNumber: credentials.phoneNumber as string,
-          },
-        });
-
-        if (!user || !user.hashedPassword) {
-          throw new Error("Invalid credentials");
-        }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password as string,
-          user.hashedPassword
-        );
-
-        if (!isPasswordValid) {
-          throw new Error("Invalid credentials");
-        }
-
-        // Allow multiple device logins - no restriction
-
-        return {
-          id: user.id,
-          name: user.fullName,
-          phoneNumber: user.phoneNumber,
-          role: user.role,
-          points: user.points,
-          parentPhoneNumber: user.parentPhoneNumber,
-        } as any;
       },
     }),
   ],

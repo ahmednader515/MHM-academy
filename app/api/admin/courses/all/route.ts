@@ -4,10 +4,17 @@ import { db } from "@/lib/db";
 
 export async function GET() {
     try {
-        const { userId, user } = await auth();
+        const session = await auth();
 
-        if (!userId || user?.role !== "ADMIN") {
+        if (!session?.user?.id || !session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const userId = session.user.id;
+        const user = session.user;
+
+        if (user.role !== "ADMIN") {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
         // Get all courses for admin

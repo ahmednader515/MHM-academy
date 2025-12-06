@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: { userId: string } }
+    { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
         const session = await auth();
@@ -18,6 +18,7 @@ export async function PATCH(
             return new NextResponse("Forbidden", { status: 403 });
         }
 
+        const resolvedParams = await params;
         const { newPassword } = await req.json();
 
         if (!newPassword) {
@@ -26,7 +27,7 @@ export async function PATCH(
 
         const user = await db.user.findUnique({
             where: {
-                id: params.userId
+                id: resolvedParams.userId
             }
         });
 
@@ -38,7 +39,7 @@ export async function PATCH(
 
         await db.user.update({
             where: {
-                id: params.userId
+                id: resolvedParams.userId
             },
             data: {
                 hashedPassword

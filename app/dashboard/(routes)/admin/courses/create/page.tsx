@@ -3,14 +3,17 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 const AdminCreateCoursePage = async () => {
-  const { userId, user } = await auth();
+  const session = await auth();
 
-  if (!userId) {
+  if (!session?.user) {
     return redirect("/");
   }
 
+  const userId = session.user.id;
+  const user = session.user;
+
   // Only admin can create courses through admin dashboard
-  if (user?.role !== "ADMIN") {
+  if (user.role !== "ADMIN") {
     return redirect("/dashboard");
   }
 

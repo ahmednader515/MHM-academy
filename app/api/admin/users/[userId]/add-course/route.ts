@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { userId: string } }
+    { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
         const session = await auth();
@@ -24,6 +24,7 @@ export async function POST(
             );
         }
 
+        const resolvedParams = await params;
         const { courseId } = await req.json();
 
         if (!courseId) {
@@ -36,7 +37,7 @@ export async function POST(
         // Check if user exists and is a student
         const user = await db.user.findUnique({
             where: {
-                id: params.userId,
+                id: resolvedParams.userId,
                 role: "USER"
             }
         });
@@ -66,7 +67,7 @@ export async function POST(
         // Check if student already has this course
         const existingPurchase = await db.purchase.findFirst({
             where: {
-                userId: params.userId,
+                userId: resolvedParams.userId,
                 courseId: courseId,
                 status: "ACTIVE"
             }
@@ -82,7 +83,7 @@ export async function POST(
         // Create purchase record
         const purchase = await db.purchase.create({
             data: {
-                userId: params.userId,
+                userId: resolvedParams.userId,
                 courseId: courseId,
                 status: "ACTIVE"
             }
@@ -104,7 +105,7 @@ export async function POST(
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { userId: string } }
+    { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
         const session = await auth();
@@ -123,6 +124,7 @@ export async function DELETE(
             );
         }
 
+        const resolvedParams = await params;
         const { courseId } = await req.json();
 
         if (!courseId) {
@@ -135,7 +137,7 @@ export async function DELETE(
         // Ensure student exists
         const user = await db.user.findUnique({
             where: {
-                id: params.userId,
+                id: resolvedParams.userId,
                 role: "USER",
             },
         });
@@ -151,7 +153,7 @@ export async function DELETE(
         const existingPurchase = await db.purchase.findUnique({
             where: {
                 userId_courseId: {
-                    userId: params.userId,
+                    userId: resolvedParams.userId,
                     courseId,
                 },
             },

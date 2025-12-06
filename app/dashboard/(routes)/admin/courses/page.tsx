@@ -4,11 +4,14 @@ import { redirect } from "next/navigation";
 import { TeacherCoursesContent } from "@/app/dashboard/(routes)/teacher/courses/_components/teacher-courses-content";
 
 const AdminCoursesPage = async () => {
-  const { userId, user } = await auth();
-  if (!userId) return redirect("/");
+  const session = await auth();
+  if (!session?.user) return redirect("/");
+
+  const userId = session.user.id;
+  const user = session.user;
 
   // Ensure only admins can access this page
-  if (user?.role !== "ADMIN") {
+  if (user.role !== "ADMIN") {
     return redirect("/dashboard");
   }
 

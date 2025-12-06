@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 
 interface User {
     id: string;
@@ -74,6 +75,7 @@ interface EditUserData {
 
 const UsersPage = () => {
     const { t, isRTL } = useLanguage();
+    const { formatPrice } = useCurrency();
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -424,7 +426,7 @@ const UsersPage = () => {
                                         </TableCell>
                                         <TableCell className={isRTL ? "text-right" : "text-left"}>
                                             <Badge variant="secondary">
-                                                {user.balance} {t('dashboard.egyptianPound')}
+                                                {formatPrice(user.balance)}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className={isRTL ? "text-right" : "text-left"}>

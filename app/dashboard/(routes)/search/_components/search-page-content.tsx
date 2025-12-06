@@ -6,6 +6,7 @@ import { BookOpen, Clock, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -34,6 +35,7 @@ interface SearchPageContentProps {
 
 export const SearchPageContent = ({ coursesWithProgress, title }: SearchPageContentProps) => {
     const { t } = useLanguage();
+    const { formatPrice } = useCurrency();
     const router = useRouter();
 
     const handleEnrollInFreeCourse = async (courseId: string) => {
@@ -128,7 +130,7 @@ export const SearchPageContent = ({ coursesWithProgress, title }: SearchPageCont
                                             ? "bg-green-500 text-white" 
                                             : "bg-white/90 backdrop-blur-sm text-gray-800"
                                     }`}>
-                                        {course.isFree ? t('dashboard.free') : `${course.price} EGP`}
+                                        {course.isFree ? t('dashboard.free') : formatPrice(course.price || 0)}
                                     </div>
                                 </div>
 

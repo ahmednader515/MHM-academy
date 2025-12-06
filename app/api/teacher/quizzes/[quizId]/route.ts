@@ -8,14 +8,17 @@ export async function GET(
     { params }: { params: Promise<{ quizId: string }> }
 ) {
     try {
-        const { userId, user } = await auth();
+        const session = await auth();
         const resolvedParams = await params;
 
-        console.log("[TEACHER_QUIZ_GET] Fetching quiz:", resolvedParams.quizId, "for user:", userId);
-
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
+        const userId = session.user.id;
+        const user = session.user;
+
+        console.log("[TEACHER_QUIZ_GET] Fetching quiz:", resolvedParams.quizId, "for user:", userId);
 
         // Get the quiz; if not admin, ensure it belongs to the teacher
         const quiz = await db.quiz.findFirst({
@@ -91,13 +94,16 @@ export async function PATCH(
     { params }: { params: Promise<{ quizId: string }> }
 ) {
     try {
-        const { userId, user } = await auth();
+        const session = await auth();
         const resolvedParams = await params;
         const { title, description, questions, position, timer, maxAttempts, courseId } = await req.json();
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
+        const userId = session.user.id;
+        const user = session.user;
 
         // Get the current quiz to know its course and owner
         const currentQuiz = await db.quiz.findUnique({

@@ -129,7 +129,10 @@ const CertificatesPage = () => {
         link.target = '_blank';
         document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+        // Safely remove the link
+        if (link.parentNode) {
+            link.parentNode.removeChild(link);
+        }
     };
 
     const filteredCertificates = certificates.filter(cert => 
@@ -159,13 +162,13 @@ const CertificatesPage = () => {
                             {t('certificates.createCertificate') || 'Create Certificate'}
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-2xl">
                         <DialogHeader>
                             <DialogTitle>{t('certificates.createCertificate') || 'Create Certificate'}</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4">
                             <div>
-                                <Label>{t('certificates.selectStudent') || 'Select Student'}</Label>
+                                <Label className="mb-2 block">{t('certificates.selectStudent') || 'Select Student'}</Label>
                                 <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
                                     <SelectTrigger>
                                         <SelectValue placeholder={t('certificates.selectStudentPlaceholder') || 'Select a student'} />
@@ -181,9 +184,9 @@ const CertificatesPage = () => {
                             </div>
 
                             <div>
-                                <Label>{t('certificates.certificateImage') || 'Certificate Image'}</Label>
+                                <Label className="mb-2 block">{t('certificates.certificateImage') || 'Certificate Image'}</Label>
                                 {certificateImageUrl ? (
-                                    <div className="mt-2 space-y-2">
+                                    <div className="space-y-2">
                                         <div className="relative w-full max-w-md border rounded-md">
                                             <img 
                                                 src={certificateImageUrl} 
@@ -208,13 +211,12 @@ const CertificatesPage = () => {
                                                 setCertificateImageUrl(res.url);
                                             }
                                         }}
-                                        className="mt-2"
                                     />
                                 )}
                             </div>
 
                             <div>
-                                <Label>{t('certificates.titleLabel') || 'Title'} ({t('dashboard.optional') || 'Optional'})</Label>
+                                <Label className="mb-2 block">{t('certificates.titleLabel') || 'Title'} ({t('dashboard.optional') || 'Optional'})</Label>
                                 <Input
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
@@ -223,7 +225,7 @@ const CertificatesPage = () => {
                             </div>
 
                             <div>
-                                <Label>{t('certificates.description') || 'Description'} ({t('dashboard.optional') || 'Optional'})</Label>
+                                <Label className="mb-2 block">{t('certificates.description') || 'Description'} ({t('dashboard.optional') || 'Optional'})</Label>
                                 <Textarea
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
@@ -232,7 +234,7 @@ const CertificatesPage = () => {
                                 />
                             </div>
 
-                            <div className="flex justify-end gap-2">
+                            <div className="flex justify-end gap-2 pt-2">
                                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                                     {t('dashboard.cancel') || 'Cancel'}
                                 </Button>

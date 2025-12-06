@@ -4,11 +4,13 @@ import { db } from "@/lib/db";
 
 export async function GET() {
   try {
-    const { userId } = await auth();
+    const session = await auth();
     
-    if (!userId) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
 
     // Combine both queries into one to reduce operations
     const user = await db.user.findUnique({

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { auth } from "@/lib/auth";
 import { ArrowLeft, CreditCard, Wallet, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { useCurrency } from "@/lib/contexts/currency-context";
 
 interface Course {
   id: string;
@@ -24,6 +25,7 @@ export default function PurchasePage({
 }) {
   const router = useRouter();
   const { courseId } = use(params);
+  const { formatPrice, convertPrice } = useCurrency();
   const [course, setCourse] = useState<Course | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -156,7 +158,7 @@ export default function PurchasePage({
                 </div>
               )}
               <div className="text-2xl font-bold text-[#211FC3]">
-                {course.price || 0} EGP
+                {formatPrice(course.price || 0)}
               </div>
             </CardContent>
           </Card>
@@ -175,7 +177,7 @@ export default function PurchasePage({
               ) : (
                 <div className="space-y-2">
                   <div className="text-xl font-bold">
-                    {userBalance.toFixed(2)} جنيه
+                    {formatPrice(userBalance)}
                   </div>
                   {!hasSufficientBalance && (
                     <div className="flex items-center gap-2 text-amber-600">
@@ -198,7 +200,7 @@ export default function PurchasePage({
                     <span className="font-medium">رصيد غير كافي</span>
                   </div>
                   <p className="text-amber-700 mb-4">
-                    تحتاج إلى {(course.price || 0) - userBalance} جنيه إضافية لشراء هذه المادة
+                    تحتاج إلى {formatPrice((course.price || 0) - userBalance)} إضافية لشراء هذه المادة
                   </p>
                   <Button asChild className="bg-[#090919] hover:bg-[#090919]/90">
                     <Link href="/dashboard/balance">إضافة رصيد</Link>
@@ -224,7 +226,7 @@ export default function PurchasePage({
             </Button>
 
             <div className="text-center text-sm text-muted-foreground">
-              <p>سيتم خصم {course.price?.toFixed(2) || "0.00"} جنيه من رصيدك</p>
+              <p>سيتم خصم {formatPrice(course.price || 0)} من رصيدك</p>
               <p>ستتمكن من الوصول إلى المادة فوراً بعد الشراء</p>
             </div>
           </div>

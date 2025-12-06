@@ -7,12 +7,14 @@ export async function GET(
   { params }: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const { userId } = await auth();
+    const session = await auth();
     const resolvedParams = await params;
 
-    if (!userId) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
 
     // Get total content (chapters + quizzes) in the course
     const [totalChapters, totalQuizzes] = await Promise.all([

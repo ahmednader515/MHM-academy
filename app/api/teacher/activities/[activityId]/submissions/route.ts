@@ -8,12 +8,15 @@ export async function GET(
   { params }: { params: Promise<{ activityId: string }> }
 ) {
   try {
-    const { userId, user } = await auth();
+    const session = await auth();
     const resolvedParams = await params;
 
-    if (!userId || !user) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
+    const user = session.user;
 
     // Check if user is teacher or admin
     if (user.role !== "TEACHER" && user.role !== "ADMIN") {

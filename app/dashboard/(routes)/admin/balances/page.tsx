@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Edit, Search, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 
 interface User {
     id: string;
@@ -22,6 +23,7 @@ interface User {
 
 const BalancesPage = () => {
     const { t, isRTL } = useLanguage();
+    const { formatPrice } = useCurrency();
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -147,7 +149,7 @@ const BalancesPage = () => {
                                         <TableCell className={isRTL ? "text-right" : "text-left"}>
                                             <Badge variant="outline" className="flex items-center gap-1">
                                                 <Wallet className="h-3 w-3" />
-                                                {user.balance} {t('dashboard.egp')}
+                                                {formatPrice(user.balance)}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className={isRTL ? "text-right" : "text-left"}>

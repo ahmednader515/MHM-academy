@@ -80,7 +80,10 @@ export const AttachmentsForm = ({
                 link.download = name || getFilenameFromUrl(url);
                 document.body.appendChild(link);
                 link.click();
-                document.body.removeChild(link);
+                // Safely remove the link
+                if (link.parentNode) {
+                    link.parentNode.removeChild(link);
+                }
                 
                 window.URL.revokeObjectURL(downloadUrl);
                 toast.success(t('teacher.downloadStarted'));
@@ -98,7 +101,10 @@ export const AttachmentsForm = ({
             
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
+            // Safely remove the link
+            if (link.parentNode) {
+                link.parentNode.removeChild(link);
+            }
             
             toast.success(t('teacher.fileOpenedInNewTab'));
         }

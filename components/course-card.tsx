@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Progress } from "@/components/ui/progress";
+import { useCurrency } from "@/lib/contexts/currency-context";
 
 interface CourseCardProps {
     id: string;
@@ -28,6 +29,8 @@ export const CourseCard = ({
     progress,
     user,
 }: CourseCardProps) => {
+    const { formatPrice } = useCurrency();
+    
     return (
         <Link href={`/courses/${id}`}>
             <div className="group hover:shadow-sm transition overflow-hidden border rounded-lg p-3 h-full">
@@ -56,7 +59,7 @@ export const CourseCard = ({
                         />
                     ) : (
                         <p className="text-md md:text-sm font-medium text-slate-700">
-                            {price} EGP
+                            {formatPrice(price)}
                         </p>
                     )}
                     <div className="flex items-center gap-x-2 mt-2">

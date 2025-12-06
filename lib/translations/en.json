@@ -68,6 +68,10 @@
     "signUpSuccess": "Account created successfully",
     "signOutSuccess": "Signed out successfully",
     "invalidCredentials": "Invalid phone number or password",
+    "userNotFound": "Phone number not found. Please check your phone number and try again.",
+    "wrongPassword": "Incorrect password. Please try again.",
+    "missingCredentials": "Please enter both phone number and password.",
+    "serverError": "Server error occurred. Please try again later.",
     "signInError": "Error occurred during sign in",
     "signUpError": "Error occurred during sign up",
     "signingIn": "Signing in...",
@@ -329,6 +333,7 @@
     "notStarted": "Not Started",
     "courseName": "Course Name",
     "purchaseDate": "Purchase Date",
+    "createdAt": "Created At",
     "progressDetails": "Progress Details",
     "chapter": "Chapter",
     "status": "Status",
@@ -1165,7 +1170,9 @@
     "selectGrade": "All Grades",
     "all": "All",
     "searchCourseOrTeacher": "Search course or teacher...",
-    "noCoursesFound": "No courses found."
+    "noCoursesFound": "No courses found.",
+    "expandTimetable": "Show Full Day (12 AM - 12 PM)",
+    "collapseTimetable": "Show 12 PM - 12 AM Only"
   },
   "quiz": {
     "title": "Quiz Title",

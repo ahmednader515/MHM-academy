@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { Course } from "@prisma/client";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 
 interface PriceFormProps {
     initialData: Course;
@@ -39,6 +40,7 @@ export const PriceForm = ({
     isAdmin = false
 }: PriceFormProps) => {
     const { t } = useLanguage();
+    const { formatPrice } = useCurrency();
     const [isEditing, setIsEditing] = useState(false);
 
     const toggleEdit = () => setIsEditing((current) => !current);
@@ -91,7 +93,7 @@ export const PriceForm = ({
                           : initialData.price === 0
                           ? t('teacher.free')
                           : initialData.price
-                          ? `${initialData.price} EGP`
+                          ? formatPrice(initialData.price)
                           : t('teacher.noPrice')
                         }
                     </p>

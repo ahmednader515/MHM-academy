@@ -12,6 +12,7 @@ import { Search, Eye, BookOpen, CheckCircle, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 
 interface User {
     id: string;
@@ -61,6 +62,7 @@ interface Purchase {
 
 const ProgressPage = () => {
     const { t, isRTL } = useLanguage();
+    const { formatPrice } = useCurrency();
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -259,7 +261,7 @@ const ProgressPage = () => {
                                                         {purchase.course.title}
                                                     </TableCell>
                                                     <TableCell className={isRTL ? "text-right" : "text-left"}>
-                                                        {purchase.course.price} {t('dashboard.egp')}
+                                                        {formatPrice(purchase.course.price || 0)}
                                                     </TableCell>
                                                     <TableCell className={isRTL ? "text-right" : "text-left"}>
                                                         <Badge variant={purchase.status === "ACTIVE" ? "default" : "secondary"}>

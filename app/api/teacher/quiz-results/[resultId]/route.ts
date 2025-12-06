@@ -7,12 +7,14 @@ export async function GET(
     { params }: { params: Promise<{ resultId: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const session = await auth();
         const resolvedParams = await params;
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
+
+        const userId = session.user.id;
 
         // Get the quiz result and verify it belongs to a quiz owned by the teacher
         const quizResult = await db.quizResult.findFirst({

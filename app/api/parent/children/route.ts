@@ -4,11 +4,13 @@ import { db } from "@/lib/db";
 
 export async function GET(req: Request) {
   try {
-    const { userId } = await auth();
+    const session = await auth();
 
-    if (!userId) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
 
     // Get the current user to verify they are a parent
     const currentUser = await db.user.findUnique({

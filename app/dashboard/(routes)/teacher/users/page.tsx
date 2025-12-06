@@ -9,6 +9,7 @@ import { Search } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 
 interface User {
     id: string;
@@ -33,6 +34,7 @@ interface User {
 
 const TeacherUsersPage = () => {
     const { t, isRTL } = useLanguage();
+    const { formatPrice } = useCurrency();
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -179,7 +181,7 @@ const TeacherUsersPage = () => {
                                     </TableCell>
                                     <TableCell className={isRTL ? "text-right" : "text-left"}>
                                         <Badge variant="secondary">
-                                            {user.balance} {t('dashboard.egyptianPound')}
+                                            {formatPrice(user.balance)}
                                         </Badge>
                                     </TableCell>
                                     <TableCell className={isRTL ? "text-right" : "text-left"}>

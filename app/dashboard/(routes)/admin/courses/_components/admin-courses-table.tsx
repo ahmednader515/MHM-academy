@@ -13,6 +13,7 @@ import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 
 type Course = {
   id: string;
@@ -24,6 +25,7 @@ type Course = {
 
 export function AdminCoursesTable({ courses, onDeleted }: { courses: Course[]; onDeleted?: () => void }) {
   const { t, isRTL } = useLanguage();
+  const { formatPrice } = useCurrency();
   const handleDelete = async (courseId: string) => {
     try {
       const res = await fetch(`/api/courses/${courseId}`, { method: "DELETE" });
@@ -53,7 +55,7 @@ export function AdminCoursesTable({ courses, onDeleted }: { courses: Course[]; o
           {courses.map((course) => (
             <TableRow key={course.id}>
               <TableCell className={isRTL ? "text-right" : "text-left"}>{course.title}</TableCell>
-              <TableCell className={isRTL ? "text-right" : "text-left"}>{Number(course.price || 0)}</TableCell>
+              <TableCell className={isRTL ? "text-right" : "text-left"}>{formatPrice(course.price || 0)}</TableCell>
               <TableCell className={isRTL ? "text-right" : "text-left"}>{course.isPublished ? t('dashboard.published') : t('dashboard.draft')}</TableCell>
               <TableCell className={isRTL ? "text-right" : "text-left"}>
                 <div className="flex items-center gap-2">

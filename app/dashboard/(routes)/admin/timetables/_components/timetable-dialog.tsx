@@ -64,7 +64,7 @@ interface Timetable {
 
 interface TimetableDialogProps {
   open: boolean;
-  onClose: () => void;
+  onClose: (newTimetable?: any) => void;
   courses: Course[];
   timetable?: Timetable | null;
 }
@@ -213,16 +213,18 @@ export const TimetableDialog = ({
     setIsLoading(true);
 
     try {
+      let response;
       if (timetable) {
         // Update existing timetable
-        await axios.patch(`/api/timetables/${timetable.id}`, formData);
+        response = await axios.patch(`/api/timetables/${timetable.id}`, formData);
         toast.success(t('common.success') || "Timetable updated successfully");
       } else {
         // Create new timetable
-        await axios.post("/api/timetables", formData);
+        response = await axios.post("/api/timetables", formData);
         toast.success(t('common.success') || "Timetable created successfully");
       }
-      onClose();
+      // Pass the created/updated timetable to onClose
+      onClose(response.data);
     } catch (error: any) {
       console.error(error);
       const errorMessage =

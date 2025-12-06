@@ -7,13 +7,15 @@ export async function POST(
   { params }: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const { userId } = await auth();
+    const session = await auth();
     const resolvedParams = await params;
 
-    if (!userId) {
+    if (!session?.user?.id || !session?.user) {
       console.log("[PURCHASE_ERROR] No user ID found in auth");
       return new NextResponse("Unauthorized - Please sign in to make a purchase", { status: 401 });
     }
+
+    const userId = session.user.id;
 
     console.log(`[PURCHASE_ATTEMPT] User ${userId} attempting to purchase course ${resolvedParams.courseId}`);
 

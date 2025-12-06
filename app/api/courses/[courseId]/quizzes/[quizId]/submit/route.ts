@@ -8,13 +8,15 @@ export async function POST(
     { params }: { params: Promise<{ courseId: string; quizId: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const session = await auth();
         const resolvedParams = await params;
         const { answers } = await req.json();
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
+
+        const userId = session.user.id;
 
         // Check if user has access to the course
         const course = await db.course.findUnique({

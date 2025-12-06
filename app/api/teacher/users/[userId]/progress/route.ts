@@ -7,8 +7,16 @@ export async function GET(
     { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
-        const { userId: currentUserId, user } = await auth();
+        const session = await auth();
         const resolvedParams = await params;
+
+        if (!session?.user?.id || !session?.user) {
+            console.error("[TEACHER_USER_PROGRESS_GET] Unauthorized - missing userId or user");
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        const currentUserId = session.user.id;
+        const user = session.user;
 
         console.log("[TEACHER_USER_PROGRESS_GET] Auth check:", {
             hasUserId: !!currentUserId,
@@ -16,11 +24,6 @@ export async function GET(
             userRole: user?.role,
             targetUserId: resolvedParams.userId
         });
-
-        if (!currentUserId || !user) {
-            console.error("[TEACHER_USER_PROGRESS_GET] Unauthorized - missing userId or user");
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
 
         // Allow teachers and admins
         if (user.role !== "TEACHER" && user.role !== "ADMIN") {

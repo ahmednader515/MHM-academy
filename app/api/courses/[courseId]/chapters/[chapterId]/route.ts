@@ -10,11 +10,13 @@ export async function GET(
     const resolvedParams = await params;
     const { courseId, chapterId } = resolvedParams;
     
-    const { userId } = await auth();
+    const session = await auth();
 
-    if (!userId) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
 
     const chapter = await db.chapter.findUnique({
       where: {
@@ -118,13 +120,16 @@ export async function PATCH(
     { params }: { params: Promise<{ courseId: string; chapterId: string }> }
 ) {
     try {
-        const { userId, user } = await auth();
+        const session = await auth();
         const resolvedParams = await params;
         const values = await req.json();
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
+
+        const userId = session.user.id;
+        const user = session.user;
 
         // Check if user is admin or course owner
         const whereClause = user?.role === "ADMIN"
@@ -161,12 +166,15 @@ export async function DELETE(
     { params }: { params: Promise<{ courseId: string; chapterId: string }> }
 ) {
     try {
-        const { userId, user } = await auth();
+        const session = await auth();
         const resolvedParams = await params;
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
+
+        const userId = session.user.id;
+        const user = session.user;
 
         // Check if user is admin or course owner
         const whereClause = user?.role === "ADMIN"

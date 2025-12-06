@@ -11,10 +11,18 @@ export default async function ChapterPage({
     const resolvedParams = await params;
     const { courseId, chapterId } = resolvedParams;
 
-    const { userId } = await auth();
+    const session = await auth();
 
-    if (!userId) {
-        return redirect("/");
+    if (!session?.user) {
+        return redirect("/sign-in");
+    }
+
+    const userId = session.user.id;
+    const user = session.user;
+
+    // Ensure only teachers can access this page
+    if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+        return redirect("/dashboard");
     }
 
     const chapter = await db.chapter.findUnique({
@@ -37,7 +45,7 @@ export default async function ChapterPage({
     });
 
     if (!chapter) {
-        return redirect("/");
+        return redirect(`/dashboard/teacher/courses/${courseId}`);
     }
 
     const requiredFields = [

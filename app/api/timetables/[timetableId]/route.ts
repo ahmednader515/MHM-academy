@@ -17,13 +17,16 @@ export async function GET(
   { params }: { params: Promise<{ timetableId: string }> }
 ) {
   try {
-    const { userId, user } = await auth();
+    const session = await auth();
     const resolvedParams = await params;
     const { timetableId } = resolvedParams;
 
-    if (!userId || !user) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
+    const user = session.user;
 
     const timetable = await db.timetable.findUnique({
       where: { id: timetableId },
@@ -85,13 +88,16 @@ export async function PATCH(
   { params }: { params: Promise<{ timetableId: string }> }
 ) {
   try {
-    const { userId, user } = await auth();
+    const session = await auth();
     const resolvedParams = await params;
     const { timetableId } = resolvedParams;
 
-    if (!userId || !user) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
+    const user = session.user;
 
     if (user.role !== "ADMIN") {
       return new NextResponse("Forbidden", { status: 403 });
@@ -176,13 +182,16 @@ export async function DELETE(
   { params }: { params: Promise<{ timetableId: string }> }
 ) {
   try {
-    const { userId, user } = await auth();
+    const session = await auth();
     const resolvedParams = await params;
     const { timetableId } = resolvedParams;
 
-    if (!userId || !user) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
+    const user = session.user;
 
     if (user.role !== "ADMIN") {
       return new NextResponse("Forbidden", { status: 403 });

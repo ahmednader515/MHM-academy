@@ -7,18 +7,23 @@ export async function PATCH(
     { params }: { params: Promise<{ courseId: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const session = await auth();
         const resolvedParams = await params;
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
+        const userId = session.user.id;
+        const user = session.user;
+
+        // Check if user is admin or course owner
+        const whereClause = user.role === "ADMIN"
+            ? { id: resolvedParams.courseId }
+            : { id: resolvedParams.courseId, userId };
+
         const course = await db.course.findUnique({
-            where: {
-                id: resolvedParams.courseId,
-                userId
-            },
+            where: whereClause,
             include: {
                 chapters: true
             }
@@ -36,8 +41,7 @@ export async function PATCH(
 
         const publishedCourse = await db.course.update({
             where: {
-                id: resolvedParams.courseId,
-                userId
+                id: resolvedParams.courseId
             },
             data: {
                 isPublished: !course.isPublished

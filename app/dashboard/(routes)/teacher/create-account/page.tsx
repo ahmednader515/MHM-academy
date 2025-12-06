@@ -120,7 +120,10 @@ export default function CreateAccountPage() {
     } catch (error) {
       const axiosError = error as AxiosError;
       if (axiosError.response?.status === 400) {
-        const errorMessage = axiosError.response.data as string;
+        const errorMessage = typeof axiosError.response.data === 'string' 
+          ? axiosError.response.data 
+          : (axiosError.response.data as any)?.error || (axiosError.response.data as any)?.message || '';
+        
         if (errorMessage.includes("Phone number already exists")) {
           toast.error(t('teacher.phoneAlreadyExists'));
         } else if (errorMessage.includes("Email already exists")) {
@@ -129,8 +132,12 @@ export default function CreateAccountPage() {
           toast.error(t('teacher.invalidEmailFormat'));
         } else if (errorMessage.includes("Passwords do not match")) {
           toast.error(t('teacher.passwordsDoNotMatch'));
+        } else if (errorMessage.includes("Parent phone number")) {
+          toast.error(errorMessage);
+        } else if (errorMessage.includes("Missing required fields")) {
+          toast.error(errorMessage);
         } else {
-          toast.error(t('teacher.accountCreationError'));
+          toast.error(errorMessage || t('teacher.accountCreationError'));
         }
       } else {
         toast.error(t('teacher.accountCreationError'));

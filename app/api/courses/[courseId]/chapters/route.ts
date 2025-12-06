@@ -7,12 +7,14 @@ export async function GET(
   { params }: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const { userId } = await auth();
+    const session = await auth();
     const resolvedParams = await params;
 
-    if (!userId) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
 
     const chapters = await db.chapter.findMany({
       where: {
@@ -42,13 +44,16 @@ export async function POST(
     { params }: { params: Promise<{ courseId: string }> }
 ) {
     try {
-        const { userId, user } = await auth();
+        const session = await auth();
         const resolvedParams = await params;
         const { title, isFree } = await req.json();
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
+
+        const userId = session.user.id;
+        const user = session.user;
 
         // Check if user is admin or course owner
         const whereClause = user?.role === "ADMIN"

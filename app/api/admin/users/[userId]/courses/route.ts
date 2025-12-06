@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 
 export async function GET(
   req: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const session = await auth();
@@ -17,8 +17,10 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const resolvedParams = await params;
+
     const user = await db.user.findUnique({
-      where: { id: params.userId, role: "USER" },
+      where: { id: resolvedParams.userId, role: "USER" },
     });
 
     if (!user) {
@@ -26,7 +28,7 @@ export async function GET(
     }
 
     const purchases = await db.purchase.findMany({
-      where: { userId: params.userId, status: "ACTIVE" },
+      where: { userId: resolvedParams.userId, status: "ACTIVE" },
       include: {
         course: {
           select: {

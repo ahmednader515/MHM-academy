@@ -4,10 +4,11 @@ import { db } from "@/lib/db";
 
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: { userId: string } }
+    { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
         const session = await auth();
+        const resolvedParams = await params;
 
         if (!session?.user) {
             return new NextResponse("Unauthorized", { status: 401 });
@@ -22,7 +23,7 @@ export async function PATCH(
         // Check if user exists
         const existingUser = await db.user.findUnique({
             where: {
-                id: params.userId
+                id: resolvedParams.userId
             }
         });
 
@@ -49,7 +50,7 @@ export async function PATCH(
                 where: {
                     email: email,
                     id: {
-                        not: params.userId
+                        not: resolvedParams.userId
                     }
                 }
             });
@@ -62,7 +63,7 @@ export async function PATCH(
         // Update user
         const updatedUser = await db.user.update({
             where: {
-                id: params.userId
+                id: resolvedParams.userId
             },
             data: {
                 ...(fullName && { fullName }),
@@ -85,10 +86,11 @@ export async function PATCH(
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { userId: string } }
+    { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
         const session = await auth();
+        const resolvedParams = await params;
 
         if (!session?.user) {
             return new NextResponse("Unauthorized", { status: 401 });
@@ -101,7 +103,7 @@ export async function DELETE(
         // Check if user exists
         const existingUser = await db.user.findUnique({
             where: {
-                id: params.userId
+                id: resolvedParams.userId
             }
         });
 
@@ -110,14 +112,14 @@ export async function DELETE(
         }
 
         // Prevent admin from deleting themselves
-        if (params.userId === session.user.id) {
+        if (resolvedParams.userId === session.user.id) {
             return new NextResponse("Cannot delete your own account", { status: 400 });
         }
 
         // Delete user (this will cascade delete related data due to Prisma relations)
         await db.user.delete({
             where: {
-                id: params.userId
+                id: resolvedParams.userId
             }
         });
 

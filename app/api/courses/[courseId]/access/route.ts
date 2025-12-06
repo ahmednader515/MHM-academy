@@ -10,11 +10,13 @@ export async function GET(
   const { courseId } = resolvedParams;
 
   try {
-    const { userId } = await auth();
+    const session = await auth();
 
-    if (!userId) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
 
     const course = await db.course.findUnique({
       where: {

@@ -8,12 +8,14 @@ export async function GET(
   { params }: { params: Promise<{ courseId: string; chapterId: string }> }
 ) {
   try {
-    const { userId } = await auth();
+    const session = await auth();
     const resolvedParams = await params;
 
-    if (!userId) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
 
     // Verify chapter exists and user has access
     const chapter = await db.chapter.findUnique({

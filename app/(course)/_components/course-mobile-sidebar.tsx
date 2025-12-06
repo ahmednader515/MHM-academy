@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { CourseSidebar } from "./course-sidebar";
@@ -8,6 +9,21 @@ import { useLanguage } from "@/lib/contexts/language-context";
 
 export const CourseMobileSidebar = () => {
   const { t } = useLanguage();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="md:hidden pl-4">
+        <div className="flex items-center justify-center h-10 w-10 rounded-md">
+          <Menu className="h-6 w-6" />
+        </div>
+      </div>
+    );
+  }
   
   return (
     <Sheet>

@@ -7,18 +7,23 @@ export async function POST(
     { params }: { params: Promise<{ courseId: string; chapterId: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const session = await auth();
         const resolvedParams = await params;
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
+        const userId = session.user.id;
+        const user = session.user;
+
+        // Check if user is admin or course owner
+        const whereClause = user.role === "ADMIN"
+            ? { id: resolvedParams.courseId }
+            : { id: resolvedParams.courseId, userId };
+
         const courseOwner = await db.course.findUnique({
-            where: {
-                id: resolvedParams.courseId,
-                userId,
-            }
+            where: whereClause
         });
 
         if (!courseOwner) {
@@ -68,18 +73,23 @@ export async function GET(
     { params }: { params: Promise<{ courseId: string; chapterId: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const session = await auth();
         const resolvedParams = await params;
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
+        const userId = session.user.id;
+        const user = session.user;
+
+        // Check if user is admin or course owner
+        const whereClause = user.role === "ADMIN"
+            ? { id: resolvedParams.courseId }
+            : { id: resolvedParams.courseId, userId };
+
         const courseOwner = await db.course.findUnique({
-            where: {
-                id: resolvedParams.courseId,
-                userId,
-            }
+            where: whereClause
         });
 
         if (!courseOwner) {

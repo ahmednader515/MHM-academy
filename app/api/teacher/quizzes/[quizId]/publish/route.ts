@@ -7,12 +7,15 @@ export async function PATCH(
     { params }: { params: Promise<{ quizId: string }> }
 ) {
     try {
-        const { userId, user } = await auth();
+        const session = await auth();
         const resolvedParams = await params;
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
+
+        const userId = session.user.id;
+        const user = session.user;
 
         const { isPublished } = await req.json();
 

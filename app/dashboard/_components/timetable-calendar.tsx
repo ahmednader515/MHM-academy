@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Clock, BookOpen } from "lucide-react";
+import { Clock, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/contexts/language-context";
 
 interface Timetable {
@@ -30,14 +32,12 @@ interface TimetableCalendarProps {
 const DAY_KEYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 const DAY_SHORT_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
-// Generate time slots from 6:00 AM to 10:00 PM
+// Generate time slots for all 24 hours (hourly intervals)
 const generateTimeSlots = () => {
   const slots: string[] = [];
-  for (let hour = 6; hour <= 22; hour++) {
-    for (let minute = 0; minute < 60; minute += 30) {
-      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-      slots.push(timeString);
-    }
+  for (let hour = 0; hour <= 23; hour++) {
+    const timeString = `${hour.toString().padStart(2, '0')}:00`;
+    slots.push(timeString);
   }
   return slots;
 };
@@ -54,6 +54,7 @@ const timeToMinutes = (time: string): number => {
 
 export const TimetableCalendar = ({ timetables }: TimetableCalendarProps) => {
   const { t } = useLanguage();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Get translated day names
   const DAYS = DAY_KEYS.map(key => t(`dashboard.${key}`) || key);
@@ -76,41 +77,40 @@ export const TimetableCalendar = ({ timetables }: TimetableCalendarProps) => {
     return acc;
   }, {} as Record<number, Timetable[]>);
 
-  // Get all unique time ranges to determine which rows to show
-  const allTimeRanges = timetables.map(t => ({
-    start: timeToMinutes(t.startTime),
-    end: timeToMinutes(t.endTime),
-  }));
+  // Get the time slot that contains a given time (rounds down to nearest hour)
+  const getSlotForTime = (time: string): string => {
+    const [hours, minutes] = time.split(':').map(Number);
+    // Round down to nearest hour (just use the hour, ignore minutes)
+    return `${hours.toString().padStart(2, '0')}:00`;
+  };
 
-  const minTime = allTimeRanges.length > 0 
-    ? Math.min(...allTimeRanges.map(t => t.start))
-    : timeToMinutes('08:00');
-  const maxTime = allTimeRanges.length > 0
-    ? Math.max(...allTimeRanges.map(t => t.end))
-    : timeToMinutes('18:00');
-
-  // Filter time slots to only show relevant ones
-  const relevantTimeSlots = TIME_SLOTS.filter(slot => {
-    const slotMinutes = timeToMinutes(slot);
-    return slotMinutes >= minTime - 60 && slotMinutes <= maxTime + 60;
-  });
+  // Filter time slots based on expansion state
+  // Default: Show 12:00 PM (12:00) to 11:00 PM (23:00)
+  // Expanded: Show all 24 hours (00:00 to 23:00)
+  const relevantTimeSlots = isExpanded
+    ? TIME_SLOTS // Show all 24 hours when expanded
+    : TIME_SLOTS.filter(slot => {
+        const slotMinutes = timeToMinutes(slot);
+        // Show 12:00 PM (12:00) to 11:00 PM (23:00) by default
+        return slotMinutes >= timeToMinutes('12:00') && slotMinutes <= timeToMinutes('23:00');
+      });
 
   // Get timetable for a specific day and time slot
   const getTimetableAtSlot = (dayIndex: number, timeSlot: string): Timetable | null => {
     const dayTimetables = timetablesByDay[dayIndex] || [];
     return dayTimetables.find(t => {
-      const slotMinutes = timeToMinutes(timeSlot);
-      const startMinutes = timeToMinutes(t.startTime);
-      // Check if this time slot is the start of the timetable
-      return slotMinutes === startMinutes;
+      // Get the slot that should contain this timetable's start time
+      const timetableSlot = getSlotForTime(t.startTime);
+      // Check if this is the slot that contains the timetable start
+      return timeSlot === timetableSlot;
     }) || null;
   };
 
   // Check if a timetable spans multiple rows
   const getTimetableRowSpan = (timetable: Timetable): number => {
     const duration = timeToMinutes(timetable.endTime) - timeToMinutes(timetable.startTime);
-    // Each row is 30 minutes, so calculate how many rows this spans (minimum 1)
-    return Math.max(1, Math.ceil(duration / 30));
+    // Each row is 1 hour (60 minutes), so calculate how many rows this spans (minimum 1)
+    return Math.max(1, Math.ceil(duration / 60));
   };
   
   // Check if a time slot is inside a timetable (but not the start)
@@ -121,8 +121,11 @@ export const TimetableCalendar = ({ timetables }: TimetableCalendarProps) => {
     return dayTimetables.some(t => {
       const startMinutes = timeToMinutes(t.startTime);
       const endMinutes = timeToMinutes(t.endTime);
-      // Inside the range but not at the start
-      return slotMinutes > startMinutes && slotMinutes < endMinutes;
+      // Inside the range but not at the start slot
+      // Use the slot that contains the start time for comparison
+      const startSlot = getSlotForTime(t.startTime);
+      const startSlotMinutes = timeToMinutes(startSlot);
+      return slotMinutes > startSlotMinutes && slotMinutes < endMinutes;
     });
   };
 
@@ -155,16 +158,14 @@ export const TimetableCalendar = ({ timetables }: TimetableCalendarProps) => {
             </tr>
           </thead>
           <tbody>
-            {relevantTimeSlots.map((timeSlot, slotIndex) => {
-              const isNewHour = timeSlot.endsWith(':00');
-              const isHalfHour = timeSlot.endsWith(':30');
-              // Show time for every slot, but make hours bold
+            {relevantTimeSlots.map((timeSlot) => {
+              // All slots are now hourly, so always show as hour
               const displayTime = formatTo12Hour(timeSlot);
               
               return (
                 <tr key={timeSlot} className="border-b hover:bg-accent/30 transition-colors h-14">
                   <td className="sticky left-0 z-10 bg-background border-r px-3 py-2 text-sm text-muted-foreground text-center align-middle">
-                    <span className={`whitespace-nowrap ${isNewHour ? 'font-semibold' : isHalfHour ? 'font-normal' : ''}`}>
+                    <span className="whitespace-nowrap font-semibold">
                       {displayTime}
                     </span>
                   </td>
@@ -172,10 +173,10 @@ export const TimetableCalendar = ({ timetables }: TimetableCalendarProps) => {
                     const timetable = getTimetableAtSlot(dayIndex, timeSlot);
                     
                     // Check if this is the start of a timetable entry
-                    const isTimetableStart = timetable && 
-                      timeToMinutes(timeSlot) === timeToMinutes(timetable.startTime);
+                    // Note: getTimetableAtSlot already checks for slot match, so this should always be true if timetable exists
+                    const isTimetableStart = timetable !== null;
                     
-                    if (isTimetableStart) {
+                    if (isTimetableStart && timetable) {
                       const rowSpan = getTimetableRowSpan(timetable);
                       return (
                         <td
@@ -235,6 +236,26 @@ export const TimetableCalendar = ({ timetables }: TimetableCalendarProps) => {
           <p>{t('dashboard.noClassesScheduled') || 'No classes scheduled'}</p>
         </div>
       )}
+      {/* Expand/Collapse Button */}
+      <div className="border-t p-4 flex justify-center">
+        <Button
+          variant="outline"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center gap-2"
+        >
+          {isExpanded ? (
+            <>
+              <ChevronUp className="h-4 w-4" />
+              {t('admin.collapseTimetable') || 'Show 12 PM - 12 AM Only'}
+            </>
+          ) : (
+            <>
+              <ChevronDown className="h-4 w-4" />
+              {t('admin.expandTimetable') || 'Show Full Day (12 AM - 12 PM)'}
+            </>
+          )}
+        </Button>
+      </div>
     </Card>
   );
 };

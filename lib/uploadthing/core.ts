@@ -5,9 +5,11 @@ import { UploadThingError } from "uploadthing/server";
 const f = createUploadthing();
 
 const handleAuth = async () => {
-    const { userId } = await auth();
-    if (!userId) throw new UploadThingError("Unauthorized");
-    return { userId };
+    const session = await auth();
+    if (!session?.user?.id || !session?.user) {
+        throw new UploadThingError("Unauthorized");
+    }
+    return { userId: session.user.id };
 }
 
 export const ourFileRouter = {

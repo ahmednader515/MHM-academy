@@ -11,15 +11,21 @@ export default async function CourseIdPage({
     const resolvedParams = await params;
     const { courseId } = resolvedParams;
 
-    const { userId, user } = await auth();
+    const session = await auth();
 
-    if (!userId) {
-        return redirect("/");
+    if (!session?.user) {
+        return redirect("/sign-in");
     }
 
+    const userId = session.user.id;
+    const user = session.user;
+
     // Ensure only teachers can access this page
-    if (user?.role !== "TEACHER") {
-        return redirect("/dashboard");
+    if (user.role !== "TEACHER") {
+        const dashboardUrl = user.role === "ADMIN" 
+            ? "/dashboard/admin/users" 
+            : "/dashboard";
+        return redirect(dashboardUrl);
     }
 
     const course = await db.course.findUnique({
@@ -41,7 +47,7 @@ export default async function CourseIdPage({
     });
 
     if (!course) {
-        return redirect("/");
+        return redirect("/dashboard/teacher/courses");
     }
 
     // Only owner or admin can view editor

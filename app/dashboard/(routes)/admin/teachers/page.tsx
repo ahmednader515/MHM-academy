@@ -11,6 +11,7 @@ import { Search, Eye, BookOpen, FileText, Video, Users, CheckCircle, X } from "l
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 import { toast } from "sonner";
 
 interface Teacher {
@@ -73,6 +74,7 @@ interface LiveStream {
 
 const TeachersPage = () => {
     const { t, isRTL } = useLanguage();
+    const { formatPrice } = useCurrency();
     const [teachers, setTeachers] = useState<Teacher[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -290,7 +292,7 @@ const TeachersPage = () => {
                                                             {course.title}
                                                         </TableCell>
                                                         <TableCell className={isRTL ? "text-right" : "text-left"}>
-                                                            {course.price !== null ? `${course.price} ${t('dashboard.egp') || 'EGP'}` : t('dashboard.free') || 'Free'}
+                                                            {course.price !== null ? formatPrice(course.price) : t('dashboard.free') || 'Free'}
                                                         </TableCell>
                                                         <TableCell className={isRTL ? "text-right" : "text-left"}>
                                                             {course.isPublished ? (

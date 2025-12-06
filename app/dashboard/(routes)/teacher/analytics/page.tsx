@@ -17,6 +17,7 @@ import { Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { useTheme } from 'next-themes';
 import { useLanguage } from '@/lib/contexts/language-context';
+import { useCurrency } from '@/lib/contexts/currency-context';
 
 // Register ChartJS components
 ChartJS.register(
@@ -63,6 +64,7 @@ interface AnalyticsData {
 const AnalyticsPage = () => {
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
   const [isLoading, setIsLoading] = useState(true);
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     totalRevenue: 0,
@@ -221,7 +223,7 @@ const AnalyticsPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-6 bg-orange-50 rounded-lg shadow-sm">
           <h3 className="text-sm font-medium text-muted-foreground">{t('dashboard.totalRevenue')}</h3>
-          <p className="text-3xl font-bold">EGP {analytics.totalRevenue.toFixed(2)}</p>
+          <p className="text-3xl font-bold">{formatPrice(analytics.totalRevenue)}</p>
         </Card>
         <Card className="p-6 bg-green-50 rounded-lg shadow-sm">
           <h3 className="text-sm font-medium text-muted-foreground">{t('dashboard.totalSales')}</h3>
@@ -267,7 +269,7 @@ const AnalyticsPage = () => {
                 <tr key={course.id} className="border-b hover:bg-slate-50 transition">
                   <td className="py-3 px-2">{course.title}</td>
                   <td className="text-center py-3 px-2">{course.sales}</td>
-                  <td className="text-center py-3 px-2">EGP {course.revenue.toFixed(2)}</td>
+                  <td className="text-center py-3 px-2">{formatPrice(course.revenue)}</td>
                   <td className="text-center py-3 px-2">
                     <div className="flex items-center justify-center">
                       <div className="w-full bg-slate-200 rounded-full h-2.5 mr-2 max-w-[150px]">

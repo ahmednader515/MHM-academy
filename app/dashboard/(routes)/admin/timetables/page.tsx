@@ -3,16 +3,23 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { TimetablesContent } from "./_components/timetables-content";
 
+// Disable caching for this page to ensure fresh data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const AdminTimetablesPage = async () => {
-  const { userId, user } = await auth();
-  if (!userId) return redirect("/");
+  const session = await auth();
+  if (!session?.user) return redirect("/");
+
+  const userId = session.user.id;
+  const user = session.user;
 
   // Ensure only admins can access this page
-  if (user?.role !== "ADMIN") {
+  if (user.role !== "ADMIN") {
     return redirect("/dashboard");
   }
 
-  // Fetch courses and timetables in parallel with caching
+  // Fetch courses and timetables in parallel
   const [courses, timetables] = await Promise.all([
     db.course.findMany({
       select: {
@@ -34,20 +41,20 @@ const AdminTimetablesPage = async () => {
       },
     }),
     db.timetable.findMany({
-    include: {
-      course: {
-        select: {
-          id: true,
-          title: true,
-          user: {
-            select: {
-              id: true,
-              fullName: true,
+      include: {
+        course: {
+          select: {
+            id: true,
+            title: true,
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+              },
             },
           },
         },
       },
-    },
       orderBy: [
         { dayOfWeek: "asc" },
         { startTime: "asc" },

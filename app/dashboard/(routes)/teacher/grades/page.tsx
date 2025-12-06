@@ -70,15 +70,6 @@ const GradesPage = () => {
     const { t, isRTL } = useLanguage();
     const { data: session } = useSession();
     
-    // Don't render content if user is not a teacher - check before any hooks
-    if (session?.user?.role !== "TEACHER") {
-        return (
-            <div className="p-6">
-                <div className="text-center">{t('teacher.loading')}</div>
-            </div>
-        );
-    }
-
     const [courses, setCourses] = useState<Course[]>([]);
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
     const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
@@ -88,12 +79,6 @@ const GradesPage = () => {
     const [selectedQuiz, setSelectedQuiz] = useState<string>("");
     const [selectedResult, setSelectedResult] = useState<QuizResult | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-    useEffect(() => {
-        fetchCourses();
-        fetchQuizzes();
-        fetchQuizResults();
-    }, []);
 
     const fetchCourses = async () => {
         try {
@@ -133,6 +118,16 @@ const GradesPage = () => {
         }
     };
 
+    useEffect(() => {
+        // Only fetch if user is a teacher
+        if (session?.user?.role !== "TEACHER") {
+            return;
+        }
+        fetchCourses();
+        fetchQuizzes();
+        fetchQuizResults();
+    }, [session?.user?.role]);
+
     const handleViewResult = (result: QuizResult) => {
         setSelectedResult(result);
         setIsDialogOpen(true);
@@ -165,6 +160,15 @@ const GradesPage = () => {
         if (percentage >= 60) return { variant: "default" as const, className: "bg-orange-600 text-white" };
         return { variant: "destructive" as const, className: "" };
     };
+
+    // Don't render content if user is not a teacher - check after all hooks
+    if (session?.user?.role !== "TEACHER") {
+        return (
+            <div className="p-6">
+                <div className="text-center">{t('teacher.loading')}</div>
+            </div>
+        );
+    }
 
     if (loading) {
         return (

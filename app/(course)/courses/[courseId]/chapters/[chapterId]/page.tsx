@@ -98,7 +98,10 @@ const ChapterPage = () => {
       link.target = '_blank';
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      // Safely remove the link
+      if (link.parentNode) {
+        link.parentNode.removeChild(link);
+      }
     }
   };
 
@@ -120,7 +123,10 @@ const ChapterPage = () => {
         link.download = name || getFilenameFromUrl(url);
         document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+        // Safely remove the link
+        if (link.parentNode) {
+          link.parentNode.removeChild(link);
+        }
         
         window.URL.revokeObjectURL(downloadUrl);
         toast.success(t('student.downloadStarted'));
@@ -140,7 +146,10 @@ const ChapterPage = () => {
       // Try to trigger download
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      // Safely remove the link
+      if (link.parentNode) {
+        link.parentNode.removeChild(link);
+      }
       
       toast.success(t('student.fileOpenedInNewTab'));
     }

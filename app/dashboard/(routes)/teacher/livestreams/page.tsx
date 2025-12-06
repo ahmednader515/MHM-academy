@@ -46,6 +46,29 @@ export default function TeacherLiveStreamsPage() {
     }
   }, [session?.user?.role, router, status]);
 
+  // Fetch live streams - only fetch if user is a teacher
+  useEffect(() => {
+    if (status === "loading") return; // Wait for session to load
+    if (session?.user?.role !== "TEACHER") return; // Don't fetch if not a teacher
+
+    const fetchLiveStreams = async () => {
+      try {
+        const response = await fetch("/api/teacher/livestreams");
+        if (response.ok) {
+          const data = await response.json();
+          setLiveStreams(data);
+        } else {
+          toast.error(t('dashboard.errorLoadingLiveStreams'));
+        }
+      } catch (e) {
+        toast.error(t('dashboard.loadingError'));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLiveStreams();
+  }, [status, session?.user?.role, t]);
+
   // Show loading while session is being fetched
   if (status === "loading") {
     return (
@@ -63,25 +86,6 @@ export default function TeacherLiveStreamsPage() {
       </div>
     );
   }
-
-  useEffect(() => {
-    const fetchLiveStreams = async () => {
-      try {
-        const response = await fetch("/api/teacher/livestreams");
-        if (response.ok) {
-          const data = await response.json();
-          setLiveStreams(data);
-        } else {
-          toast.error(t('dashboard.errorLoadingLiveStreams'));
-        }
-      } catch (e) {
-        toast.error(t('dashboard.loadingError'));
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchLiveStreams();
-  }, []);
 
   const filteredLiveStreams = liveStreams.filter((liveStream) =>
     [liveStream.title, liveStream.course.title].some((v) => v.toLowerCase().includes(searchTerm.toLowerCase()))

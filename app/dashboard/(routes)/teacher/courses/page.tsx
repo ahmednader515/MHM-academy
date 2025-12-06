@@ -10,15 +10,33 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { TeacherCoursesContent } from "./_components/teacher-courses-content";
 
 const CoursesPage = async () => {
-    const { userId, user } = await auth();
+    const session = await auth();
 
-    if (!userId) {
-        return redirect("/");
+    // Middleware handles authentication checks, so we only check role here
+    // If user is not authenticated, middleware will redirect before we get here
+    
+    // If no user, return early - middleware will handle authentication
+    // Don't redirect to avoid loops with middleware
+    if (!session?.user) {
+        // Return a simple loading message instead of redirecting
+        // This prevents redirect loops - middleware will handle auth on next request
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <p>Loading...</p>
+            </div>
+        );
     }
 
+    const userId = session.user.id;
+    const user = session.user;
+    
     // Ensure only teachers can access this page
-    if (user?.role !== "TEACHER") {
-        return redirect("/dashboard");
+    if (user.role !== "TEACHER") {
+        // If wrong role, redirect to appropriate dashboard
+        const dashboardUrl = user.role === "ADMIN" 
+            ? "/dashboard/admin/users" 
+            : "/dashboard";
+        return redirect(dashboardUrl);
     }
 
     // Use _count to reduce data transfer and queries

@@ -4,13 +4,16 @@ import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
     try {
-        const { userId, user } = await auth();
+        const session = await auth();
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        if (user?.role !== "TEACHER") {
+        const userId = session.user.id;
+        const user = session.user;
+
+        if (user.role !== "TEACHER") {
             return NextResponse.json({ error: "Forbidden - Only teachers can access this resource" }, { status: 403 });
         }
 

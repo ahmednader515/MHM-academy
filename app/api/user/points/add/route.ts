@@ -4,11 +4,13 @@ import { db } from "@/lib/db";
 
 export async function POST() {
   try {
-    const { userId } = await auth();
+    const session = await auth();
     
-    if (!userId) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
 
     // Add 10 points to the user
     const updatedUser = await db.user.update({

@@ -15,13 +15,16 @@ const createTimetableSchema = z.object({
 // GET - Get all timetables (filtered by role)
 export async function GET(req: Request) {
   try {
-    const { userId, user } = await auth();
+    const session = await auth();
     const { searchParams } = new URL(req.url);
     const courseId = searchParams.get("courseId");
 
-    if (!userId || !user) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
+    const user = session.user;
 
     let whereClause: any = {};
 
@@ -98,11 +101,14 @@ export async function GET(req: Request) {
 // POST - Create a new timetable (Admin only)
 export async function POST(req: Request) {
   try {
-    const { userId, user } = await auth();
+    const session = await auth();
 
-    if (!userId || !user) {
+    if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const userId = session.user.id;
+    const user = session.user;
 
     if (user.role !== "ADMIN") {
       return new NextResponse("Forbidden", { status: 403 });

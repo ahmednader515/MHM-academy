@@ -4,10 +4,11 @@ import { db } from "@/lib/db";
 
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: { userId: string } }
+    { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
         const session = await auth();
+        const resolvedParams = await params;
 
         if (!session?.user) {
             return new NextResponse("Unauthorized", { status: 401 });
@@ -25,7 +26,7 @@ export async function PATCH(
 
         const user = await db.user.findUnique({
             where: {
-                id: params.userId
+                id: resolvedParams.userId
             }
         });
 
@@ -35,7 +36,7 @@ export async function PATCH(
 
         await db.user.update({
             where: {
-                id: params.userId
+                id: resolvedParams.userId
             },
             data: {
                 balance: newBalance

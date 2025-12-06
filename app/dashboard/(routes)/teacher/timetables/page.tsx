@@ -4,12 +4,18 @@ import { redirect } from "next/navigation";
 import { TimetableViewContent } from "./_components/timetable-view-content";
 
 const TeacherTimetablesPage = async () => {
-  const { userId, user } = await auth();
-  if (!userId) return redirect("/");
+  const session = await auth();
+  if (!session?.user) return redirect("/sign-in");
+
+  const userId = session.user.id;
+  const user = session.user;
 
   // Ensure only teachers can access this page
-  if (user?.role !== "TEACHER") {
-    return redirect("/dashboard");
+  if (user.role !== "TEACHER") {
+    const dashboardUrl = user.role === "ADMIN" 
+      ? "/dashboard/admin/users" 
+      : "/dashboard";
+    return redirect(dashboardUrl);
   }
 
   // Get teacher's courses

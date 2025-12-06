@@ -6,6 +6,7 @@ import { BookOpen, Play, Clock, Trophy, Wallet, TrendingUp, BookOpen as BookOpen
 import Link from "next/link";
 import Image from "next/image";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 import {
   Tooltip,
   TooltipContent,
@@ -82,6 +83,7 @@ export const DashboardContent = ({
   coursesWithProgress 
 }: DashboardContentProps) => {
   const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
 
   return (
     <div className="p-6 space-y-6">
@@ -149,7 +151,7 @@ export const DashboardContent = ({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-orange-100 text-sm">{t('dashboard.currentBalance')}</p>
-              <p className="text-2xl font-bold">{user?.balance?.toFixed(2) || "0.00"} {t('dashboard.egyptianPound')}</p>
+              <p className="text-2xl font-bold">{formatPrice(user?.balance || 0)}</p>
             </div>
             <Wallet className="h-8 w-8 text-orange-200" />
           </div>

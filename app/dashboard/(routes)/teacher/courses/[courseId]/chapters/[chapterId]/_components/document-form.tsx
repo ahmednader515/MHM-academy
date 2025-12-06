@@ -60,7 +60,10 @@ export const DocumentForm = ({
             link.target = '_blank';
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
+            // Safely remove the link
+            if (link.parentNode) {
+                link.parentNode.removeChild(link);
+            }
         }
     };
 

@@ -11,14 +11,17 @@ export default async function AdminCourseIdPage({
     const resolvedParams = await params;
     const { courseId } = resolvedParams;
 
-    const { userId, user } = await auth();
+    const session = await auth();
 
-    if (!userId) {
+    if (!session?.user) {
         return redirect("/");
     }
 
+    const userId = session.user.id;
+    const user = session.user;
+
     // Only admin can access this page
-    if (user?.role !== "ADMIN") {
+    if (user.role !== "ADMIN") {
         return redirect("/dashboard");
     }
 

@@ -3,10 +3,18 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 const CreatePage = async () => {
-    const { userId } = await auth();
+    const session = await auth();
 
-    if (!userId) {
-        return redirect("/");
+    if (!session?.user) {
+        return redirect("/sign-in");
+    }
+
+    const userId = session.user.id;
+    const user = session.user;
+
+    // Ensure only teachers can access this page
+    if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+        return redirect("/dashboard");
     }
 
     const course = await db.course.create({

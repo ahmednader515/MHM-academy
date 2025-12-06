@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 
 export type Course = {
     id: string;
@@ -24,6 +25,7 @@ export type Course = {
 
 export const useColumns = (isAdmin: boolean = false): ColumnDef<Course>[] => {
     const { t } = useLanguage();
+    const { formatPrice } = useCurrency();
     
     const columns: ColumnDef<Course>[] = [
         {
@@ -79,7 +81,7 @@ export const useColumns = (isAdmin: boolean = false): ColumnDef<Course>[] => {
             },
             cell: ({ row }) => {
                 const price = parseFloat(row.getValue("price"));
-                return <div>{price} EGP</div>;
+                return <div>{formatPrice(price)}</div>;
             },
         },
         {

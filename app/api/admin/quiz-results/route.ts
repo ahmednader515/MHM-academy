@@ -4,15 +4,18 @@ import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
     try {
-        const { userId, user } = await auth();
+        const session = await auth();
         const { searchParams } = new URL(req.url);
         const quizId = searchParams.get('quizId');
 
-        if (!userId) {
+        if (!session?.user?.id || !session?.user) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        if (user?.role !== "ADMIN") {
+        const userId = session.user.id;
+        const user = session.user;
+
+        if (user.role !== "ADMIN") {
             return new NextResponse("Forbidden - Only admins can access this resource", { status: 403 });
         }
 

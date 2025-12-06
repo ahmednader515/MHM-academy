@@ -44,7 +44,17 @@ export default function SignInPage() {
       });
 
       if (result?.error) {
-        if (result.error === "CredentialsSignin") {
+        // Handle specific error cases
+        if (result.error === "UserNotFound") {
+          toast.error(t('auth.userNotFound'));
+        } else if (result.error === "WrongPassword") {
+          toast.error(t('auth.wrongPassword'));
+        } else if (result.error === "MissingCredentials") {
+          toast.error(t('auth.missingCredentials'));
+        } else if (result.error === "ServerError") {
+          toast.error(t('auth.serverError'));
+        } else if (result.error === "CredentialsSignin") {
+          // Fallback for generic credentials error
           toast.error(t('auth.invalidCredentials'));
         } else if (result.error === "UserAlreadyLoggedIn") {
           toast.error(t('auth.userAlreadyLoggedIn'));
@@ -56,6 +66,9 @@ export default function SignInPage() {
 
       toast.success(t('auth.signInSuccess'));
       
+      // Small delay to ensure session is fully established
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Get user data to determine role and redirect accordingly
       const response = await fetch("/api/auth/session", { cache: "no-store" });
       const sessionData = await response.json();
@@ -65,12 +78,14 @@ export default function SignInPage() {
       // Force a full reload to ensure fresh session on the dashboard
       const target = `${dashboardUrl}?t=${Date.now()}`;
       if (typeof window !== "undefined") {
-        window.location.replace(target);
+        window.location.href = target;
       } else {
         router.replace(target);
       }
-    } catch {
-      toast.error(t('auth.signInError'));
+    } catch (error) {
+      // Handle network errors or other unexpected errors
+      console.error("Sign in error:", error);
+      toast.error(t('auth.serverError'));
     } finally {
       setIsLoading(false);
     }

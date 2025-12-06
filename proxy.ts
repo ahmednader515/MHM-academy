@@ -55,8 +55,10 @@ export async function proxy(request: NextRequest) {
   const isAdmin = token?.role === "ADMIN";
 
   // If user is not a teacher or admin but trying to access teacher routes
-  if (isTeacherRoute && !(isTeacher || isAdmin)) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  // Only redirect if we have a token (meaning user is authenticated but wrong role)
+  if (isTeacherRoute && token && !(isTeacher || isAdmin)) {
+    const dashboardUrl = isAdmin ? "/dashboard/admin/users" : "/dashboard";
+    return NextResponse.redirect(new URL(dashboardUrl, request.url));
   }
 
   // If user is not a parent but trying to access parent routes

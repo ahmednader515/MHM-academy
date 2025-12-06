@@ -10,6 +10,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { useState } from "react";
 import { useLanguage } from "@/lib/contexts/language-context";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { CurrencySwitcher } from "@/components/currency-switcher";
 
 export const NavbarRoutes = () => {
     const { data: session } = useSession();
@@ -40,6 +41,9 @@ export const NavbarRoutes = () => {
         <div className="flex items-center gap-x-2 rtl:mr-auto ltr:ml-auto">
             {/* Language Switcher */}
             <LanguageSwitcher />
+            
+            {/* Currency Switcher */}
+            <CurrencySwitcher />
             
             {/* Logout button for all user types */}
             {session?.user && (
