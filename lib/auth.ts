@@ -89,12 +89,14 @@ const config: NextAuthConfig = {
   },
   cookies: {
     sessionToken: {
-      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
+      name: `next-auth.session-token`,
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
         secure: process.env.NODE_ENV === 'production',
+        // In production, NextAuth will automatically add __Secure- prefix
+        // We don't need to add it manually
       },
     },
   },

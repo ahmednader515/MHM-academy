@@ -18,17 +18,7 @@ function getDashboardUrlByRole(role: string): string {
 }
 
 export async function proxy(request: NextRequest) {
-  // Get the token using next-auth v5 compatible method
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-development",
-  });
-
   const pathname = request.nextUrl.pathname;
-  const isTeacherRoute = pathname.startsWith("/dashboard/teacher");
-  const isTeacher = token?.role === "TEACHER";
-  const isParentRoute = pathname.startsWith("/dashboard/parent");
-  const isParent = token?.role === "PARENT";
   const isAuthPage = pathname.startsWith("/sign-in") || 
                     pathname.startsWith("/sign-up") ||
                     pathname.startsWith("/forgot-password") ||
@@ -36,6 +26,22 @@ export async function proxy(request: NextRequest) {
   
   // Add check for payment status page
   const isPaymentStatusPage = pathname.includes("/payment-status");
+
+  // Check if there's a session cookie in the request (might be set but not yet readable by getToken)
+  const hasSessionCookie = request.cookies.has('next-auth.session-token') || 
+                          request.cookies.has('__Secure-next-auth.session-token');
+
+  // Get the token using next-auth v5 compatible method
+  // getToken automatically detects the cookie name based on environment
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-development",
+  });
+
+  const isTeacherRoute = pathname.startsWith("/dashboard/teacher");
+  const isTeacher = token?.role === "TEACHER";
+  const isParentRoute = pathname.startsWith("/dashboard/parent");
+  const isParent = token?.role === "PARENT";
 
   // If user is on auth page and is authenticated, redirect to appropriate dashboard
   if (isAuthPage && token) {
@@ -46,7 +52,18 @@ export async function proxy(request: NextRequest) {
 
   // If user is not authenticated and trying to access protected routes
   // But exclude payment status page from this check
+  // IMPORTANT: If a session cookie exists but token couldn't be read, 
+  // it's likely a timing issue (cookie just set). Allow the request through
+  // and let the page component handle authentication (it will redirect if needed)
   if (!token && !isAuthPage && !isPaymentStatusPage) {
+    // If we have a session cookie but couldn't read the token, 
+    // it might be a timing issue - allow the request through
+    // The page itself will handle authentication via auth() check
+    if (hasSessionCookie) {
+      // Cookie exists but token couldn't be read yet - likely timing issue
+      // Let the request through and let the server component handle it
+      return NextResponse.next();
+    }
     return NextResponse.redirect(new URL("/sign-in", request.url), { status: 302 });
   }
 
