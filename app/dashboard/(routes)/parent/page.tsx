@@ -112,7 +112,7 @@ export default function ParentDashboard() {
                       {t('parent.progress') || 'التقدم'}
                     </TabsTrigger>
                     <TabsTrigger value="courses">
-                      {t('parent.courses') || 'الدورات'}
+                      {t('parent.courses') || 'المواد'}
                     </TabsTrigger>
                     <TabsTrigger value="quizzes">
                       {t('parent.quizzes') || 'الاختبارات'}
@@ -231,7 +231,7 @@ export default function ParentDashboard() {
                   <TabsContent value="courses" className="space-y-4">
                     <Card>
                       <CardHeader>
-                        <CardTitle>{t('parent.enrolledCourses') || 'الدورات المسجلة'}</CardTitle>
+                        <CardTitle>{t('parent.enrolledCourses') || 'المواد المسجلة'}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         {child.courses && child.courses.length > 0 ? (
