@@ -64,23 +64,63 @@ export default function SignInPage() {
         return;
       }
 
+      if (!result?.ok) {
+        return;
+      }
+
       toast.success(t('auth.signInSuccess'));
       
-      // Small delay to ensure session is fully established
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Get user role from session with retries
+      // On Vercel, cookies might take a moment to be set, so we retry
+      let userRole = "USER";
+      let sessionData = null;
+      const maxRetries = 5;
+      let retries = 0;
       
-      // Get user data to determine role and redirect accordingly
-      const response = await fetch("/api/auth/session", { cache: "no-store" });
-      const sessionData = await response.json();
-      const userRole = sessionData?.user?.role || "USER";
+      while (retries < maxRetries) {
+        try {
+          // Wait progressively longer on each retry
+          await new Promise(resolve => setTimeout(resolve, 200 * (retries + 1)));
+          
+          const response = await fetch("/api/auth/session", { 
+            cache: "no-store",
+            credentials: "include",
+            headers: {
+              'Cache-Control': 'no-cache',
+            },
+          });
+          
+          if (response.ok) {
+            sessionData = await response.json();
+            
+            if (sessionData?.user?.role) {
+              userRole = sessionData.user.role;
+              break;
+            }
+          }
+        } catch (error) {
+          console.error(`Session fetch attempt ${retries + 1} error:`, error);
+        }
+        
+        retries++;
+      }
+      
+      // If we still don't have a role after all retries, default to USER
+      // The proxy will handle redirecting to the correct dashboard on the next request
+      if (!sessionData?.user?.role) {
+        console.warn("Could not fetch user role from session, defaulting to USER");
+      }
+      
       const dashboardUrl = getDashboardUrlByRole(userRole);
 
-      // Force a full reload to ensure fresh session on the dashboard
-      const target = `${dashboardUrl}?t=${Date.now()}`;
+      // Use window.location.href for a hard navigation that ensures cookies are sent
+      // This is important for Vercel where cookies need to be properly set
       if (typeof window !== "undefined") {
-        window.location.href = target;
+        // Add a small delay to ensure cookie is set before navigation
+        await new Promise(resolve => setTimeout(resolve, 100));
+        window.location.href = dashboardUrl;
       } else {
-        router.replace(target);
+        router.replace(dashboardUrl);
       }
     } catch (error) {
       // Handle network errors or other unexpected errors

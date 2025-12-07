@@ -87,6 +87,17 @@ const config: NextAuthConfig = {
   jwt: {
     // Remove maxAge to make JWT tokens persist indefinitely
   },
+  cookies: {
+    sessionToken: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
   pages: {
     signIn: "/sign-in",
     error: "/sign-in",
