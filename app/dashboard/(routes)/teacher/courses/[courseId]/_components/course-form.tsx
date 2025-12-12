@@ -24,6 +24,7 @@ import { CurriculumSelector } from "@/components/curriculum-selector";
             message: "الوصف مطلوب",
         }),
         targetCurriculum: z.string().optional(),
+        targetCurriculumType: z.string().optional(),
         targetLevel: z.string().optional(),
         targetLanguage: z.string().optional(),
         targetGrade: z.string().optional(),
@@ -48,6 +49,7 @@ export const CourseForm = ({
             title: initialData.title || "",
             description: initialData.description || "",
             targetCurriculum: initialData.targetCurriculum || "",
+            targetCurriculumType: (initialData as any).targetCurriculumType || "",
             targetLevel: initialData.targetLevel || "",
             targetLanguage: initialData.targetLanguage || "",
             targetGrade: initialData.targetGrade || "",
@@ -174,14 +176,22 @@ export const CourseForm = ({
                             <FormLabel>المنهج والمرحلة والصف المستهدفة (اختياري)</FormLabel>
         <CurriculumSelector
             selectedCurriculum={form.watch("targetCurriculum") as 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy' | null}
+            selectedCurriculumType={form.watch("targetCurriculumType") as 'morning' | 'evening' | null}
             selectedLevel={form.watch("targetLevel") as 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels' | null}
             selectedLanguage={form.watch("targetLanguage") as 'arabic' | 'languages' | null}
             selectedGrade={form.watch("targetGrade")}
             onCurriculumChange={(curriculum) => {
                 form.setValue("targetCurriculum", curriculum || "");
+                // Reset curriculum type if not egyptian
+                if (curriculum !== 'egyptian') {
+                    form.setValue("targetCurriculumType", "");
+                }
                 form.setValue("targetLevel", ""); // Reset level when curriculum changes
                 form.setValue("targetLanguage", ""); // Reset language when curriculum changes
                 form.setValue("targetGrade", ""); // Reset grade when curriculum changes
+            }}
+            onCurriculumTypeChange={(curriculumType) => {
+                form.setValue("targetCurriculumType", curriculumType || "");
             }}
             onLevelChange={(level) => {
                 form.setValue("targetLevel", level || "");

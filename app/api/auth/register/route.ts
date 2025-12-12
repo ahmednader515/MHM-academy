@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 
 export async function POST(req: Request) {
   try {
-    const { fullName, phoneNumber, email, parentPhoneNumber, curriculum, level, language, grade, password, confirmPassword } = await req.json();
+    const { fullName, phoneNumber, email, parentPhoneNumber, curriculum, curriculumType, level, language, grade, password, confirmPassword } = await req.json();
 
     if (!fullName || !phoneNumber || !email || !parentPhoneNumber || !password || !confirmPassword) {
       return new NextResponse("Missing required fields", { status: 400 });
@@ -89,6 +89,7 @@ export async function POST(req: Request) {
           phoneNumber,
           email,
           curriculum: curriculum || null,
+          curriculumType: curriculumType || null,
           level: level || null,
           language: language || null,
           grade: grade || null,

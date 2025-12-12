@@ -8,10 +8,12 @@ import { Check, ChevronDown } from "lucide-react";
 
 interface CurriculumSelectorProps {
   selectedCurriculum?: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy' | null;
+  selectedCurriculumType?: 'morning' | 'evening' | null;
   selectedLevel?: 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels' | null;
   selectedLanguage?: 'arabic' | 'languages' | null;
   selectedGrade?: string | null;
   onCurriculumChange: (curriculum: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy' | null) => void;
+  onCurriculumTypeChange?: (curriculumType: 'morning' | 'evening' | null) => void;
   onLevelChange: (level: 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels' | null) => void;
   onLanguageChange: (language: 'arabic' | 'languages' | null) => void;
   onGradeChange: (grade: string | null) => void;
@@ -20,24 +22,43 @@ interface CurriculumSelectorProps {
 
 export const CurriculumSelector = ({
   selectedCurriculum,
+  selectedCurriculumType,
   selectedLevel,
   selectedLanguage,
   selectedGrade,
   onCurriculumChange,
+  onCurriculumTypeChange,
   onLevelChange,
   onLanguageChange,
   onGradeChange,
   className = ""
 }: CurriculumSelectorProps) => {
+  const [isCurriculumTypeOpen, setIsCurriculumTypeOpen] = useState(false);
   const [isLevelOpen, setIsLevelOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isGradeOpen, setIsGradeOpen] = useState(false);
 
+  const curriculumTypes = [
+    { id: 'morning' as const, name: 'صباحي' },
+    { id: 'evening' as const, name: 'مسائي' },
+  ];
+
   const handleCurriculumSelect = (curriculum: 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy') => {
     onCurriculumChange(curriculum);
+    // Reset curriculum type when curriculum changes (unless it's still egyptian)
+    if (onCurriculumTypeChange && curriculum !== 'egyptian') {
+      onCurriculumTypeChange(null);
+    }
     onLevelChange(null); // Reset level when curriculum changes
     onLanguageChange(null); // Reset language when curriculum changes
     onGradeChange(null); // Reset grade when curriculum changes
+  };
+
+  const handleCurriculumTypeSelect = (curriculumType: 'morning' | 'evening') => {
+    if (onCurriculumTypeChange) {
+      onCurriculumTypeChange(curriculumType);
+    }
+    setIsCurriculumTypeOpen(false);
   };
 
   const handleLevelSelect = (level: 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels') => {
@@ -92,6 +113,48 @@ export const CurriculumSelector = ({
           ))}
         </div>
       </div>
+
+      {/* Curriculum Type Selection (only for Egyptian curriculum) */}
+      {selectedCurriculum === 'egyptian' && (
+        <div>
+          <label className="block text-sm font-medium mb-2">نوع المنهج</label>
+          <div className="relative">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-between"
+              onClick={() => setIsCurriculumTypeOpen(!isCurriculumTypeOpen)}
+            >
+              {selectedCurriculumType 
+                ? curriculumTypes.find(t => t.id === selectedCurriculumType)?.name 
+                : "اختر نوع المنهج"
+              }
+              <ChevronDown className={`h-4 w-4 transition-transform ${isCurriculumTypeOpen ? 'rotate-180' : ''}`} />
+            </Button>
+            
+            {isCurriculumTypeOpen && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                <div className="p-2">
+                  {curriculumTypes.map((type) => (
+                    <div
+                      key={type.id}
+                      className={`px-3 py-2 rounded-md cursor-pointer hover:bg-gray-100 flex items-center justify-between ${
+                        selectedCurriculumType === type.id ? 'bg-[#090919]/10' : ''
+                      }`}
+                      onClick={() => handleCurriculumTypeSelect(type.id)}
+                    >
+                      <span className="text-sm">{type.name}</span>
+                      {selectedCurriculumType === type.id && (
+                        <Check className="h-4 w-4 text-[#090919]" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Level Selection */}
       {selectedCurriculum && (

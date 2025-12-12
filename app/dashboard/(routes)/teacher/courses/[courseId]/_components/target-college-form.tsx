@@ -30,6 +30,7 @@ interface TargetCollegeFormProps {
 
     const formSchema = z.object({
         targetCurriculum: z.string().optional(),
+        targetCurriculumType: z.string().optional(),
         targetLevel: z.string().optional(),
         targetLanguage: z.string().optional(),
         targetGrade: z.string().optional(),
@@ -49,6 +50,7 @@ export const TargetCollegeForm = ({
         resolver: zodResolver(formSchema),
         defaultValues: {
             targetCurriculum: initialData.targetCurriculum || "",
+            targetCurriculumType: (initialData as any).targetCurriculumType || "",
             targetLevel: initialData.targetLevel || "",
             targetLanguage: initialData.targetLanguage || "",
             targetGrade: initialData.targetGrade || "",
@@ -91,7 +93,7 @@ export const TargetCollegeForm = ({
                   initialData.targetCurriculum === 'saudi' ? 'المنهج السعودي' :
                   initialData.targetCurriculum === 'summer_courses' ? 'الكورسات الصيفية' :
                   initialData.targetCurriculum === 'center_mhm_academy' ? 'Center MHM Academy' : 
-                  initialData.targetCurriculum}${initialData.targetLevel ? ` - ${initialData.targetLevel}` : ''}${initialData.targetLanguage ? ` - ${initialData.targetLanguage === 'arabic' ? 'عربي' : 'لغات'}` : ''}${initialData.targetGrade ? ` - ${initialData.targetGrade}` : ''}` 
+                  initialData.targetCurriculum}${(initialData as any).targetCurriculumType ? ` - ${(initialData as any).targetCurriculumType === 'morning' ? 'صباحي' : (initialData as any).targetCurriculumType === 'evening' ? 'مسائي' : (initialData as any).targetCurriculumType}` : ''}${initialData.targetLevel ? ` - ${initialData.targetLevel}` : ''}${initialData.targetLanguage ? ` - ${initialData.targetLanguage === 'arabic' ? 'عربي' : 'لغات'}` : ''}${initialData.targetGrade ? ` - ${initialData.targetGrade}` : ''}` 
                 : t('teacher.notSpecified')
             }
         </p>
@@ -102,14 +104,22 @@ export const TargetCollegeForm = ({
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
                         <CurriculumSelector
                             selectedCurriculum={form.watch("targetCurriculum") as 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy' | null}
+                            selectedCurriculumType={form.watch("targetCurriculumType") as 'morning' | 'evening' | null}
                             selectedLevel={form.watch("targetLevel") as 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels' | null}
                             selectedLanguage={form.watch("targetLanguage") as 'arabic' | 'languages' | null}
                             selectedGrade={form.watch("targetGrade")}
                             onCurriculumChange={(curriculum) => {
                                 form.setValue("targetCurriculum", curriculum || "");
+                                // Reset curriculum type if not egyptian
+                                if (curriculum !== 'egyptian') {
+                                    form.setValue("targetCurriculumType", "");
+                                }
                                 form.setValue("targetLevel", ""); // Reset level when curriculum changes
                                 form.setValue("targetLanguage", ""); // Reset language when curriculum changes
                                 form.setValue("targetGrade", ""); // Reset grade when curriculum changes
+                            }}
+                            onCurriculumTypeChange={(curriculumType) => {
+                                form.setValue("targetCurriculumType", curriculumType || "");
                             }}
                             onLevelChange={(level) => {
                                 form.setValue("targetLevel", level || "");

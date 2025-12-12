@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Star, BookOpen, Award, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
+import { CURRICULA } from "@/lib/data/curriculum-data";
 
 interface ChildData {
   id: string;
@@ -15,6 +16,7 @@ interface ChildData {
   phoneNumber: string;
   email: string;
   curriculum: string | null;
+  curriculumType: string | null;
   level: string | null;
   grade: string | null;
   points: number;
@@ -28,6 +30,39 @@ interface ChildData {
   userProgress: any[];
   recentQuizResults: any[];
 }
+
+// Helper function to get curriculum name in Arabic
+const getCurriculumName = (curriculum: string | null): string => {
+  if (!curriculum) return '';
+  const curriculumData = CURRICULA.find(c => c.id === curriculum);
+  return curriculumData?.name || curriculum;
+};
+
+// Helper function to get level name in Arabic
+const getLevelName = (curriculum: string | null, level: string | null): string => {
+  if (!curriculum || !level) return '';
+  const curriculumData = CURRICULA.find(c => c.id === curriculum);
+  if (!curriculumData) return level;
+  const levelData = curriculumData.levels.find(l => l.id === level);
+  return levelData?.name || level;
+};
+
+// Helper function to get grade name in Arabic
+const getGradeName = (curriculum: string | null, level: string | null, grade: string | null): string => {
+  if (!curriculum || !level || !grade) return '';
+  const curriculumData = CURRICULA.find(c => c.id === curriculum);
+  if (!curriculumData) return grade;
+  const gradeData = curriculumData.grades.find(g => g.id === grade);
+  return gradeData?.name || grade;
+};
+
+// Helper function to get curriculum type name in Arabic
+const getCurriculumTypeName = (curriculumType: string | null): string => {
+  if (!curriculumType) return '';
+  if (curriculumType === 'morning') return 'صباحي';
+  if (curriculumType === 'evening') return 'مسائي';
+  return curriculumType;
+};
 
 export default function ParentDashboard() {
   const { data: session } = useSession();
@@ -93,7 +128,24 @@ export default function ParentDashboard() {
                   <div>
                     <CardTitle className="text-xl">{child.fullName}</CardTitle>
                     <CardDescription>
-                      {child.curriculum} - {child.level} - {child.grade}
+                      {(() => {
+                        const parts: string[] = [];
+                        const curriculumName = getCurriculumName(child.curriculum);
+                        if (curriculumName) parts.push(curriculumName);
+                        
+                        // Add curriculum type for Egyptian curriculum
+                        if (child.curriculum === 'egyptian' && child.curriculumType) {
+                          parts.push(getCurriculumTypeName(child.curriculumType));
+                        }
+                        
+                        const levelName = getLevelName(child.curriculum, child.level);
+                        if (levelName) parts.push(levelName);
+                        
+                        const gradeName = getGradeName(child.curriculum, child.level, child.grade);
+                        if (gradeName) parts.push(gradeName);
+                        
+                        return parts.join(' - ');
+                      })()}
                     </CardDescription>
                   </div>
                   <Badge variant="secondary" className="flex items-center gap-1">

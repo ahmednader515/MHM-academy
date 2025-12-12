@@ -26,6 +26,7 @@ export default function SignUpPage() {
     email: "",
     parentPhoneNumber: "",
     curriculum: null as 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy' | null,
+    curriculumType: null as 'morning' | 'evening' | null,
     level: null as 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels' | null,
     language: null as 'arabic' | 'languages' | null,
     grade: null as string | null,
@@ -45,9 +46,20 @@ export default function SignUpPage() {
     setFormData((prev) => ({
       ...prev,
       curriculum,
+      curriculumType: curriculum !== 'egyptian' ? null : prev.curriculumType, // Reset if not egyptian
       level: null, // Reset level when curriculum changes
       language: null, // Reset language when curriculum changes
       grade: null, // Reset grade when curriculum changes
+    }));
+  };
+
+  const handleCurriculumTypeChange = (curriculumType: 'morning' | 'evening' | null) => {
+    setFormData((prev) => ({
+      ...prev,
+      curriculumType,
+      level: null, // Reset level when curriculum type changes
+      language: null, // Reset language when curriculum type changes
+      grade: null, // Reset grade when curriculum type changes
     }));
   };
 
@@ -78,6 +90,8 @@ export default function SignUpPage() {
   const validateForm = () => {
     const passwordValid = formData.password === formData.confirmPassword && formData.password.length > 0;
     const curriculumValid = formData.curriculum !== null;
+    // If Egyptian curriculum is selected, curriculumType is required
+    const curriculumTypeValid = formData.curriculum !== 'egyptian' || formData.curriculumType !== null;
     const levelValid = formData.level !== null;
     const gradeValid = formData.grade !== null;
     
@@ -85,9 +99,10 @@ export default function SignUpPage() {
       passwordMatch: formData.password === formData.confirmPassword,
       passwordValid,
       curriculumValid,
+      curriculumTypeValid,
       levelValid,
       gradeValid,
-      isValid: passwordValid && curriculumValid && levelValid && gradeValid,
+      isValid: passwordValid && curriculumValid && curriculumTypeValid && levelValid && gradeValid,
     };
   };
 
@@ -102,6 +117,8 @@ export default function SignUpPage() {
         toast.error(t('auth.passwordsDoNotMatch'));
       } else if (!formValidation.curriculumValid) {
         toast.error('يرجى اختيار المنهج');
+      } else if (!formValidation.curriculumTypeValid) {
+        toast.error('يرجى اختيار نوع المنهج');
       } else if (!formValidation.levelValid) {
         toast.error('يرجى اختيار المرحلة');
       } else if (!formValidation.gradeValid) {
@@ -253,10 +270,12 @@ export default function SignUpPage() {
             </div>
         <CurriculumSelector
           selectedCurriculum={formData.curriculum}
+          selectedCurriculumType={formData.curriculumType}
           selectedLevel={formData.level}
           selectedLanguage={formData.language}
           selectedGrade={formData.grade}
           onCurriculumChange={handleCurriculumChange}
+          onCurriculumTypeChange={handleCurriculumTypeChange}
           onLevelChange={handleLevelChange}
           onLanguageChange={handleLanguageChange}
           onGradeChange={handleGradeChange}

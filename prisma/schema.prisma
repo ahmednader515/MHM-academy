@@ -16,6 +16,7 @@ model User {
   phoneNumber          String                 @unique
   email                String                 @unique
   curriculum           String?
+  curriculumType       String?
   level                String?
   language             String?
   grade                String?
@@ -44,27 +45,28 @@ model User {
 }
 
 model Course {
-  id               String       @id @default(uuid())
-  userId           String
-  title            String
-  description      String?
-  imageUrl         String?
-  price            Float?
-  isPublished      Boolean      @default(false)
-  isFree           Boolean      @default(false)
-  targetCurriculum String?
-  targetLevel      String?
-  targetLanguage   String?
-  targetGrade      String?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  attachments      Attachment[]
-  chapters         Chapter[]
-  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  liveStreams      LiveStream[]
-  purchases        Purchase[]
-  quizzes          Quiz[]
-  timetables       Timetable[]
+  id                   String       @id @default(uuid())
+  userId               String
+  title                String
+  description          String?
+  imageUrl             String?
+  price                Float?
+  isPublished          Boolean      @default(false)
+  isFree               Boolean      @default(false)
+  targetCurriculum     String?
+  targetCurriculumType String?
+  targetLevel          String?
+  targetLanguage       String?
+  targetGrade          String?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  attachments          Attachment[]
+  chapters             Chapter[]
+  user                 User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  liveStreams          LiveStream[]
+  purchases            Purchase[]
+  quizzes              Quiz[]
+  timetables           Timetable[]
 }
 
 model Attachment {

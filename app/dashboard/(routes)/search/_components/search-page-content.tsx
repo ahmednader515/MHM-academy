@@ -18,6 +18,7 @@ type CourseWithDetails = {
     price?: number | null;
     isPublished: boolean;
     targetCurriculum?: string | null;
+    targetCurriculumType?: string | null;
     targetLevel?: string | null;
     targetLanguage?: string | null;
     targetGrade?: string | null;
@@ -158,7 +159,7 @@ export const SearchPageContent = ({ coursesWithProgress, title }: SearchPageCont
                                     </h3>
                                     
                                     {/* Target Audience Info */}
-                                    {(course.targetCurriculum || course.targetLevel || course.targetLanguage || course.targetGrade) && (
+                                    {(course.targetCurriculum || course.targetCurriculumType || course.targetLevel || course.targetLanguage || course.targetGrade) && (
                                         <div className="mb-3 flex flex-wrap gap-2">
                                             {course.targetCurriculum && (
                                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -167,6 +168,13 @@ export const SearchPageContent = ({ coursesWithProgress, title }: SearchPageCont
                                                      course.targetCurriculum === 'summer_courses' ? 'الكورسات الصيفية' :
                                                      course.targetCurriculum === 'center_mhm_academy' ? 'Center MHM Academy' :
                                                      course.targetCurriculum}
+                                                </span>
+                                            )}
+                                            {course.targetCurriculum === 'egyptian' && course.targetCurriculumType && (
+                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
+                                                    {course.targetCurriculumType === 'morning' ? 'صباحي' : 
+                                                     course.targetCurriculumType === 'evening' ? 'مسائي' :
+                                                     course.targetCurriculumType}
                                                 </span>
                                             )}
                                             {course.targetLevel && (
