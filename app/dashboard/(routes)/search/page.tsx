@@ -84,10 +84,10 @@ export default async function SearchPage({
         // Add courses that match user's curriculum only (any level, any language, any grade)
         if (user.curriculum) {
             const conditions: any[] = [
-                { targetCurriculum: user.curriculum },
-                { targetLevel: null },
-                { targetLanguage: null },
-                { targetGrade: null }
+                    { targetCurriculum: user.curriculum },
+                    { targetLevel: null },
+                    { targetLanguage: null },
+                    { targetGrade: null }
             ];
             addCurriculumTypeCondition(conditions);
             whereClause.OR.push({ AND: conditions });
@@ -96,10 +96,10 @@ export default async function SearchPage({
         // Add courses that match user's curriculum and level (any language, any grade)
         if (user.curriculum && user.level) {
             const conditions: any[] = [
-                { targetCurriculum: user.curriculum },
-                { targetLevel: user.level },
-                { targetLanguage: null },
-                { targetGrade: null }
+                    { targetCurriculum: user.curriculum },
+                    { targetLevel: user.level },
+                    { targetLanguage: null },
+                    { targetGrade: null }
             ];
             addCurriculumTypeCondition(conditions);
             whereClause.OR.push({ AND: conditions });
@@ -108,10 +108,10 @@ export default async function SearchPage({
         // Add courses that match user's curriculum, level and language (any grade)
         if (user.curriculum && user.level && user.language) {
             const conditions: any[] = [
-                { targetCurriculum: user.curriculum },
-                { targetLevel: user.level },
-                { targetLanguage: user.language },
-                { targetGrade: null }
+                    { targetCurriculum: user.curriculum },
+                    { targetLevel: user.level },
+                    { targetLanguage: user.language },
+                    { targetGrade: null }
             ];
             addCurriculumTypeCondition(conditions);
             whereClause.OR.push({ AND: conditions });
@@ -120,10 +120,10 @@ export default async function SearchPage({
         // Add courses that match user's curriculum, level, language and grade exactly
         if (user.curriculum && user.level && user.language && user.grade) {
             const conditions: any[] = [
-                { targetCurriculum: user.curriculum },
-                { targetLevel: user.level },
-                { targetLanguage: user.language },
-                { targetGrade: user.grade }
+                    { targetCurriculum: user.curriculum },
+                    { targetLevel: user.level },
+                    { targetLanguage: user.language },
+                    { targetGrade: user.grade }
             ];
             addCurriculumTypeCondition(conditions);
             whereClause.OR.push({ AND: conditions });
@@ -135,8 +135,8 @@ export default async function SearchPage({
             // Courses that match curriculum and level but have any language/grade
             if (user.level) {
                 const conditions: any[] = [
-                    { targetCurriculum: user.curriculum },
-                    { targetLevel: user.level }
+                        { targetCurriculum: user.curriculum },
+                        { targetLevel: user.level }
                 ];
                 addCurriculumTypeCondition(conditions);
                 whereClause.OR.push({ AND: conditions });
@@ -145,8 +145,8 @@ export default async function SearchPage({
             // Courses that match curriculum and language but have any level/grade
             if (user.language) {
                 const conditions: any[] = [
-                    { targetCurriculum: user.curriculum },
-                    { targetLanguage: user.language }
+                        { targetCurriculum: user.curriculum },
+                        { targetLanguage: user.language }
                 ];
                 addCurriculumTypeCondition(conditions);
                 whereClause.OR.push({ AND: conditions });
@@ -155,8 +155,8 @@ export default async function SearchPage({
             // Courses that match curriculum and grade but have any level/language
             if (user.grade) {
                 const conditions: any[] = [
-                    { targetCurriculum: user.curriculum },
-                    { targetGrade: user.grade }
+                        { targetCurriculum: user.curriculum },
+                        { targetGrade: user.grade }
                 ];
                 addCurriculumTypeCondition(conditions);
                 whereClause.OR.push({ AND: conditions });

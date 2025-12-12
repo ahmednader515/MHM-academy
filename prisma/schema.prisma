@@ -42,6 +42,8 @@ model User {
   parent               User?                  @relation("ParentChild", fields: [parentPhoneNumber], references: [phoneNumber])
   children             User[]                 @relation("ParentChild")
   userProgress         UserProgress[]
+  requestedPromoCodes  PromoCode[]            @relation("StudentPromoCodes")
+  createdPromoCodes    PromoCode[]            @relation("CreatorPromoCodes")
 }
 
 model Course {
@@ -337,4 +339,24 @@ model Timetable {
 
   @@index([courseId])
   @@index([dayOfWeek])
+}
+
+model PromoCode {
+  id          String   @id @default(uuid())
+  code        String?  @unique
+  studentId   String
+  createdBy   String?
+  discountPercentage Int?
+  isUsed      Boolean  @default(false)
+  status      String   @default("requested") // requested, approved, used
+  requestedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  student     User     @relation("StudentPromoCodes", fields: [studentId], references: [id], onDelete: Cascade)
+  creator     User?    @relation("CreatorPromoCodes", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([createdBy])
+  @@index([code])
+  @@index([status])
 }

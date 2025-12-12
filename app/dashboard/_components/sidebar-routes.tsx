@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart, Compass, Layout, List, Wallet, Shield, Users, Eye, TrendingUp, BookOpen, FileText, Award, PlusSquare, Video, GraduationCap, Calendar } from "lucide-react";
+import { BarChart, Compass, Layout, List, Wallet, Shield, Users, Eye, TrendingUp, BookOpen, FileText, Award, PlusSquare, Video, GraduationCap, Calendar, Ticket } from "lucide-react";
 import { SidebarItem } from "./sidebar-item";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/contexts/language-context";
@@ -88,6 +88,11 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             label: t('teacher.createAccount'),
             href: "/dashboard/teacher/create-account",
         },
+        {
+            icon: Ticket,
+            label: t('admin.promocodeManagement') || 'Promocode Management',
+            href: "/dashboard/teacher/promocodes",
+        },
     ];
 
     const parentRoutes = [
@@ -157,6 +162,11 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             icon: GraduationCap,
             label: t('admin.teachersManagement') || 'Teachers',
             href: "/dashboard/admin/teachers",
+        },
+        {
+            icon: Ticket,
+            label: t('admin.promocodeManagement') || 'Promocode Management',
+            href: "/dashboard/admin/promocodes",
         },
         {
             icon: Award,

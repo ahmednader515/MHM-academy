@@ -2,7 +2,7 @@
 
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Play, Clock, Trophy, Wallet, TrendingUp, BookOpen as BookOpenIcon, Star, HelpCircle } from "lucide-react";
+import { BookOpen, Play, Clock, Trophy, Wallet, TrendingUp, BookOpen as BookOpenIcon, Star, HelpCircle, Ticket, Copy, Check } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useLanguage } from "@/lib/contexts/language-context";
@@ -14,6 +14,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { NewContentBanner } from "./new-content-banner";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 type Course = {
   id: string;
@@ -84,6 +87,59 @@ export const DashboardContent = ({
 }: DashboardContentProps) => {
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
+  const router = useRouter();
+  const [promocode, setPromocode] = useState<any>(null);
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
+  const [loadingPromocode, setLoadingPromocode] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    fetchPromocode();
+  }, []);
+
+  const fetchPromocode = async () => {
+    try {
+      const response = await fetch('/api/user/promocode');
+      if (response.ok) {
+        const data = await response.json();
+        setPromocode(data.promocode);
+        setHasPendingRequest(data.hasPendingRequest || false);
+      }
+    } catch (error) {
+      console.error('Error fetching promocode:', error);
+    } finally {
+      setLoadingPromocode(false);
+    }
+  };
+
+  const handleRequestPromocode = async () => {
+    try {
+      const response = await fetch('/api/user/promocode', {
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        toast.success(t('dashboard.promocodeRequestSubmitted') || 'Promocode request submitted successfully');
+        setHasPendingRequest(true);
+        fetchPromocode(); // Refresh to get updated status
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.message || t('dashboard.promocodeRequestFailed') || 'Failed to submit request');
+      }
+    } catch (error) {
+      console.error('Error requesting promocode:', error);
+      toast.error(t('dashboard.promocodeRequestFailed') || 'Failed to submit request');
+    }
+  };
+
+  const handleCopyCode = () => {
+    if (promocode?.code) {
+      navigator.clipboard.writeText(promocode.code);
+      setCopied(true);
+      toast.success(t('dashboard.promocodeCopied') || 'Promocode copied to clipboard!');
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -129,9 +185,57 @@ export const DashboardContent = ({
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-                <p className="text-3xl font-bold text-white drop-shadow-lg">
+                <p className="text-3xl font-bold text-yellow-900 drop-shadow-lg">
                   {user?.points || 0}
                 </p>
+                {/* Promocode Section */}
+                {!loadingPromocode && (
+                  <div className="mt-4 pt-4 border-t border-yellow-700/40">
+                    {promocode && !promocode.isUsed ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm rounded-lg p-2">
+                          <Ticket className="h-4 w-4 text-yellow-900" />
+                          <span className="text-sm text-yellow-900 font-medium">{t('dashboard.yourPromocode') || 'Your Promocode:'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <code className="flex-1 bg-white/40 backdrop-blur-sm text-yellow-900 font-mono text-sm px-3 py-2 rounded-lg font-bold">
+                            {promocode.code}
+                          </code>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={handleCopyCode}
+                            className="bg-white/30 hover:bg-white/40 text-yellow-900 border-yellow-700/30"
+                          >
+                            {copied ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                        {promocode.discountPercentage && (
+                          <p className="text-xs font-medium text-yellow-900">
+                            {promocode.discountPercentage}% {t('dashboard.discount') || 'خصم'}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <Button
+                        onClick={handleRequestPromocode}
+                        disabled={hasPendingRequest}
+                        className="w-full bg-white/30 hover:bg-white/40 text-yellow-900 border-yellow-700/30 text-sm disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                        size="sm"
+                      >
+                        <Ticket className="h-4 w-4 mr-2" />
+                        {hasPendingRequest 
+                          ? (t('dashboard.promocodeRequestPending') || 'طلب كود الخصم قيد المراجعة')
+                          : (t('dashboard.exchangePointsForPromocode') || 'استبدال النقاط بكود خصم')
+                        }
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="bg-white/20 backdrop-blur-sm rounded-full p-3">
                 <Trophy className="h-8 w-8 text-white" />
