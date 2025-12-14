@@ -12,6 +12,7 @@ import { CurrencySelector } from "@/components/currency-selector";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/db"; // Import db client
 import { useLanguage } from "@/lib/contexts/language-context";
+import { CaptchaGate } from "@/components/captcha-gate";
 
 // Define types based on Prisma schema
 type Course = {
@@ -114,10 +115,11 @@ export default function HomePage() {
   };
 
   return (
-    <div className="h-full w-full bg-background">
-      <Navbar />
-      <ScrollProgress />
-      <CurrencySelector />
+    <CaptchaGate>
+      <div className="h-full w-full bg-background">
+        <Navbar />
+        <ScrollProgress />
+        <CurrencySelector />
       {/* Hero Section */}
       <section id="hero-section" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-28 md:pt-0">
         {/* Hero Container */}
@@ -697,6 +699,7 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
-    </div>
+      </div>
+    </CaptchaGate>
   );
 } 

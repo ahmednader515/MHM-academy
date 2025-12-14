@@ -14,6 +14,7 @@ import Image from "next/image";
 import { useLanguage } from "@/lib/contexts/language-context";
 import { CurriculumSelector } from "@/components/curriculum-selector";
 import ReCAPTCHA from "react-google-recaptcha";
+import { CaptchaGate } from "@/components/captcha-gate";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -183,7 +184,8 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background overflow-y-auto">
+    <CaptchaGate>
+      <div className="flex min-h-screen bg-background overflow-y-auto">
       <div className="absolute top-4 left-4 z-10">
         <Button variant="ghost" size="lg" asChild>
           <Link href="/">
@@ -403,6 +405,7 @@ export default function SignUpPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </CaptchaGate>
   );
 } 

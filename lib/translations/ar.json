@@ -98,7 +98,12 @@
     "sessionExpired": "انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى.",
     "invalidSession": "جلسة غير صحيحة. يرجى تسجيل الدخول مرة أخرى.",
     "recaptchaRequired": "يرجى إكمال التحقق من reCAPTCHA",
-    "recaptchaFailed": "فشل التحقق من reCAPTCHA. يرجى المحاولة مرة أخرى"
+    "recaptchaFailed": "فشل التحقق من reCAPTCHA. يرجى المحاولة مرة أخرى",
+    "captchaGateTitle": "التحقق من الأمان",
+    "captchaGateDescription": "يرجى إكمال التحقق من reCAPTCHA للوصول إلى الموقع",
+    "captchaGateHelp": "هذا التحقق يساعدنا على حماية الموقع من الروبوتات والوصول غير المصرح به",
+    "captchaVerificationError": "فشل التحقق من reCAPTCHA. يرجى المحاولة مرة أخرى.",
+    "captchaVerificationGenericError": "حدث خطأ أثناء التحقق. يرجى المحاولة مرة أخرى."
   },
   "home": {
     "title": "MHM Academy",
