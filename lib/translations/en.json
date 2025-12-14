@@ -96,7 +96,9 @@
     "invalidEmailFormat": "Invalid email format",
     "userAlreadyLoggedIn": "This account is already logged in on another device. Please log out from the other device first or contact support if you believe this is an error.",
     "sessionExpired": "Your session has expired. Please sign in again.",
-    "invalidSession": "Invalid session. Please sign in again."
+    "invalidSession": "Invalid session. Please sign in again.",
+    "recaptchaRequired": "Please complete the reCAPTCHA verification",
+    "recaptchaFailed": "reCAPTCHA verification failed. Please try again"
   },
   "home": {
     "title": "MHM Academy",

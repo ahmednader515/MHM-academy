@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { Check, X, Eye, EyeOff, ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import { useLanguage } from "@/lib/contexts/language-context";
 import { CurriculumSelector } from "@/components/curriculum-selector";
+import ReCAPTCHA from "react-google-recaptcha";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -20,6 +21,8 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [formData, setFormData] = useState({
     fullName: "",
     phoneNumber: "",
@@ -108,6 +111,10 @@ export default function SignUpPage() {
 
   const formValidation = validateForm();
 
+  const handleRecaptchaChange = (token: string | null) => {
+    setRecaptchaToken(token);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
@@ -128,8 +135,18 @@ export default function SignUpPage() {
       return;
     }
 
+    // Check reCAPTCHA
+    if (!recaptchaToken) {
+      toast.error(t('auth.recaptchaRequired') || 'يرجى إكمال التحقق من reCAPTCHA');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const response = await axios.post("/api/auth/register", formData);
+      const response = await axios.post("/api/auth/register", {
+        ...formData,
+        recaptchaToken,
+      });
       
       if (response.data.success) {
         toast.success(t('auth.signUpSuccess'));
@@ -147,12 +164,19 @@ export default function SignUpPage() {
           toast.error(t('auth.invalidEmailFormat'));
         } else if (errorMessage.includes("Passwords do not match")) {
           toast.error(t('auth.passwordsDoNotMatch'));
+        } else if (errorMessage.includes("reCAPTCHA") || errorMessage.includes("Invalid reCAPTCHA")) {
+          toast.error(t('auth.recaptchaFailed') || 'فشل التحقق من reCAPTCHA. يرجى المحاولة مرة أخرى');
+          recaptchaRef.current?.reset();
+          setRecaptchaToken(null);
         } else {
           toast.error(t('auth.signUpError'));
         }
       } else {
         toast.error(t('auth.signUpError'));
       }
+      // Reset reCAPTCHA on error
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
     } finally {
       setIsLoading(false);
     }
@@ -351,10 +375,19 @@ export default function SignUpPage() {
               </div>
             </div>
 
+            <div className="flex justify-center">
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""}
+                onChange={handleRecaptchaChange}
+                theme="light"
+              />
+            </div>
+
             <Button
               type="submit"
               className="w-full h-10 bg-[#090919] hover:bg-[#090919]/90 text-white"
-              disabled={isLoading || !formValidation.isValid}
+              disabled={isLoading || !formValidation.isValid || !recaptchaToken}
             >
               {isLoading ? t('auth.signingUp') : t('auth.signUp')}
             </Button>
