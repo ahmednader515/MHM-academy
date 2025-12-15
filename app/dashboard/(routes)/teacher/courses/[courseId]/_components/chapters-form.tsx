@@ -30,7 +30,7 @@ export const ChaptersForm = ({
         try {
             setIsUpdating(true);
             await axios.post(`/api/courses/${courseId}/chapters`, { title });
-            toast.success("تم انشاء الفصل");
+            toast.success("تم انشاء الحصة");
             setTitle("");
             setIsCreating(false);
             router.refresh();
@@ -45,7 +45,7 @@ export const ChaptersForm = ({
         try {
             setIsUpdating(true);
             await axios.delete(`/api/courses/${courseId}/chapters/${id}`);
-            toast.success("تم حذف الفصل");
+            toast.success("تم حذف الحصة");
             router.refresh();
         } catch {
             toast.error("حدث خطأ");
@@ -88,7 +88,7 @@ export const ChaptersForm = ({
                     ) : (
                         <>
                             <PlusCircle className="h-4 w-4 mr-2" />
-                            إضافة فصل
+                            إضافة حصة
                         </>
                     )}
                 </Button>

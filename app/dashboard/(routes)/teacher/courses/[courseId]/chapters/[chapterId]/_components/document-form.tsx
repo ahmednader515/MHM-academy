@@ -38,11 +38,11 @@ export const DocumentForm = ({
                 const decodedFilename = decodeURIComponent(filename);
                 // Remove query parameters if any
                 const cleanFilename = decodedFilename.split('?')[0];
-                return cleanFilename || 'مستند الفصل';
+                return cleanFilename || 'مستند الحصة';
             }
-            return 'مستند الفصل';
+            return 'مستند الحصة';
         } catch {
-            return 'مستند الفصل';
+            return 'مستند الحصة';
         }
     };
 
@@ -125,7 +125,7 @@ export const DocumentForm = ({
     return (
         <div className="mt-6 border bg-card rounded-md p-4">
             <div className="font-medium flex items-center justify-between">
-                مستند الفصل
+                مستند الحصة
                 <Button onClick={() => setIsEditing(!isEditing)} variant="ghost">
                     {isEditing ? (
                         <>إلغاء</>
@@ -147,7 +147,7 @@ export const DocumentForm = ({
                                 <p className="text-sm font-medium truncate">
                                     {initialData.documentName || getFilenameFromUrl(initialData.documentUrl || '')}
                                 </p>
-                                <p className="text-xs text-muted-foreground">مستند الفصل</p>
+                                <p className="text-xs text-muted-foreground">مستند الحصة</p>
                             </div>
                             <div className="ml-auto flex items-center gap-2 flex-shrink-0">
                                 <Button
@@ -203,7 +203,7 @@ export const DocumentForm = ({
                         }}
                     />
                     <div className="text-xs text-muted-foreground mt-4">
-                        أضف مستندات إضافية قد يحتاجها الطلاب لفهم الفصل بشكل أفضل.
+                        أضف مستندات إضافية قد يحتاجها الطلاب لفهم الحصة بشكل أفضل.
                     </div>
                 </div>
             )}

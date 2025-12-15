@@ -319,7 +319,7 @@ export default function QuizResultPage({
                                 onClick={handleNextChapter}
                                 className="bg-[#090919] hover:bg-[#090919]/90"
                             >
-                                {willRedirectToDashboard ? "لوحة التحكم" : "الفصل التالي"}
+                                {willRedirectToDashboard ? "لوحة التحكم" : "الحصة التالي"}
                             </Button>
                         )}
                     </div>

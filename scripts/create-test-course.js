@@ -34,7 +34,7 @@ async function main() {
         const chapter = await prisma.chapter.create({
             data: {
                 courseId: course.id,
-                title: "الفصل الأول: الجبر",
+                title: "الحصة الأول: الجبر",
                 description: "مقدمة في الجبر والعمليات الجبرية",
                 position: 1,
                 isPublished: true,
