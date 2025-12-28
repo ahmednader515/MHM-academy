@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart, Compass, Layout, List, Wallet, Shield, Users, Eye, TrendingUp, BookOpen, FileText, Award, PlusSquare, Video, GraduationCap, Calendar, Ticket } from "lucide-react";
+import { BarChart, Compass, Layout, List, Wallet, Shield, Users, Eye, TrendingUp, BookOpen, FileText, Award, PlusSquare, Video, GraduationCap, Calendar, Ticket, UserCheck, MessageSquare } from "lucide-react";
 import { SidebarItem } from "./sidebar-item";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/contexts/language-context";
@@ -101,13 +101,23 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             label: t('parent.dashboard'),
             href: "/dashboard/parent",
         },
+        {
+            icon: Award,
+            label: t('certificates.certificates') || 'Certificates',
+            href: "/dashboard/parent/certificates",
+        },
     ];
 
     const adminRoutes = [
         {
-            icon: Users,
-            label: t('admin.userManagement'),
-            href: "/dashboard/admin/users",
+            icon: UserCheck,
+            label: t('admin.staffAndTeachers'),
+            href: "/dashboard/admin/staff",
+        },
+        {
+            icon: GraduationCap,
+            label: t('admin.studentsManagement'),
+            href: "/dashboard/admin/students",
         },
         {
             icon: List,
@@ -172,6 +182,11 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             icon: Award,
             label: t('certificates.certificates') || 'Certificates',
             href: "/dashboard/admin/certificates",
+        },
+        {
+            icon: MessageSquare,
+            label: t('admin.studentMessages') || 'Student Messages',
+            href: "/dashboard/admin/messages",
         },
     ];
 

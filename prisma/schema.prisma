@@ -44,6 +44,7 @@ model User {
   userProgress         UserProgress[]
   requestedPromoCodes  PromoCode[]            @relation("StudentPromoCodes")
   createdPromoCodes    PromoCode[]            @relation("CreatorPromoCodes")
+  createdMessages      StudentMessage[]       @relation("MessageCreator")
 }
 
 model Course {
@@ -359,4 +360,25 @@ model PromoCode {
   @@index([createdBy])
   @@index([code])
   @@index([status])
+}
+
+model StudentMessage {
+  id          String   @id @default(uuid())
+  message     String
+  isActive    Boolean  @default(true)
+  targetCurriculum String?
+  targetLevel String?
+  targetLanguage String?
+  targetGrade String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  creator     User     @relation("MessageCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([isActive])
+  @@index([targetCurriculum])
+  @@index([targetLevel])
+  @@index([targetLanguage])
+  @@index([targetGrade])
+  @@index([createdBy])
 }

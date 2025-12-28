@@ -2,7 +2,7 @@
 
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Play, Clock, Trophy, Wallet, TrendingUp, BookOpen as BookOpenIcon, Star, HelpCircle, Ticket, Copy, Check } from "lucide-react";
+import { BookOpen, Play, Clock, Trophy, Wallet, TrendingUp, BookOpen as BookOpenIcon, Star, HelpCircle, Ticket, Copy, Check, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useLanguage } from "@/lib/contexts/language-context";
@@ -17,6 +17,7 @@ import { NewContentBanner } from "./new-content-banner";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type Course = {
   id: string;
@@ -92,10 +93,24 @@ export const DashboardContent = ({
   const [hasPendingRequest, setHasPendingRequest] = useState(false);
   const [loadingPromocode, setLoadingPromocode] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [messages, setMessages] = useState<any[]>([]);
 
   useEffect(() => {
     fetchPromocode();
+    fetchMessages();
   }, []);
+
+  const fetchMessages = async () => {
+    try {
+      const response = await fetch("/api/dashboard/messages");
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(data);
+      }
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
 
   const fetchPromocode = async () => {
     try {
@@ -143,6 +158,51 @@ export const DashboardContent = ({
 
   return (
     <div className="p-6 space-y-6">
+      {/* Warning Messages Banner */}
+      {messages.length > 0 && (
+        <div className="space-y-4 mb-6">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className="relative overflow-hidden rounded-xl border-2 border-yellow-400/50 bg-gradient-to-r from-yellow-50 via-amber-50 to-yellow-50 dark:from-yellow-900/30 dark:via-amber-900/20 dark:to-yellow-900/30 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.01]"
+            >
+              {/* Decorative background pattern */}
+              <div className="absolute inset-0 opacity-5">
+                <div className="absolute inset-0" style={{
+                  backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px)`
+                }} />
+              </div>
+              
+              {/* Content */}
+              <div className="relative flex items-start gap-4 p-6">
+                {/* Icon */}
+                <div className="flex-shrink-0 mt-1">
+                  <div className="rounded-full bg-yellow-500/20 p-3 dark:bg-yellow-500/30">
+                    <AlertTriangle className="h-6 w-6 text-yellow-600 dark:text-yellow-400 animate-pulse" />
+                  </div>
+                </div>
+                
+                {/* Message Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-lg font-bold text-yellow-900 dark:text-yellow-100">
+                      {t('admin.importantNotice') || 'Important Notice'}
+                    </h3>
+                    <div className="h-1 w-1 rounded-full bg-yellow-600 dark:bg-yellow-400 animate-ping" />
+                  </div>
+                  <p className="text-base leading-relaxed text-yellow-800 dark:text-yellow-200 font-medium">
+                    {message.message}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Bottom accent line */}
+              <div className="h-1 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-400" />
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Header with Points */}
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
