@@ -20,7 +20,6 @@ export async function GET(req: NextRequest) {
       where: { userId: session.user.id },
       include: {
         plan: true,
-        request: true,
       },
       orderBy: { createdAt: "desc" },
     });
@@ -39,22 +38,40 @@ export async function POST(req: NextRequest) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { planId, transactionImage } = await req.json();
+    const { planId } = await req.json();
 
-    if (!planId || !transactionImage) {
-      return new NextResponse("Missing required fields", { status: 400 });
+    if (!planId) {
+      return new NextResponse("Missing plan ID", { status: 400 });
     }
 
     // Check if plan exists and is active
     const plan = await (db as any).subscriptionPlan.findUnique({
       where: { id: planId },
-    });
+    }) as any;
 
     if (!plan || !plan.isActive) {
       return new NextResponse("Plan not found or inactive", { status: 404 });
     }
 
-    // Check if user already has an active or pending subscription for this plan
+    // Get user with balance
+    const user = await (db as any).user.findUnique({
+      where: { id: session.user.id },
+      select: { balance: true },
+    });
+
+    if (!user) {
+      return new NextResponse("User not found", { status: 404 });
+    }
+
+    // Check if user has sufficient balance
+    if (user.balance < plan.price) {
+      return NextResponse.json(
+        { error: "INSUFFICIENT_BALANCE", message: "Insufficient balance" },
+        { status: 400 }
+      );
+    }
+
+    // Check if user already has an active subscription for this plan
     // Allow renewal if subscription is expired
     const existingSubscription = await (db as any).subscription.findFirst({
       where: {
@@ -70,26 +87,58 @@ export async function POST(req: NextRequest) {
       return new NextResponse("You already have an active or pending subscription for this plan", { status: 400 });
     }
 
-    // Create subscription and request
-    const subscription = await (db as any).subscription.create({
-      data: {
-        userId: session.user.id,
-        planId,
-        status: "PENDING",
-        request: {
-          create: {
-            transactionImage,
-            status: "PENDING",
+    // Calculate subscription dates
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + plan.duration);
+
+    // Create subscription, deduct balance, and grant access in a transaction
+    const result = await (db as any).$transaction(async (tx: any) => {
+      // Create subscription with ACTIVE status
+      const subscription = await tx.subscription.create({
+        data: {
+          userId: session.user.id,
+          planId,
+          status: "ACTIVE",
+          startDate,
+          endDate,
+        },
+        include: {
+          plan: true,
+        },
+      });
+
+      // Update user balance
+      const updatedUser = await tx.user.update({
+        where: { id: session.user.id },
+        data: {
+          balance: {
+            decrement: plan.price,
           },
         },
-      },
-      include: {
-        plan: true,
-        request: true,
-      },
-    });
+      });
 
-    return NextResponse.json(subscription);
+      // Create balance transaction record
+      await tx.balanceTransaction.create({
+        data: {
+          userId: session.user.id,
+          amount: -plan.price,
+          type: "PURCHASE",
+          description: `اشتراك شهري: ${plan.curriculum} - ${plan.grade}`,
+        },
+      });
+
+      return { subscription, updatedUser };
+    }) as { subscription: any; updatedUser: any };
+
+    // Grant access to all matching courses (outside transaction)
+    await grantAccessForUser(session.user.id);
+
+    return NextResponse.json({
+      success: true,
+      subscription: result.subscription,
+      newBalance: result.updatedUser.balance,
+    });
   } catch (error) {
     console.error("[SUBSCRIPTIONS_POST_ERROR]", error);
     return new NextResponse("Internal Error", { status: 500 });

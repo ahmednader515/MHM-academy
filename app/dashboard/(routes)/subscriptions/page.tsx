@@ -31,11 +31,6 @@ interface Subscription {
   endDate: string | null;
   createdAt: string;
   plan: SubscriptionPlan;
-  request: {
-    id: string;
-    status: string;
-    transactionImage: string;
-  } | null;
 }
 
 const SubscriptionsPage = () => {
@@ -46,6 +41,7 @@ const SubscriptionsPage = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -75,74 +71,49 @@ const SubscriptionsPage = () => {
     }
   };
 
-  // Check for pending subscription
-  const pendingSubscription = subscriptions.find(
-    (sub) => sub.status === "PENDING" && sub.request?.status === "PENDING"
-  );
+  const handleSubscribe = async (planId: string) => {
+    setSubscribingPlanId(planId);
+    try {
+      const response = await fetch("/api/subscriptions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ planId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(t('subscriptions.subscriptionSuccess') || 'Subscription activated successfully!');
+        // Refresh data
+        fetchData();
+      } else {
+        let errorData: any;
+        try {
+          errorData = await response.json();
+        } catch {
+          const errorText = await response.text();
+          errorData = { error: errorText };
+        }
+        if (errorData.error === "INSUFFICIENT_BALANCE" || errorData.message === "Insufficient balance") {
+          toast.error(t('subscriptions.insufficientBalance') || 'Insufficient balance. Please add funds to your account.');
+          router.push("/dashboard/balance");
+        } else {
+          toast.error(errorData.message || t('common.error'));
+        }
+      }
+    } catch (error) {
+      console.error("Error subscribing:", error);
+      toast.error(t('common.error'));
+    } finally {
+      setSubscribingPlanId(null);
+    }
+  };
 
   if (loading) {
     return (
       <div className="p-6">
         <div className="text-center">{t('common.loading')}</div>
-      </div>
-    );
-  }
-
-  // Show pending confirmation page if there's a pending subscription
-  if (pendingSubscription) {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {t('subscriptions.mySubscription') || 'My Subscription'}
-          </h1>
-        </div>
-
-        <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-yellow-600" />
-              {t('subscriptions.pendingConfirmation') || 'Pending Admin Confirmation'}
-            </CardTitle>
-            <CardDescription>
-              {t('subscriptions.pendingDescription') || 'Your subscription request is pending admin approval. You will be notified once it is reviewed.'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">{t('dashboard.name')}</p>
-                <p className="text-lg font-semibold">{session?.user?.name || '-'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">{t('subscriptions.plan') || 'Plan'}</p>
-                <p className="text-lg font-semibold">
-                  {t('subscriptions.gradeSubscription') || 'Grade Subscription'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">{t('dashboard.price')}</p>
-                <p className="text-lg font-semibold">{formatPrice(pendingSubscription.plan.price)}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">{t('subscriptions.duration') || 'Duration'}</p>
-                <p className="text-lg font-semibold">{pendingSubscription.plan.duration} {t('admin.days') || 'days'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">{t('subscriptions.requestDate') || 'Request Date'}</p>
-                <p className="text-lg font-semibold">
-                  {format(new Date(pendingSubscription.createdAt), "dd/MM/yyyy hh:mm a", { locale: language === 'ar' ? ar : enUS })}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">{t('admin.status')}</p>
-                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                  {t('admin.pending')}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -212,9 +183,12 @@ const SubscriptionsPage = () => {
             {isExpired && (
               <Button
                 className="w-full"
-                onClick={() => router.push(`/dashboard/subscriptions/${subscription!.plan.id}/payment`)}
+                onClick={() => handleSubscribe(subscription!.plan.id)}
+                disabled={subscribingPlanId === subscription!.plan.id}
               >
-                {t('subscriptions.renew') || 'Renew Subscription'}
+                {subscribingPlanId === subscription!.plan.id 
+                  ? (t('common.submitting') || 'Submitting...')
+                  : (t('subscriptions.renew') || 'Renew Subscription')}
               </Button>
             )}
           </CardContent>
@@ -266,9 +240,12 @@ const SubscriptionsPage = () => {
                 <Button
                   className="w-full mt-4"
                   size="lg"
-                  onClick={() => router.push(`/dashboard/subscriptions/${plan.id}/payment`)}
+                  onClick={() => handleSubscribe(plan.id)}
+                  disabled={subscribingPlanId === plan.id}
                 >
-                  {t('subscriptions.buyNow') || 'Buy Now'}
+                  {subscribingPlanId === plan.id 
+                    ? (t('common.submitting') || 'Submitting...')
+                    : (t('subscriptions.buyNow') || 'Buy Now')}
                 </Button>
               </CardContent>
             </Card>

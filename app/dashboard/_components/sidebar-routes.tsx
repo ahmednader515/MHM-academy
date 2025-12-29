@@ -198,11 +198,6 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             label: t('admin.subscriptionPlans') || 'Subscription Plans',
             href: "/dashboard/admin/subscription-plans",
         },
-        {
-            icon: UserCheck,
-            label: t('admin.subscriptionRequests') || 'Subscription Requests',
-            href: "/dashboard/admin/subscription-requests",
-        },
     ];
 
     const pathName = usePathname();
