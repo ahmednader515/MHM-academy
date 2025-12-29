@@ -38,10 +38,15 @@ const TeacherUsersPage = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [displayedCount, setDisplayedCount] = useState(25);
 
     useEffect(() => {
         fetchUsers();
     }, []);
+
+    useEffect(() => {
+        setDisplayedCount(25);
+    }, [searchTerm]);
 
     const fetchUsers = async () => {
         try {
@@ -108,7 +113,7 @@ const TeacherUsersPage = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {staffUsers.map((user) => (
+                                {staffUsers.slice(0, displayedCount).map((user) => (
                                     <TableRow key={user.id}>
                                         <TableCell className={`font-medium ${isRTL ? "text-right" : "text-left"}`}>
                                             {user.fullName}
@@ -134,6 +139,16 @@ const TeacherUsersPage = () => {
                                 ))}
                             </TableBody>
                         </Table>
+                        {staffUsers.length > displayedCount && (
+                            <div className="flex justify-center mt-4">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setDisplayedCount(prev => prev + 25)}
+                                >
+                                    {t('common.showMore')}
+                                </Button>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             )}
@@ -167,7 +182,7 @@ const TeacherUsersPage = () => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {studentUsers.map((user) => (
+                            {studentUsers.slice(0, displayedCount).map((user) => (
                                 <TableRow key={user.id}>
                                     <TableCell className={`font-medium ${isRTL ? "text-right" : "text-left"}`}>
                                         {user.fullName}
@@ -201,6 +216,16 @@ const TeacherUsersPage = () => {
                             ))}
                         </TableBody>
                     </Table>
+                    {studentUsers.length > displayedCount && (
+                        <div className="flex justify-center mt-4">
+                            <Button
+                                variant="outline"
+                                onClick={() => setDisplayedCount(prev => prev + 25)}
+                            >
+                                {t('common.showMore')}
+                            </Button>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>

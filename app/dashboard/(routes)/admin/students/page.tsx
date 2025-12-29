@@ -93,6 +93,7 @@ const StudentsPage = () => {
     });
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [displayedCount, setDisplayedCount] = useState(25);
 
     // Filter states
     const [selectedCurriculum, setSelectedCurriculum] = useState<string>("");
@@ -206,21 +207,25 @@ const StudentsPage = () => {
         setSelectedLevel("");
         setSelectedLanguage("");
         setSelectedGrade("");
+        setDisplayedCount(25);
     };
 
     const handleLevelChange = (value: string) => {
         setSelectedLevel(value === "all" ? "" : value);
         setSelectedLanguage("");
         setSelectedGrade("");
+        setDisplayedCount(25);
     };
 
     const handleLanguageChange = (value: string) => {
         setSelectedLanguage(value === "all" ? "" : value);
         setSelectedGrade("");
+        setDisplayedCount(25);
     };
 
     const handleGradeChange = (value: string) => {
         setSelectedGrade(value === "all" ? "" : value);
+        setDisplayedCount(25);
     };
 
     // Filter users based on search and classification
@@ -239,6 +244,11 @@ const StudentsPage = () => {
 
         return matchesSearch && matchesCurriculum && matchesLevel && matchesLanguage && matchesGrade;
     });
+
+    // Reset displayed count when search term changes
+    useEffect(() => {
+        setDisplayedCount(25);
+    }, [searchTerm]);
 
     if (loading) {
         return (
@@ -380,7 +390,7 @@ const StudentsPage = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredUsers.map((user) => (
+                                {filteredUsers.slice(0, displayedCount).map((user) => (
                                     <TableRow key={user.id}>
                                         <TableCell className={`font-medium ${isRTL ? "text-right" : "text-left"}`}>
                                             {user.fullName}
@@ -643,6 +653,16 @@ const StudentsPage = () => {
                                 ))}
                             </TableBody>
                         </Table>
+                    )}
+                    {filteredUsers.length > displayedCount && (
+                        <div className="flex justify-center mt-4">
+                            <Button
+                                variant="outline"
+                                onClick={() => setDisplayedCount(prev => prev + 25)}
+                            >
+                                {t('common.showMore')}
+                            </Button>
+                        </div>
                     )}
                 </CardContent>
             </Card>

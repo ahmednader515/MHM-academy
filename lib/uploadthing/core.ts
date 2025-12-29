@@ -44,6 +44,12 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ file }) => {
         return { url: file.url, name: file.name };
     }),
+
+    transactionImage: f({ image: {maxFileSize: "10MB", maxFileCount: 1} })
+    .middleware(() => handleAuth())
+    .onUploadComplete(async ({ file }) => {
+        return { url: file.url, name: file.name };
+    }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

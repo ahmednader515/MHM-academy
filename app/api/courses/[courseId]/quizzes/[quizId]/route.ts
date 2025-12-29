@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { parseQuizOptions, stringifyQuizOptions } from "@/lib/utils";
+import { hasSubscriptionAccess, courseMatchesSubscription } from "@/lib/subscription-utils";
 
 export async function GET(
     req: Request,
@@ -41,10 +42,39 @@ export async function GET(
             // Course is free, allow access
         } else {
             // Check if user has purchased the course
-            const hasAccess = course.purchases.some(purchase => purchase.status === "ACTIVE");
+            let hasAccess = course.purchases.some(purchase => purchase.status === "ACTIVE");
+            
+            // If no purchase access, check subscription
+            if (!hasAccess) {
+                hasAccess = await hasSubscriptionAccess(userId, course);
+            }
             
             if (!hasAccess) {
-                return new NextResponse("Course access required", { status: 403 });
+                // Check if user has an expired subscription that previously granted access
+                const expiredSubscription = await (db as any).subscription.findFirst({
+                    where: {
+                        userId,
+                        status: "EXPIRED",
+                    },
+                    include: {
+                        plan: true,
+                    },
+                    orderBy: {
+                        endDate: "desc",
+                    },
+                });
+
+                if (expiredSubscription && courseMatchesSubscription(course, expiredSubscription)) {
+                    return NextResponse.json({ 
+                        error: "SUBSCRIPTION_EXPIRED",
+                        subscriptionEndDate: expiredSubscription.endDate 
+                    }, { status: 403 });
+                }
+                
+                return new NextResponse(JSON.stringify({ error: "Course access required" }), { 
+                    status: 403,
+                    headers: { "Content-Type": "application/json" }
+                });
             }
         }
 

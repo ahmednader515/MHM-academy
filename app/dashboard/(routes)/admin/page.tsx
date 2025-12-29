@@ -9,7 +9,7 @@ export default function AdminRedirect() {
     const { t } = useLanguage();
 
     useEffect(() => {
-        router.replace("/dashboard/admin/users");
+        router.replace("/dashboard/admin/staff");
     }, [router]);
 
     return (

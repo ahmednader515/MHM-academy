@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { grantCourseAccessToSubscriptions } from "@/lib/subscription-utils";
 
 export async function GET(
     req: Request,
@@ -84,6 +85,11 @@ export async function PATCH(
                 ...values,
             }
         });
+
+        // If course is published and target fields are being updated, grant access to matching subscriptions
+        if (course.isPublished && (values.targetCurriculum || values.targetGrade || values.targetLevel || values.targetLanguage)) {
+            await grantCourseAccessToSubscriptions(resolvedParams.courseId, course);
+        }
 
         return NextResponse.json(course);
     } catch (error) {

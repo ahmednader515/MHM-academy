@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { hasSubscriptionAccess } from "@/lib/subscription-utils";
 
 // POST - Submit activity work
 export async function POST(
@@ -42,13 +43,18 @@ export async function POST(
     }
 
     // Check if user has access to the course
-    const hasAccess = activity.chapter.isFree || await db.purchase.findFirst({
+    let hasAccess = activity.chapter.isFree || await db.purchase.findFirst({
       where: {
         userId,
         courseId: resolvedParams.courseId,
         status: "ACTIVE",
       },
     });
+
+    // If no purchase access, check subscription
+    if (!hasAccess && !activity.chapter.isFree) {
+      hasAccess = await hasSubscriptionAccess(userId, activity.chapter.course);
+    }
 
     if (!hasAccess) {
       return new NextResponse("Access denied", { status: 403 });

@@ -72,10 +72,15 @@ const ProgressPage = () => {
     const [allChapters, setAllChapters] = useState<Chapter[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [loadingProgress, setLoadingProgress] = useState(false);
+    const [displayedCount, setDisplayedCount] = useState(25);
 
     useEffect(() => {
         fetchUsers();
     }, []);
+
+    useEffect(() => {
+        setDisplayedCount(25);
+    }, [searchTerm]);
 
     const fetchUsers = async () => {
         try {
@@ -168,7 +173,7 @@ const ProgressPage = () => {
                              </TableRow>
                          </TableHeader>
                         <TableBody>
-                            {studentUsers.map((user) => (
+                            {studentUsers.slice(0, displayedCount).map((user) => (
                                 <TableRow key={user.id}>
                                     <TableCell className={`font-medium ${isRTL ? "text-right" : "text-left"}`}>
                                         {user.fullName}
@@ -198,6 +203,16 @@ const ProgressPage = () => {
                             ))}
                         </TableBody>
                     </Table>
+                    {studentUsers.length > displayedCount && (
+                        <div className="flex justify-center mt-4">
+                            <Button
+                                variant="outline"
+                                onClick={() => setDisplayedCount(prev => prev + 25)}
+                            >
+                                {t('common.showMore')}
+                            </Button>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 

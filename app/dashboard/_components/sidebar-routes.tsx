@@ -35,6 +35,11 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             label: t('certificates.myCertificates') || 'My Certificates',
             href: "/dashboard/certificates",
         },
+        {
+            icon: Ticket,
+            label: t('subscriptions.mySubscription') || 'My Subscription',
+            href: "/dashboard/subscriptions",
+        },
     ];
 
     const teacherRoutes = [
@@ -187,6 +192,16 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             icon: MessageSquare,
             label: t('admin.studentMessages') || 'Student Messages',
             href: "/dashboard/admin/messages",
+        },
+        {
+            icon: Ticket,
+            label: t('admin.subscriptionPlans') || 'Subscription Plans',
+            href: "/dashboard/admin/subscription-plans",
+        },
+        {
+            icon: UserCheck,
+            label: t('admin.subscriptionRequests') || 'Subscription Requests',
+            href: "/dashboard/admin/subscription-requests",
         },
     ];
 

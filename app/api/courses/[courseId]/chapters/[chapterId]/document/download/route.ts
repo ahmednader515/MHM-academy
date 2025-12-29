@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { hasSubscriptionAccess } from "@/lib/subscription-utils";
 
 export async function GET(
     req: Request,
@@ -20,16 +21,9 @@ export async function GET(
                 id: resolvedParams.chapterId,
                 courseId: resolvedParams.courseId,
             },
-            select: {
-                documentUrl: true,
-                documentName: true,
-                course: {
-                    select: {
-                        userId: true,
-                        isPublished: true
-                    }
-                }
-            }
+            include: {
+                course: true,
+            },
         });
 
         if (!chapter || !chapter.documentUrl) {
@@ -37,13 +31,18 @@ export async function GET(
         }
 
         // Check if user has access to the course
-        const hasAccess = await db.purchase.findFirst({
+        let hasAccess = await db.purchase.findFirst({
             where: {
                 userId,
                 courseId: resolvedParams.courseId,
                 status: "ACTIVE"
             }
         });
+
+        // If no purchase access, check subscription
+        if (!hasAccess) {
+            hasAccess = await hasSubscriptionAccess(userId, chapter.course);
+        }
 
         const isCourseOwner = chapter.course.userId === userId;
         const isPublished = chapter.course.isPublished;

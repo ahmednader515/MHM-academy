@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { hasSubscriptionAccess } from "@/lib/subscription-utils";
 
 export async function GET(
   req: Request,
@@ -38,7 +39,12 @@ export async function GET(
     }
 
     // Check if user has access (course is free or user has purchased it)
-    const hasAccess = course.isFree || course.purchases.length > 0;
+    let hasAccess = course.isFree || course.purchases.length > 0;
+    
+    // If no purchase access, check subscription
+    if (!hasAccess && !course.isFree) {
+      hasAccess = await hasSubscriptionAccess(userId, course);
+    }
     
     if (!hasAccess) {
       return new NextResponse("Access denied", { status: 403 });

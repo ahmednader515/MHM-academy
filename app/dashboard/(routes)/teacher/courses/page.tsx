@@ -34,7 +34,7 @@ const CoursesPage = async () => {
     if (user.role !== "TEACHER") {
         // If wrong role, redirect to appropriate dashboard
         const dashboardUrl = user.role === "ADMIN" 
-            ? "/dashboard/admin/users" 
+            ? "/dashboard/admin/staff" 
             : "/dashboard";
         return redirect(dashboardUrl);
     }

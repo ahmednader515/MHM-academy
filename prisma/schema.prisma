@@ -45,6 +45,8 @@ model User {
   requestedPromoCodes  PromoCode[]            @relation("StudentPromoCodes")
   createdPromoCodes    PromoCode[]            @relation("CreatorPromoCodes")
   createdMessages      StudentMessage[]       @relation("MessageCreator")
+  subscriptions       Subscription[]
+  reviewedSubscriptions SubscriptionRequest[] @relation("SubscriptionReviewer")
 }
 
 model Course {
@@ -381,4 +383,58 @@ model StudentMessage {
   @@index([targetLanguage])
   @@index([targetGrade])
   @@index([createdBy])
+}
+
+model SubscriptionPlan {
+  id          String   @id @default(uuid())
+  curriculum  String
+  level       String?
+  language    String?
+  grade       String
+  price       Float
+  duration    Int       @default(30) // Duration in days
+  isActive    Boolean  @default(true)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  subscriptions Subscription[]
+
+  @@unique([curriculum, level, language, grade], name: "unique_plan")
+  @@index([curriculum])
+  @@index([grade])
+  @@index([isActive])
+}
+
+model Subscription {
+  id          String   @id @default(uuid())
+  userId      String
+  planId      String
+  status      String   @default("PENDING") // PENDING, APPROVED, ACTIVE, EXPIRED, DENIED
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan        SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  request     SubscriptionRequest?
+
+  @@index([userId])
+  @@index([planId])
+  @@index([status])
+}
+
+model SubscriptionRequest {
+  id              String   @id @default(uuid())
+  subscriptionId  String   @unique
+  transactionImage String
+  status          String   @default("PENDING") // PENDING, APPROVED, DENIED
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  subscription    Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  reviewer        User?    @relation("SubscriptionReviewer", fields: [reviewedBy], references: [id])
+
+  @@index([status])
+  @@index([subscriptionId])
 }

@@ -8,7 +8,7 @@ function getDashboardUrlByRole(role: string): string {
     case "TEACHER":
       return "/dashboard/teacher/courses";
     case "ADMIN":
-      return "/dashboard/admin/users";
+      return "/dashboard/admin/staff";
     case "PARENT":
       return "/dashboard/parent";
     case "USER":
@@ -74,7 +74,7 @@ export async function proxy(request: NextRequest) {
   // If user is not a teacher or admin but trying to access teacher routes
   // Only redirect if we have a token (meaning user is authenticated but wrong role)
   if (isTeacherRoute && token && !(isTeacher || isAdmin)) {
-    const dashboardUrl = isAdmin ? "/dashboard/admin/users" : "/dashboard";
+    const dashboardUrl = isAdmin ? "/dashboard/admin/staff" : "/dashboard";
     return NextResponse.redirect(new URL(dashboardUrl, request.url));
   }
 

@@ -47,6 +47,8 @@ const ChapterPage = () => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [courseProgress, setCourseProgress] = useState(0);
   const [hasAccess, setHasAccess] = useState(false);
+  const [subscriptionExpired, setSubscriptionExpired] = useState(false);
+  const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
   const [homework, setHomework] = useState<{ id: string; imageUrl: string; createdAt: string } | null>(null);
   const [uploadingHomework, setUploadingHomework] = useState(false);
   const [activities, setActivities] = useState<Array<{ id: string; title: string; description: string | null; isRequired: boolean }>>([]);
@@ -175,6 +177,8 @@ const ChapterPage = () => {
         setIsCompleted(chapterResponse.data.userProgress?.[0]?.isCompleted || false);
         setCourseProgress(progressResponse.data.progress);
         setHasAccess(accessResponse.data.hasAccess);
+        setSubscriptionExpired(accessResponse.data.subscriptionExpired || false);
+        setSubscriptionEndDate(accessResponse.data.subscriptionEndDate || null);
 
         // Fetch homework submission
         try {
@@ -301,6 +305,25 @@ const ChapterPage = () => {
   }
 
   if (!hasAccess && !chapter.isFree) {
+    // Check if subscription expired
+    if (subscriptionExpired) {
+      return (
+        <div className="h-full flex items-center justify-center">
+          <div className="text-center space-y-4 max-w-md">
+            <Lock className="h-8 w-8 mx-auto text-muted-foreground" />
+            <h2 className="text-2xl font-semibold">{t('subscriptions.subscriptionExpired') || 'Subscription Expired'}</h2>
+            <p className="text-muted-foreground">
+              {t('subscriptions.expiredDescription') || 'Your subscription has expired. Please renew to continue accessing your courses.'}
+            </p>
+            <Button onClick={() => router.push('/dashboard/subscriptions')}>
+              {t('subscriptions.renewSubscription') || 'Renew Subscription'}
+            </Button>
+          </div>
+        </div>
+      );
+    }
+    
+    // Regular locked content
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center space-y-4">

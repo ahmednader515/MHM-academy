@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { ArrowLeft, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { parseQuizOptions } from "@/lib/utils";
+import { useLanguage } from "@/lib/contexts/language-context";
 
 interface Question {
     id: string;
@@ -46,6 +47,7 @@ export default function QuizPage({
 }) {
     const router = useRouter();
     const { courseId, quizId } = use(params);
+    const { t } = useLanguage();
     const [quiz, setQuiz] = useState<Quiz | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -59,6 +61,7 @@ export default function QuizPage({
         previousContentType: 'chapter' | 'quiz' | null;
     } | null>(null);
     const [redirectToResult, setRedirectToResult] = useState(false);
+    const [subscriptionExpired, setSubscriptionExpired] = useState(false);
 
     useEffect(() => {
         fetchQuiz();
@@ -90,8 +93,17 @@ export default function QuizPage({
                 const timerInSeconds = (data.timer || 30) * 60;
                 setTimeLeft(timerInSeconds);
             } else {
-                const errorText = await response.text();
-                if (errorText.includes("Maximum attempts reached")) {
+                let errorData;
+                try {
+                    errorData = await response.json();
+                } catch {
+                    const errorText = await response.text();
+                    errorData = { error: errorText };
+                }
+                
+                if (errorData.error === "SUBSCRIPTION_EXPIRED") {
+                    setSubscriptionExpired(true);
+                } else if (errorData.error && errorData.error.includes("Maximum attempts reached")) {
                     toast.error("لقد استنفذت جميع المحاولات المسموحة لهذا الاختبار");
                     // Set flag to redirect to result page when no attempts remaining
                     setRedirectToResult(true);
@@ -201,6 +213,23 @@ export default function QuizPage({
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#211FC3] mx-auto mb-4"></div>
                     <p className="text-muted-foreground">جاري تحميل النتيجة...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (subscriptionExpired) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center space-y-4 max-w-md">
+                    <AlertCircle className="h-8 w-8 mx-auto text-muted-foreground" />
+                    <h2 className="text-2xl font-semibold">{t('subscriptions.subscriptionExpired') || 'Subscription Expired'}</h2>
+                    <p className="text-muted-foreground">
+                        {t('subscriptions.expiredDescription') || 'Your subscription has expired. Please renew to continue accessing your courses.'}
+                    </p>
+                    <Button onClick={() => router.push('/dashboard/subscriptions')}>
+                        {t('subscriptions.renewSubscription') || 'Renew Subscription'}
+                    </Button>
                 </div>
             </div>
         );

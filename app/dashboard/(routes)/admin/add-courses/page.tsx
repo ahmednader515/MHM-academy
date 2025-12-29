@@ -44,11 +44,16 @@ const AddCoursesPage = () => {
     const [dialogMode, setDialogMode] = useState<"add" | "delete">("add");
     const [isAddingCourse, setIsAddingCourse] = useState(false);
     const [isDeletingCourse, setIsDeletingCourse] = useState(false);
+    const [displayedCount, setDisplayedCount] = useState(25);
 
     useEffect(() => {
         fetchUsers();
         fetchCourses();
     }, []);
+
+    useEffect(() => {
+        setDisplayedCount(25);
+    }, [searchTerm]);
 
     useEffect(() => {
         // fetch owned courses when a user is selected for delete mode
@@ -210,7 +215,7 @@ const AddCoursesPage = () => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredUsers.map((user) => (
+                            {filteredUsers.slice(0, displayedCount).map((user) => (
                                 <TableRow key={user.id}>
                                     <TableCell className={`font-medium ${isRTL ? "text-right" : "text-left"}`}>
                                         {user.fullName}
@@ -257,6 +262,16 @@ const AddCoursesPage = () => {
                             ))}
                         </TableBody>
                     </Table>
+                    {filteredUsers.length > displayedCount && (
+                        <div className="flex justify-center mt-4">
+                            <Button
+                                variant="outline"
+                                onClick={() => setDisplayedCount(prev => prev + 25)}
+                            >
+                                {t('common.showMore')}
+                            </Button>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
             {/* Single lightweight dialog rendered once */}

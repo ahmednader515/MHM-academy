@@ -50,10 +50,15 @@ export default function PromocodesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [discountPercentage, setDiscountPercentage] = useState<number>(10);
   const [isCreating, setIsCreating] = useState(false);
+  const [displayedCount, setDisplayedCount] = useState(25);
 
   useEffect(() => {
     fetchStudents();
   }, []);
+
+  useEffect(() => {
+    setDisplayedCount(25);
+  }, [searchTerm]);
 
   const fetchStudents = async () => {
     try {
@@ -169,7 +174,7 @@ export default function PromocodesPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {studentsWithPendingRequests.map((student) => (
+              {studentsWithPendingRequests.slice(0, displayedCount).map((student) => (
                 <div
                   key={student.id}
                   className="flex items-center justify-between p-4 border rounded-lg border-orange-200 bg-orange-50/50"
@@ -198,6 +203,16 @@ export default function PromocodesPage() {
                 </div>
               ))}
             </div>
+            {studentsWithPendingRequests.length > displayedCount && (
+              <div className="flex justify-center mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setDisplayedCount(prev => prev + 25)}
+                >
+                  {t('common.showMore')}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -213,7 +228,7 @@ export default function PromocodesPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {studentsWithoutPromocode.filter((s) => !s.hasPendingRequest).map((student) => (
+              {studentsWithoutPromocode.filter((s) => !s.hasPendingRequest).slice(0, displayedCount).map((student) => (
                 <div
                   key={student.id}
                   className="flex items-center justify-between p-4 border rounded-lg"
@@ -239,6 +254,16 @@ export default function PromocodesPage() {
                 </div>
               ))}
             </div>
+            {studentsWithoutPromocode.filter((s) => !s.hasPendingRequest).length > displayedCount && (
+              <div className="flex justify-center mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setDisplayedCount(prev => prev + 25)}
+                >
+                  {t('common.showMore')}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -254,7 +279,7 @@ export default function PromocodesPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {studentsWithPromocode.map((student) => (
+              {studentsWithPromocode.slice(0, displayedCount).map((student) => (
                 <div
                   key={student.id}
                   className="flex items-center justify-between p-4 border rounded-lg"
@@ -288,6 +313,16 @@ export default function PromocodesPage() {
                 </div>
               ))}
             </div>
+            {studentsWithPromocode.length > displayedCount && (
+              <div className="flex justify-center mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setDisplayedCount(prev => prev + 25)}
+                >
+                  {t('common.showMore')}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

@@ -83,6 +83,7 @@ const StaffPage = () => {
     });
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [displayedCount, setDisplayedCount] = useState(25);
 
     // Filter states
     const [selectedCurriculum, setSelectedCurriculum] = useState<string>("");
@@ -93,6 +94,10 @@ const StaffPage = () => {
     useEffect(() => {
         fetchUsers();
     }, []);
+
+    useEffect(() => {
+        setDisplayedCount(25);
+    }, [searchTerm, selectedCurriculum, selectedLevel, selectedLanguage, selectedGrade]);
 
     const fetchUsers = async () => {
         try {
@@ -458,7 +463,7 @@ const StaffPage = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredUsers.map((user) => {
+                                {filteredUsers.slice(0, displayedCount).map((user) => {
                                     const courseCounts = getCourseCounts(user);
                                     return (
                                         <TableRow key={user.id}>
@@ -620,6 +625,16 @@ const StaffPage = () => {
                                 })}
                             </TableBody>
                         </Table>
+                    )}
+                    {filteredUsers.length > displayedCount && (
+                        <div className="flex justify-center mt-4">
+                            <Button
+                                variant="outline"
+                                onClick={() => setDisplayedCount(prev => prev + 25)}
+                            >
+                                {t('common.showMore')}
+                            </Button>
+                        </div>
                     )}
                 </CardContent>
             </Card>

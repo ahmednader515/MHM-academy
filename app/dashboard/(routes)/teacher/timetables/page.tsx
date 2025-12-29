@@ -13,7 +13,7 @@ const TeacherTimetablesPage = async () => {
   // Ensure only teachers can access this page
   if (user.role !== "TEACHER") {
     const dashboardUrl = user.role === "ADMIN" 
-      ? "/dashboard/admin/users" 
+      ? "/dashboard/admin/staff" 
       : "/dashboard";
     return redirect(dashboardUrl);
   }
