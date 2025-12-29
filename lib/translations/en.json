@@ -485,6 +485,7 @@
     "actions": "Actions",
     "teacher": "Teacher",
     "admin": "Admin",
+    "student": "Student",
     "editUser": "Edit User",
     "editUserInfo": "Edit user information",
     "cancel": "Cancel",

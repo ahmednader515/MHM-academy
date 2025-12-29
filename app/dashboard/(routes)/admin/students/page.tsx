@@ -433,191 +433,13 @@ const StudentsPage = () => {
                                         </TableCell>
                                         <TableCell className={isRTL ? "text-right" : "text-left"}>
                                             <div className="flex items-center gap-2">
-                                                <Dialog open={isEditDialogOpen && editingUser?.id === user.id} onOpenChange={(open) => {
-                                                    if (!open) {
-                                                        setIsEditDialogOpen(false);
-                                                        setEditingUser(null);
-                                                    }
-                                                }}>
-                                                    <DialogTrigger asChild>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleEditUser(user)}
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                    </DialogTrigger>
-                                                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                                                        <DialogHeader>
-                                                            <DialogTitle>{t('dashboard.editUser')}</DialogTitle>
-                                                            <DialogDescription>
-                                                                {t('dashboard.editUserInfo')}
-                                                            </DialogDescription>
-                                                        </DialogHeader>
-                                                        <div className="grid gap-4 py-4">
-                                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                                <Label htmlFor="fullName" className={isRTL ? "text-right" : "text-left"}>
-                                                                    {t('dashboard.name')}
-                                                                </Label>
-                                                                <Input
-                                                                    id="fullName"
-                                                                    value={editData.fullName}
-                                                                    onChange={(e) => setEditData({...editData, fullName: e.target.value})}
-                                                                    className="col-span-3"
-                                                                />
-                                                            </div>
-                                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                                <Label htmlFor="phoneNumber" className={isRTL ? "text-right" : "text-left"}>
-                                                                    {t('dashboard.phoneNumber')}
-                                                                </Label>
-                                                                <Input
-                                                                    id="phoneNumber"
-                                                                    value={editData.phoneNumber}
-                                                                    onChange={(e) => setEditData({...editData, phoneNumber: e.target.value})}
-                                                                    className="col-span-3"
-                                                                />
-                                                            </div>
-                                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                                <Label htmlFor="email" className={isRTL ? "text-right" : "text-left"}>
-                                                                    {t('dashboard.email')}
-                                                                </Label>
-                                                                <Input
-                                                                    id="email"
-                                                                    type="email"
-                                                                    value={editData.email}
-                                                                    onChange={(e) => setEditData({...editData, email: e.target.value})}
-                                                                    className="col-span-3"
-                                                                />
-                                                            </div>
-                                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                                <Label htmlFor="curriculum" className={isRTL ? "text-right" : "text-left"}>
-                                                                    {t('admin.curriculum')}
-                                                                </Label>
-                                                                <Select
-                                                                    value={editData.curriculum || "none"}
-                                                                    onValueChange={(value) => {
-                                                                        setEditData({
-                                                                            ...editData,
-                                                                            curriculum: value === "none" ? "" : value,
-                                                                            level: "",
-                                                                            language: "",
-                                                                            grade: ""
-                                                                        });
-                                                                    }}
-                                                                >
-                                                                    <SelectTrigger className="col-span-3">
-                                                                        <SelectValue placeholder={t('admin.selectCurriculum')} />
-                                                                    </SelectTrigger>
-                                                                    <SelectContent>
-                                                                        <SelectItem value="none">{t('common.none')}</SelectItem>
-                                                                        {CURRICULA.map((curriculum) => (
-                                                                            <SelectItem key={curriculum.id} value={curriculum.id}>
-                                                                                {curriculum.name}
-                                                                            </SelectItem>
-                                                                        ))}
-                                                                    </SelectContent>
-                                                                </Select>
-                                                            </div>
-                                                            {editData.curriculum && getLevelsByCurriculum(editData.curriculum as any).length > 0 && (
-                                                                <div className="grid grid-cols-4 items-center gap-4">
-                                                                    <Label htmlFor="level" className={isRTL ? "text-right" : "text-left"}>
-                                                                        {t('admin.level')}
-                                                                    </Label>
-                                                                    <Select
-                                                                        value={editData.level || "none"}
-                                                                        onValueChange={(value) => {
-                                                                            setEditData({
-                                                                                ...editData,
-                                                                                level: value === "none" ? "" : value,
-                                                                                language: "",
-                                                                                grade: ""
-                                                                            });
-                                                                        }}
-                                                                    >
-                                                                        <SelectTrigger className="col-span-3">
-                                                                            <SelectValue placeholder={t('admin.selectLevel')} />
-                                                                        </SelectTrigger>
-                                                                        <SelectContent>
-                                                                            <SelectItem value="none">{t('common.none')}</SelectItem>
-                                                                            {getLevelsByCurriculum(editData.curriculum as any).map((level) => (
-                                                                                <SelectItem key={level.id} value={level.id}>
-                                                                                    {level.name}
-                                                                                </SelectItem>
-                                                                            ))}
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                </div>
-                                                            )}
-                                                            {editData.curriculum && editData.level && getLanguagesByLevel(editData.curriculum as any, editData.level as any).length > 0 && (
-                                                                <div className="grid grid-cols-4 items-center gap-4">
-                                                                    <Label htmlFor="language" className={isRTL ? "text-right" : "text-left"}>
-                                                                        {t('admin.language')}
-                                                                    </Label>
-                                                                    <Select
-                                                                        value={editData.language || "none"}
-                                                                        onValueChange={(value) => {
-                                                                            setEditData({
-                                                                                ...editData,
-                                                                                language: value === "none" ? "" : value,
-                                                                                grade: ""
-                                                                            });
-                                                                        }}
-                                                                    >
-                                                                        <SelectTrigger className="col-span-3">
-                                                                            <SelectValue placeholder={t('admin.selectLanguage')} />
-                                                                        </SelectTrigger>
-                                                                        <SelectContent>
-                                                                            <SelectItem value="none">{t('common.none')}</SelectItem>
-                                                                            {getLanguagesByLevel(editData.curriculum as any, editData.level as any).map((language) => (
-                                                                                <SelectItem key={language.id} value={language.id}>
-                                                                                    {language.name}
-                                                                                </SelectItem>
-                                                                            ))}
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                </div>
-                                                            )}
-                                                            {editData.curriculum && editData.level && (
-                                                                <div className="grid grid-cols-4 items-center gap-4">
-                                                                    <Label htmlFor="grade" className={isRTL ? "text-right" : "text-left"}>
-                                                                        {t('admin.grade')}
-                                                                    </Label>
-                                                                    <Select
-                                                                        value={editData.grade || "none"}
-                                                                        onValueChange={(value) => setEditData({...editData, grade: value === "none" ? "" : value})}
-                                                                    >
-                                                                        <SelectTrigger className="col-span-3">
-                                                                            <SelectValue placeholder={t('admin.selectGrade')} />
-                                                                        </SelectTrigger>
-                                                                        <SelectContent>
-                                                                            <SelectItem value="none">{t('common.none')}</SelectItem>
-                                                                            {(editData.language
-                                                                                ? getGradesByLanguage(editData.curriculum as any, editData.level as any, editData.language as any)
-                                                                                : getGradesByLevel(editData.curriculum as any, editData.level as any)
-                                                                            ).map((grade) => (
-                                                                                <SelectItem key={grade.id} value={grade.id}>
-                                                                                    {grade.name}
-                                                                                </SelectItem>
-                                                                            ))}
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <DialogFooter>
-                                                            <Button variant="outline" onClick={() => {
-                                                                setIsEditDialogOpen(false);
-                                                                setEditingUser(null);
-                                                            }}>
-                                                                {t('common.cancel')}
-                                                            </Button>
-                                                            <Button onClick={handleSaveUser}>
-                                                                {t('dashboard.saveChanges')}
-                                                            </Button>
-                                                        </DialogFooter>
-                                                    </DialogContent>
-                                                </Dialog>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handleEditUser(user)}
+                                                >
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
                                                 
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
@@ -666,6 +488,202 @@ const StudentsPage = () => {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Edit Dialog - Outside table to persist across pagination */}
+            <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+                if (!open) {
+                    setIsEditDialogOpen(false);
+                    setEditingUser(null);
+                }
+            }}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>{t('dashboard.editUser')}</DialogTitle>
+                        <DialogDescription>
+                            {t('dashboard.editUserInfo')}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="fullName" className={isRTL ? "text-right" : "text-left"}>
+                                {t('dashboard.name')}
+                            </Label>
+                            <Input
+                                id="fullName"
+                                value={editData.fullName}
+                                onChange={(e) => setEditData({...editData, fullName: e.target.value})}
+                                className="col-span-3"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="phoneNumber" className={isRTL ? "text-right" : "text-left"}>
+                                {t('dashboard.phoneNumber')}
+                            </Label>
+                            <Input
+                                id="phoneNumber"
+                                value={editData.phoneNumber}
+                                onChange={(e) => setEditData({...editData, phoneNumber: e.target.value})}
+                                className="col-span-3"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="email" className={isRTL ? "text-right" : "text-left"}>
+                                {t('dashboard.email')}
+                            </Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                value={editData.email}
+                                onChange={(e) => setEditData({...editData, email: e.target.value})}
+                                className="col-span-3"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="curriculum" className={isRTL ? "text-right" : "text-left"}>
+                                {t('admin.curriculum')}
+                            </Label>
+                            <Select
+                                value={editData.curriculum || "none"}
+                                onValueChange={(value) => {
+                                    setEditData({
+                                        ...editData,
+                                        curriculum: value === "none" ? "" : value,
+                                        level: "",
+                                        language: "",
+                                        grade: ""
+                                    });
+                                }}
+                            >
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue placeholder={t('admin.selectCurriculum')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">{t('common.none')}</SelectItem>
+                                    {CURRICULA.map((curriculum) => (
+                                        <SelectItem key={curriculum.id} value={curriculum.id}>
+                                            {curriculum.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {editData.curriculum && getLevelsByCurriculum(editData.curriculum as any).length > 0 && (
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="level" className={isRTL ? "text-right" : "text-left"}>
+                                    {t('admin.level')}
+                                </Label>
+                                <Select
+                                    value={editData.level || "none"}
+                                    onValueChange={(value) => {
+                                        setEditData({
+                                            ...editData,
+                                            level: value === "none" ? "" : value,
+                                            language: "",
+                                            grade: ""
+                                        });
+                                    }}
+                                >
+                                    <SelectTrigger className="col-span-3">
+                                        <SelectValue placeholder={t('admin.selectLevel')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">{t('common.none')}</SelectItem>
+                                        {getLevelsByCurriculum(editData.curriculum as any).map((level) => (
+                                            <SelectItem key={level.id} value={level.id}>
+                                                {level.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                        {editData.curriculum && editData.level && getLanguagesByLevel(editData.curriculum as any, editData.level as any).length > 0 && (
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="language" className={isRTL ? "text-right" : "text-left"}>
+                                    {t('admin.language')}
+                                </Label>
+                                <Select
+                                    value={editData.language || "none"}
+                                    onValueChange={(value) => {
+                                        setEditData({
+                                            ...editData,
+                                            language: value === "none" ? "" : value,
+                                            grade: ""
+                                        });
+                                    }}
+                                >
+                                    <SelectTrigger className="col-span-3">
+                                        <SelectValue placeholder={t('admin.selectLanguage')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">{t('common.none')}</SelectItem>
+                                        {getLanguagesByLevel(editData.curriculum as any, editData.level as any).map((language) => (
+                                            <SelectItem key={language.id} value={language.id}>
+                                                {language.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                        {editData.curriculum && editData.level && (
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="grade" className={isRTL ? "text-right" : "text-left"}>
+                                    {t('admin.grade')}
+                                </Label>
+                                <Select
+                                    value={editData.grade || "none"}
+                                    onValueChange={(value) => setEditData({...editData, grade: value === "none" ? "" : value})}
+                                >
+                                    <SelectTrigger className="col-span-3">
+                                        <SelectValue placeholder={t('admin.selectGrade')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">{t('common.none')}</SelectItem>
+                                        {(editData.language
+                                            ? getGradesByLanguage(editData.curriculum as any, editData.level as any, editData.language as any)
+                                            : getGradesByLevel(editData.curriculum as any, editData.level as any)
+                                        ).map((grade) => (
+                                            <SelectItem key={grade.id} value={grade.id}>
+                                                {grade.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="role" className={isRTL ? "text-right" : "text-left"}>
+                                {t('dashboard.role')}
+                            </Label>
+                            <Select
+                                value={editData.role}
+                                onValueChange={(value) => setEditData({...editData, role: value})}
+                            >
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue placeholder={t('dashboard.selectRole')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="USER">{t('dashboard.student')}</SelectItem>
+                                    <SelectItem value="TEACHER">{t('dashboard.teacher')}</SelectItem>
+                                    <SelectItem value="ADMIN">{t('dashboard.admin')}</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => {
+                            setIsEditDialogOpen(false);
+                            setEditingUser(null);
+                        }}>
+                            {t('common.cancel')}
+                        </Button>
+                        <Button onClick={handleSaveUser}>
+                            {t('dashboard.saveChanges')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
