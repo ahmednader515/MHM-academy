@@ -478,11 +478,13 @@ const StaffPage = () => {
                                                     className={
                                                         user.role === "ADMIN" ? "bg-orange-600 text-white hover:bg-orange-700" : 
                                                         user.role === "TEACHER" ? "bg-blue-600 text-white hover:bg-blue-700" : 
+                                                        user.role === "USER" ? "bg-green-600 text-white hover:bg-green-700" :
                                                         ""
                                                     }
                                                 >
                                                     {user.role === "TEACHER" ? t('dashboard.teacher') : 
-                                                     user.role === "ADMIN" ? t('dashboard.admin') : user.role}
+                                                     user.role === "ADMIN" ? t('dashboard.admin') : 
+                                                     user.role === "USER" ? t('dashboard.student') : user.role}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className={isRTL ? "text-right" : "text-left"}>
@@ -572,6 +574,7 @@ const StaffPage = () => {
                                                                     <SelectContent>
                                                                         <SelectItem value="TEACHER">{t('dashboard.teacher')}</SelectItem>
                                                                         <SelectItem value="ADMIN">{t('dashboard.admin')}</SelectItem>
+                                                                        <SelectItem value="USER">{t('dashboard.student')}</SelectItem>
                                                                     </SelectContent>
                                                                 </Select>
                                                             </div>
