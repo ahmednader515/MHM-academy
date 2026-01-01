@@ -15,6 +15,11 @@ export async function GET() {
           select: { 
             id: true, 
             title: true,
+            targetCurriculum: true,
+            targetCurriculumType: true,
+            targetLevel: true,
+            targetLanguage: true,
+            targetGrade: true,
             user: {
               select: {
                 id: true,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,15 +12,21 @@ import { ArrowLeft, Video, Calendar, Clock, Link } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/contexts/language-context";
 import { format } from "date-fns";
+import { CURRICULA, getLevelsByCurriculum, getLanguagesByLevel, getGradesByLanguage, getGradesByLevel } from "@/lib/data/curriculum-data";
 
 interface Course {
   id: string;
   title: string;
+  targetCurriculum?: string | null;
+  targetCurriculumType?: string | null;
+  targetLevel?: string | null;
+  targetLanguage?: string | null;
+  targetGrade?: string | null;
 }
 
 export default function CreateLiveStreamPage() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -31,6 +37,13 @@ export default function CreateLiveStreamPage() {
     scheduledAt: "",
     duration: "",
   });
+
+  // Filter states
+  const [selectedCurriculumType, setSelectedCurriculumType] = useState<string>("");
+  const [selectedCurriculum, setSelectedCurriculum] = useState<string>("");
+  const [selectedLevel, setSelectedLevel] = useState<string>("");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+  const [selectedGrade, setSelectedGrade] = useState<string>("");
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -87,6 +100,99 @@ export default function CreateLiveStreamPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Get available options based on selections
+  const availableLevels = selectedCurriculum 
+    ? getLevelsByCurriculum(selectedCurriculum as any)
+    : [];
+
+  const availableLanguages = selectedCurriculum && selectedLevel
+    ? getLanguagesByLevel(selectedCurriculum as any, selectedLevel as any)
+    : [];
+
+  const availableGrades = selectedCurriculum && selectedLevel
+    ? (selectedLanguage 
+        ? getGradesByLanguage(selectedCurriculum as any, selectedLevel as any, selectedLanguage as any)
+        : getGradesByLevel(selectedCurriculum as any, selectedLevel as any))
+    : [];
+
+  // Handle filter changes
+  const handleCurriculumTypeChange = (value: string) => {
+    setSelectedCurriculumType(value === "all" ? "" : value);
+    setSelectedLevel("");
+    setSelectedLanguage("");
+    setSelectedGrade("");
+    setFormData(prev => ({ ...prev, courseId: "" }));
+  };
+
+  const handleCurriculumChange = (value: string) => {
+    const newCurriculum = value === "all" ? "" : value;
+    setSelectedCurriculum(newCurriculum);
+    // Clear curriculum type if switching away from Egyptian
+    if (newCurriculum !== "egyptian") {
+      setSelectedCurriculumType("");
+    }
+    setSelectedLevel("");
+    setSelectedLanguage("");
+    setSelectedGrade("");
+    setFormData(prev => ({ ...prev, courseId: "" }));
+  };
+
+  const handleLevelChange = (value: string) => {
+    setSelectedLevel(value === "all" ? "" : value);
+    setSelectedLanguage("");
+    setSelectedGrade("");
+    setFormData(prev => ({ ...prev, courseId: "" }));
+  };
+
+  const handleLanguageChange = (value: string) => {
+    setSelectedLanguage(value === "all" ? "" : value);
+    setSelectedGrade("");
+    setFormData(prev => ({ ...prev, courseId: "" }));
+  };
+
+  const handleGradeChange = (value: string) => {
+    setSelectedGrade(value === "all" ? "" : value);
+    setFormData(prev => ({ ...prev, courseId: "" }));
+  };
+
+  // Filter courses based on selected criteria
+  const filteredCourses = useMemo(() => {
+    let filtered = courses;
+
+    // Only filter by curriculum type if curriculum is egyptian
+    if (selectedCurriculum === "egyptian" && selectedCurriculumType) {
+      filtered = filtered.filter(course => 
+        !course.targetCurriculumType || course.targetCurriculumType === selectedCurriculumType
+      );
+    }
+
+    if (selectedCurriculum) {
+      filtered = filtered.filter(course => 
+        !course.targetCurriculum || course.targetCurriculum === selectedCurriculum
+      );
+    }
+
+    if (selectedLevel) {
+      filtered = filtered.filter(course => 
+        !course.targetLevel || course.targetLevel === selectedLevel
+      );
+    }
+
+    if (selectedLanguage) {
+      filtered = filtered.filter(course => 
+        !course.targetLanguage || course.targetLanguage === selectedLanguage
+      );
+    }
+
+    if (selectedGrade) {
+      filtered = filtered.filter(course => 
+        !course.targetGrade || course.targetGrade === selectedGrade
+      );
+    }
+
+    return filtered;
+  }, [courses, selectedCurriculumType, selectedCurriculum, selectedLevel, selectedLanguage, selectedGrade]);
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-4">
@@ -110,6 +216,107 @@ export default function CreateLiveStreamPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Course Filter Section */}
+            <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+              <Label className="text-base font-semibold">{t('admin.filterCourses') || 'Filter Courses'}</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                {/* Curriculum Filter - Always First */}
+                <div className="space-y-2">
+                  <Label className="text-sm">{t('admin.curriculum')}</Label>
+                  <Select value={selectedCurriculum || "all"} onValueChange={handleCurriculumChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('admin.selectCurriculum')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('common.all')}</SelectItem>
+                      {CURRICULA.map((curriculum) => (
+                        <SelectItem key={curriculum.id} value={curriculum.id}>
+                          {curriculum.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Curriculum Type Filter (only for Egyptian) - After Curriculum */}
+                {selectedCurriculum === "egyptian" && (
+                  <div className="space-y-2">
+                    <Label className="text-sm">{t('admin.curriculumType') || 'Curriculum Type'}</Label>
+                    <Select value={selectedCurriculumType || "all"} onValueChange={handleCurriculumTypeChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('admin.selectCurriculumType') || 'Select Type'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('common.all')}</SelectItem>
+                        <SelectItem value="morning">{t('admin.morning') || 'Morning'}</SelectItem>
+                        <SelectItem value="evening">{t('admin.evening') || 'Evening'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Level Filter */}
+                {selectedCurriculum && availableLevels.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm">{t('admin.level')}</Label>
+                    <Select value={selectedLevel || "all"} onValueChange={handleLevelChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('admin.selectLevel')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('common.all')}</SelectItem>
+                        {availableLevels.map((level) => (
+                          <SelectItem key={level.id} value={level.id}>
+                            {level.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Language Filter */}
+                {selectedCurriculum && selectedLevel && availableLanguages.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm">{t('admin.language')}</Label>
+                    <Select value={selectedLanguage || "all"} onValueChange={handleLanguageChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('admin.selectLanguage')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('common.all')}</SelectItem>
+                        {availableLanguages.map((language) => (
+                          <SelectItem key={language.id} value={language.id}>
+                            {language.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Grade Filter */}
+                {selectedCurriculum && selectedLevel && availableGrades.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm">{t('admin.grade')}</Label>
+                    <Select value={selectedGrade || "all"} onValueChange={handleGradeChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('admin.selectGrade')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('common.all')}</SelectItem>
+                        {availableGrades.map((grade) => (
+                          <SelectItem key={grade.id} value={grade.id}>
+                            {grade.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="title">{t('admin.liveStreamTitle')} *</Label>
@@ -133,13 +340,24 @@ export default function CreateLiveStreamPage() {
                     <SelectValue placeholder={t('admin.selectCourse')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {courses.map((course) => (
-                      <SelectItem key={course.id} value={course.id}>
-                        {course.title}
+                    {filteredCourses.length === 0 ? (
+                      <SelectItem value="none" disabled>
+                        {t('admin.noCoursesFound') || 'No courses found'}
                       </SelectItem>
-                    ))}
+                    ) : (
+                      filteredCourses.map((course) => (
+                        <SelectItem key={course.id} value={course.id}>
+                          {course.title}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
+                {filteredCourses.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {t('dashboard.coursesAvailable', { count: filteredCourses.length })}
+                  </p>
+                )}
               </div>
             </div>
 
