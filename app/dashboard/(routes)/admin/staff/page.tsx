@@ -105,8 +105,11 @@ const StaffPage = () => {
             
             if (usersResponse.ok) {
                 const usersData = await usersResponse.json();
-                // Filter only staff (ADMIN and TEACHER roles)
-                const staffData = usersData.filter((user: User) => user.role === "ADMIN" || user.role === "TEACHER");
+                // Filter only staff (ADMIN, SUPERVISOR and TEACHER roles)
+                const staffData = usersData.filter(
+                    (user: User) =>
+                        user.role === "ADMIN" || user.role === "SUPERVISOR" || user.role === "TEACHER"
+                );
                 
                 // Fetch all courses with user info
                 try {
@@ -477,6 +480,7 @@ const StaffPage = () => {
                                                     variant="secondary"
                                                     className={
                                                         user.role === "ADMIN" ? "bg-orange-600 text-white hover:bg-orange-700" : 
+                                                        user.role === "SUPERVISOR" ? "bg-purple-600 text-white hover:bg-purple-700" :
                                                         user.role === "TEACHER" ? "bg-blue-600 text-white hover:bg-blue-700" : 
                                                         user.role === "USER" ? "bg-green-600 text-white hover:bg-green-700" :
                                                         ""
@@ -484,6 +488,7 @@ const StaffPage = () => {
                                                 >
                                                     {user.role === "TEACHER" ? t('dashboard.teacher') : 
                                                      user.role === "ADMIN" ? t('dashboard.admin') : 
+                                                     user.role === "SUPERVISOR" ? t('dashboard.supervisor') :
                                                      user.role === "USER" ? t('dashboard.student') : user.role}
                                                 </Badge>
                                             </TableCell>
@@ -574,6 +579,7 @@ const StaffPage = () => {
                                                                     <SelectContent>
                                                                         <SelectItem value="TEACHER">{t('dashboard.teacher')}</SelectItem>
                                                                         <SelectItem value="ADMIN">{t('dashboard.admin')}</SelectItem>
+                                                                        <SelectItem value="SUPERVISOR">{t('dashboard.supervisor')}</SelectItem>
                                                                         <SelectItem value="USER">{t('dashboard.student')}</SelectItem>
                                                                     </SelectContent>
                                                                 </Select>

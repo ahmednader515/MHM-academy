@@ -7,6 +7,7 @@ export async function POST(
     { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
+        const prisma = db as any;
         const session = await auth();
         
         if (!session?.user) {
@@ -16,8 +17,8 @@ export async function POST(
             );
         }
 
-        // Check if user is admin
-        if (session.user.role !== "ADMIN") {
+        // Check if user is admin or supervisor
+        if (session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR") {
             return NextResponse.json(
                 { error: "Forbidden" },
                 { status: 403 }
@@ -35,7 +36,7 @@ export async function POST(
         }
 
         // Check if user exists and is a student
-        const user = await db.user.findUnique({
+        const user = await prisma.user.findUnique({
             where: {
                 id: resolvedParams.userId,
                 role: "USER"
@@ -50,7 +51,7 @@ export async function POST(
         }
 
         // Check if course exists and is published
-        const course = await db.course.findUnique({
+        const course = await prisma.course.findUnique({
             where: {
                 id: courseId,
                 isPublished: true
@@ -65,7 +66,7 @@ export async function POST(
         }
 
         // Check if student already has this course
-        const existingPurchase = await db.purchase.findFirst({
+        const existingPurchase = await prisma.purchase.findFirst({
             where: {
                 userId: resolvedParams.userId,
                 courseId: courseId,
@@ -81,7 +82,7 @@ export async function POST(
         }
 
         // Create purchase record
-        const purchase = await db.purchase.create({
+        const purchase = await prisma.purchase.create({
             data: {
                 userId: resolvedParams.userId,
                 courseId: courseId,
@@ -108,6 +109,7 @@ export async function DELETE(
     { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
+        const prisma = db as any;
         const session = await auth();
 
         if (!session?.user) {
@@ -117,7 +119,7 @@ export async function DELETE(
             );
         }
 
-        if (session.user.role !== "ADMIN") {
+        if (session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR") {
             return NextResponse.json(
                 { error: "Forbidden" },
                 { status: 403 }
@@ -135,7 +137,7 @@ export async function DELETE(
         }
 
         // Ensure student exists
-        const user = await db.user.findUnique({
+        const user = await prisma.user.findUnique({
             where: {
                 id: resolvedParams.userId,
                 role: "USER",
@@ -150,7 +152,7 @@ export async function DELETE(
         }
 
         // Find existing purchase for this user and course
-        const existingPurchase = await db.purchase.findUnique({
+        const existingPurchase = await prisma.purchase.findUnique({
             where: {
                 userId_courseId: {
                     userId: resolvedParams.userId,
@@ -167,7 +169,7 @@ export async function DELETE(
         }
 
         // Delete purchase to free unique constraint for re-adding later
-        await db.purchase.delete({
+        await prisma.purchase.delete({
             where: { id: existingPurchase.id },
         });
 

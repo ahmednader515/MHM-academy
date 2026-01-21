@@ -14,8 +14,8 @@ export async function GET() {
 
     const user = session.user;
 
-    // Only for admin and teacher
-    if (user.role !== "ADMIN" && user.role !== "TEACHER") {
+    // Only for admin, supervisor, and teacher
+    if (user.role !== "ADMIN" && user.role !== "SUPERVISOR" && user.role !== "TEACHER") {
       return new NextResponse("Forbidden", { status: 403 });
     }
 
@@ -91,8 +91,8 @@ export async function POST(req: Request) {
 
     const user = session.user;
 
-    // Only for admin and teacher
-    if (user.role !== "ADMIN" && user.role !== "TEACHER") {
+    // Only for admin, supervisor, and teacher
+    if (user.role !== "ADMIN" && user.role !== "SUPERVISOR" && user.role !== "TEACHER") {
       return new NextResponse("Forbidden", { status: 403 });
     }
 

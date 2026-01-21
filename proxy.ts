@@ -9,6 +9,8 @@ function getDashboardUrlByRole(role: string): string {
       return "/dashboard/teacher/courses";
     case "ADMIN":
       return "/dashboard/admin/staff";
+    case "SUPERVISOR":
+      return "/dashboard/supervisor/staff";
     case "PARENT":
       return "/dashboard/parent";
     case "USER":
@@ -67,14 +69,20 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/sign-in", request.url), { status: 302 });
   }
 
+  const role = (token?.role as string | undefined) || "USER";
+
   // Check for admin routes
   const isAdminRoute = pathname.startsWith("/dashboard/admin");
-  const isAdmin = token?.role === "ADMIN";
+  const isAdmin = role === "ADMIN";
+
+  // Check for supervisor routes
+  const isSupervisorRoute = pathname.startsWith("/dashboard/supervisor");
+  const isSupervisor = role === "SUPERVISOR";
 
   // If user is not a teacher or admin but trying to access teacher routes
   // Only redirect if we have a token (meaning user is authenticated but wrong role)
   if (isTeacherRoute && token && !(isTeacher || isAdmin)) {
-    const dashboardUrl = isAdmin ? "/dashboard/admin/staff" : "/dashboard";
+    const dashboardUrl = isAdmin ? "/dashboard/admin/staff" : isSupervisor ? "/dashboard/supervisor/staff" : "/dashboard";
     return NextResponse.redirect(new URL(dashboardUrl, request.url));
   }
 
@@ -88,9 +96,19 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
+  // If user is not a supervisor but trying to access supervisor routes
+  if (isSupervisorRoute && !isSupervisor) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // If user is a supervisor, block access to admin routes entirely
+  if (isAdminRoute && isSupervisor) {
+    return NextResponse.redirect(new URL("/dashboard/supervisor/staff", request.url));
+  }
+
   // If user accesses main dashboard, redirect to role-specific dashboard
   if (pathname === "/dashboard" && token) {
-    const userRole = token.role as string || "USER";
+    const userRole = role || "USER";
     const dashboardUrl = getDashboardUrlByRole(userRole);
     
     // Only redirect if the user's role-specific dashboard is different from the main dashboard

@@ -142,12 +142,14 @@ const PasswordsPage = () => {
                                                 variant="secondary"
                                                 className={
                                                     user.role === "ADMIN" ? "bg-orange-600 text-white hover:bg-orange-700" : 
+                                                    user.role === "SUPERVISOR" ? "bg-purple-600 text-white hover:bg-purple-700" :
                                                     user.role === "TEACHER" ? "bg-blue-600 text-white hover:bg-blue-700" : 
                                                     ""
                                                 }
                                             >
                                                 {user.role === "TEACHER" ? t('dashboard.teacher') : 
-                                                 user.role === "ADMIN" ? t('dashboard.admin') : user.role}
+                                                 user.role === "ADMIN" ? t('dashboard.admin') : 
+                                                 user.role === "SUPERVISOR" ? t('dashboard.supervisor') : user.role}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className={isRTL ? "text-right" : "text-left"}>

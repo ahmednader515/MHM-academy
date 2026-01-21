@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session?.user || session.user.role !== "ADMIN") {
+    if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR")) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session?.user || session.user.role !== "ADMIN") {
+    if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR")) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 

@@ -14,9 +14,9 @@ export async function GET(req: Request) {
         const userId = session.user.id;
         const user = session.user;
 
-        // Check if user is admin
-        if (user.role !== "ADMIN") {
-            return new NextResponse("Forbidden - Only admins can access this", { status: 403 });
+        // Check if user is admin or supervisor
+        if (user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
+            return new NextResponse("Forbidden - Only admins and supervisors can access this", { status: 403 });
         }
 
         // Get all teachers

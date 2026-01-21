@@ -12,8 +12,8 @@ export async function POST(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    if (session.user.role !== "ADMIN") {
-      return new NextResponse("Forbidden - Admin access required", { status: 403 });
+    if (session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR") {
+      return new NextResponse("Forbidden - Admin or Supervisor access required", { status: 403 });
     }
 
     const { fullName, phoneNumber, email, college, faculty, password, confirmPassword } = await req.json();

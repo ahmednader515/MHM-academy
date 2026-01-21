@@ -4,10 +4,13 @@ import { BarChart, Compass, Layout, List, Wallet, Shield, Users, Eye, TrendingUp
 import { SidebarItem } from "./sidebar-item";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { useSession } from "next-auth/react";
 
 export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean }) => {
     const pathname = usePathname();
     const { t } = useLanguage();
+    const { data: session } = useSession();
+    const role = session?.user?.role;
 
     const guestRoutes = [
         {
@@ -198,14 +201,67 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             label: t('admin.subscriptionPlans') || 'Subscription Plans',
             href: "/dashboard/admin/subscription-plans",
         },
+        {
+            icon: BarChart,
+            label: t('dashboard.analytics'),
+            href: "/dashboard/admin/analytics",
+        },
     ];
 
-    const pathName = usePathname();
+    const supervisorRoutes = [
+        {
+            icon: UserCheck,
+            label: t('admin.staffAndTeachers'),
+            href: "/dashboard/supervisor/staff",
+        },
+        {
+            icon: GraduationCap,
+            label: t('admin.studentsManagement'),
+            href: "/dashboard/supervisor/students",
+        },
+        {
+            icon: Eye,
+            label: t('admin.passwords'),
+            href: "/dashboard/supervisor/passwords",
+        },
+        {
+            icon: Wallet,
+            label: t('admin.balanceManagement'),
+            href: "/dashboard/supervisor/balances",
+        },
+        {
+            icon: TrendingUp,
+            label: t('admin.studentProgress'),
+            href: "/dashboard/supervisor/progress",
+        },
+        {
+            icon: BookOpen,
+            label: t('admin.addRemoveCourses'),
+            href: "/dashboard/supervisor/add-courses",
+        },
+        {
+            icon: GraduationCap,
+            label: t('admin.teachersManagement') || 'Teachers',
+            href: "/dashboard/supervisor/teachers",
+        },
+        {
+            icon: Ticket,
+            label: t('admin.promocodeManagement') || 'Promocode Management',
+            href: "/dashboard/supervisor/promocodes",
+        },
+        {
+            icon: Ticket,
+            label: t('admin.subscriptionPlans') || 'Subscription Plans',
+            href: "/dashboard/supervisor/subscription-plans",
+        },
+    ];
 
-    const isTeacherPage = pathName?.includes("/dashboard/teacher");
-    const isAdminPage = pathName?.includes("/dashboard/admin");
-    const isParentPage = pathName?.includes("/dashboard/parent");
-    const routes = isAdminPage ? adminRoutes : isTeacherPage ? teacherRoutes : isParentPage ? parentRoutes : guestRoutes;
+    const routes =
+        role === "ADMIN" ? adminRoutes :
+        role === "SUPERVISOR" ? supervisorRoutes :
+        role === "TEACHER" ? teacherRoutes :
+        role === "PARENT" ? parentRoutes :
+        guestRoutes;
 
     return (
         <div className="flex flex-col w-full pt-0">

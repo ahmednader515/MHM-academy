@@ -667,6 +667,7 @@ const StudentsPage = () => {
                                     <SelectItem value="USER">{t('dashboard.student')}</SelectItem>
                                     <SelectItem value="TEACHER">{t('dashboard.teacher')}</SelectItem>
                                     <SelectItem value="ADMIN">{t('dashboard.admin')}</SelectItem>
+                                    <SelectItem value="SUPERVISOR">{t('dashboard.supervisor')}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
