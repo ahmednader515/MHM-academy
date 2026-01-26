@@ -42,10 +42,10 @@ export const ImageForm = ({
     }
 
     return (
-        <div className="mt-6 border bg-card rounded-md p-4">
-            <div className="font-medium flex items-center justify-between">
-                {t('teacher.courseImage')}
-                <Button onClick={toggleEdit} variant="ghost">
+        <div className="mt-6 border bg-card rounded-md p-3 sm:p-4">
+            <div className="font-medium flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                <span className="text-sm sm:text-base">{t('teacher.courseImage')}</span>
+                <Button onClick={toggleEdit} variant="ghost" size="sm" className="w-full sm:w-auto justify-start sm:justify-center">
                     {isEditing && (<>{t('common.cancel')}</>)}
                     {!isEditing && !initialData.imageUrl && (
                         <>

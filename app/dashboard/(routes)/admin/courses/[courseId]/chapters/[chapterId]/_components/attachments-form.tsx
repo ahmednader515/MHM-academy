@@ -163,14 +163,16 @@ export const AttachmentsForm = ({
             });
 
             if (!response.ok) {
-                throw new Error('Failed to delete attachment');
+                const errorData = await response.json().catch(() => ({ error: 'Failed to delete attachment' }));
+                throw new Error(errorData.error || 'Failed to delete attachment');
             }
 
             setAttachments(prev => prev.filter(att => att.id !== attachmentId));
             toast.success(t('teacher.documentDeletedSuccessfully'));
         } catch (error) {
             console.error("[CHAPTER_ATTACHMENT_DELETE]", error);
-            toast.error(t('teacher.errorOccurred'));
+            const errorMessage = error instanceof Error ? error.message : t('teacher.errorOccurred');
+            toast.error(errorMessage);
         } finally {
             setIsSubmitting(false);
         }

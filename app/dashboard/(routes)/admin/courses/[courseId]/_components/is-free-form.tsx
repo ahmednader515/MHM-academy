@@ -59,13 +59,13 @@ export const IsFreeForm = ({
     const router = useRouter();
 
     return (
-        <div className="mt-6 border bg-slate-100 rounded-md p-4">
-            <div className="font-medium flex items-center justify-between">
+        <div className="mt-6 border bg-slate-100 rounded-md p-3 sm:p-4">
+            <div className="font-medium flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                 <div className="flex items-center gap-x-2">
                     <IconBadge icon={Lock} />
-                    {t('teacher.courseAccess')}
+                    <span className="text-sm sm:text-base">{t('teacher.courseAccess')}</span>
                 </div>
-                <Button onClick={toggleEdit} variant="ghost">
+                <Button onClick={toggleEdit} variant="ghost" size="sm" className="w-full sm:w-auto justify-start sm:justify-center">
                     {isEditing ? (
                         <>{t('common.cancel')}</>
                     ) : (

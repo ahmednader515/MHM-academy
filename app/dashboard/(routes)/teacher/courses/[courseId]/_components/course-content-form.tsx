@@ -106,33 +106,18 @@ export const CourseContentForm = ({
     ].sort((a, b) => a.position - b.position);
 
     return (
-        <div className="relative mt-6 border bg-card rounded-md p-4">
+        <div className="relative mt-6 border bg-card rounded-md p-3 sm:p-4 flex flex-col min-h-[200px]">
             {isUpdating && (
-                <div className="absolute h-full w-full bg-background/50 top-0 right-0 rounded-m flex items-center justify-center">
+                <div className="absolute h-full w-full bg-background/50 top-0 right-0 rounded-m flex items-center justify-center z-10">
                     <div className="animate-spin h-6 w-6 border-4 border-primary rounded-full border-t-transparent" />
                 </div>
             )}
-            <div className="font-medium flex items-center justify-between">
-                {t('teacher.courseContent')}
-                <div className="flex gap-2">
-                    <Button onClick={() => router.push(`/dashboard/teacher/quizzes/create?courseId=${courseId}`)} variant="ghost">
-                        <PlusCircle className="h-4 w-4 mr-2" />
-                        {t('teacher.addQuiz')}
-                    </Button>
-                    <Button onClick={() => setIsCreating((current) => !current)} variant="ghost">
-                        {isCreating ? (
-                            <>{t('common.cancel')}</>
-                        ) : (
-                            <>
-                                <PlusCircle className="h-4 w-4 mr-2" />
-                                {t('teacher.addChapter')}
-                            </>
-                        )}
-                    </Button>
-                </div>
+            <div className="font-medium mb-4">
+                <span className="text-sm sm:text-base">{t('teacher.courseContent')}</span>
             </div>
+            
             {isCreating && (
-                <div className="mt-4 space-y-4">
+                <div className="flex-1 space-y-4 mb-4">
                     <Input
                         disabled={isUpdating}
                         placeholder={t('teacher.chapterTitlePlaceholder')}
@@ -162,25 +147,57 @@ export const CourseContentForm = ({
                     </Button>
                 </div>
             )}
+            
             {!isCreating && (
                 <div className={cn(
-                    "text-sm mt-2",
+                    "flex-1 text-sm",
                     !courseItems.length && "text-muted-foreground italic"
                 )}>
-                    {!courseItems.length && t('teacher.noContent')}
-                    <CourseContentList
-                        onEdit={onEdit}
-                        onDelete={onDelete}
-                        onReorder={onReorder}
-                        items={courseItems}
-                    />
+                    {!courseItems.length && (
+                        <p className="py-8 text-center">{t('teacher.noContent')}</p>
+                    )}
+                    {courseItems.length > 0 && (
+                        <>
+                            <CourseContentList
+                                onEdit={onEdit}
+                                onDelete={onDelete}
+                                onReorder={onReorder}
+                                items={courseItems}
+                            />
+                            <p className="text-xs text-muted-foreground mt-4 text-center">
+                                {t('teacher.dragAndDropToReorder')}
+                            </p>
+                        </>
+                    )}
                 </div>
             )}
-            {!isCreating && courseItems.length > 0 && (
-                <p className="text-xs text-muted-foreground mt-4">
-                    {t('teacher.dragAndDropToReorder')}
-                </p>
-            )}
+            
+            <div className="flex flex-row gap-2 mt-4 pt-4 border-t">
+                <Button 
+                    onClick={() => router.push(`/dashboard/teacher/quizzes/create?courseId=${courseId}`)} 
+                    variant="ghost"
+                    size="sm"
+                    className="flex-1 justify-center"
+                >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    {t('teacher.addQuiz')}
+                </Button>
+                <Button 
+                    onClick={() => setIsCreating((current) => !current)} 
+                    variant="ghost"
+                    size="sm"
+                    className="flex-1 justify-center"
+                >
+                    {isCreating ? (
+                        <>{t('common.cancel')}</>
+                    ) : (
+                        <>
+                            <PlusCircle className="h-4 w-4 mr-2" />
+                            {t('teacher.addChapter')}
+                        </>
+                    )}
+                </Button>
+            </div>
         </div>
     );
 }; 

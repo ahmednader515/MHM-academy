@@ -64,18 +64,18 @@ export const CourseEditContent = ({
                     label={t('teacher.courseNotPublishedWarning')}
                 />
             )}
-            <div className="p-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex flex-col gap-y-2">
-                        <h1 className="text-2xl font-medium">
+            <div className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex flex-col gap-y-2 flex-1">
+                        <h1 className="text-xl sm:text-2xl font-medium">
                             {t('teacher.courseSetup')}
                         </h1>
-                        <span className="text-sm text-slate-700">
+                        <span className="text-xs sm:text-sm text-slate-700">
                             {t('teacher.completeAllFields')} {completionText}
                         </span>
                         {!isComplete && (
                             <div className="text-xs text-muted-foreground mt-2">
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <div className={`flex items-center gap-1 ${completionStatus.title ? 'text-green-600' : 'text-red-600'}`}>
                                         <span>{completionStatus.title ? '✓' : '✗'}</span>
                                         <span>{t('teacher.title')}</span>
@@ -100,18 +100,20 @@ export const CourseEditContent = ({
                             </div>
                         )}
                     </div>
-                    <Actions
-                        disabled={!isComplete}
-                        courseId={course.id}
-                        isPublished={course.isPublished}
-                        isAdmin={isAdmin}
-                    />
+                    <div className="flex-shrink-0">
+                        <Actions
+                            disabled={!isComplete}
+                            courseId={course.id}
+                            isPublished={course.isPublished}
+                            isAdmin={isAdmin}
+                        />
+                    </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-16">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-8 sm:mt-16">
                     <div>
-                        <div className="flex items-center gap-x-2">
+                        <div className="flex items-center gap-x-2 mb-4">
                             <IconBadge icon={LayoutDashboard} />
-                            <h2 className="text-xl">
+                            <h2 className="text-lg sm:text-xl">
                                 {t('teacher.customizeYourCourse')}
                             </h2>
                         </div>
@@ -141,11 +143,11 @@ export const CourseEditContent = ({
                             isAdmin={isAdmin}
                         />
                     </div>
-                    <div className="space-y-6">
+                    <div className="space-y-4 sm:space-y-6">
                         <div>
-                            <div className="flex items-center gap-x-2">
+                            <div className="flex items-center gap-x-2 mb-4">
                                 <IconBadge icon={LayoutDashboard} />
-                                <h2 className="text-xl">
+                                <h2 className="text-lg sm:text-xl">
                                     {t('teacher.resourcesAndChapters')}
                                 </h2>
                             </div>
@@ -156,9 +158,9 @@ export const CourseEditContent = ({
                             />
                         </div>
                         <div>
-                            <div className="flex items-center gap-x-2">
+                            <div className="flex items-center gap-x-2 mb-4">
                                 <IconBadge icon={LayoutDashboard} />
-                                <h2 className="text-xl">
+                                <h2 className="text-lg sm:text-xl">
                                     {t('teacher.courseSettings')}
                                 </h2>
                             </div>
