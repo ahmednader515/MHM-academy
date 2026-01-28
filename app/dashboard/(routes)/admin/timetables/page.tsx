@@ -14,55 +14,27 @@ const AdminTimetablesPage = async () => {
   const userId = session.user.id;
   const user = session.user;
 
-  // Ensure only admins can access this page
-  if (user.role !== "ADMIN") {
+  // Ensure only admins and supervisors can access this page
+  if (user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
     return redirect("/dashboard");
   }
 
-  // Fetch courses and timetables in parallel
-  const [courses, timetables] = await Promise.all([
-    db.course.findMany({
-      select: {
-        id: true,
-        title: true,
-        targetCurriculum: true,
-        targetLevel: true,
-        targetLanguage: true,
-        targetGrade: true,
-        user: {
-          select: {
-            id: true,
-            fullName: true,
-          },
+  // Fetch timetables
+  const timetables = await db.timetable.findMany({
+    include: {
+      course: {
+        select: {
+          id: true,
+          title: true,
         },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
-    }),
-    db.timetable.findMany({
-      include: {
-        course: {
-          select: {
-            id: true,
-            title: true,
-            user: {
-              select: {
-                id: true,
-                fullName: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: [
-        { dayOfWeek: "asc" },
-        { startTime: "asc" },
-      ],
-    })
-  ]);
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
-  return <TimetablesContent courses={courses} timetables={timetables} />;
+  return <TimetablesContent timetables={timetables} />;
 };
 
 export default AdminTimetablesPage;

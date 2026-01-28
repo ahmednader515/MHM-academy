@@ -13,7 +13,7 @@ export async function GET() {
     const userId = session.user.id;
     const user = session.user;
 
-    if (user.role !== "ADMIN") {
+    if (user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
       return new NextResponse("Forbidden", { status: 403 });
     }
 

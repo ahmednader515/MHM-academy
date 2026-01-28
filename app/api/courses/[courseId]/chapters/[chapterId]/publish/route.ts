@@ -28,8 +28,8 @@ export async function PATCH(
             return new NextResponse("Course not found", { status: 404 });
         }
 
-        // Check if user is the course owner or an admin
-        if (courseOwner.userId !== userId && user?.role !== "ADMIN") {
+        // Check if user is the course owner, admin, or supervisor
+        if (courseOwner.userId !== userId && user?.role !== "ADMIN" && user?.role !== "SUPERVISOR") {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 

@@ -72,16 +72,6 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             href: "/dashboard/teacher/grades",
         },
         {
-            icon: BarChart,
-            label: t('dashboard.analytics'),
-            href: "/dashboard/teacher/analytics",
-        },
-        {
-            icon: Wallet,
-            label: t('dashboard.balance'),
-            href: "/dashboard/teacher/balance",
-        },
-        {
             icon: Eye,
             label: t('dashboard.studentProgress') || 'Student Progress',
             href: "/dashboard/teacher/progress",
@@ -90,16 +80,6 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             icon: Award,
             label: t('certificates.certificates') || 'Certificates',
             href: "/dashboard/teacher/certificates",
-        },
-        {
-            icon: Shield,
-            label: t('teacher.createAccount'),
-            href: "/dashboard/teacher/create-account",
-        },
-        {
-            icon: Ticket,
-            label: t('admin.promocodeManagement') || 'Promocode Management',
-            href: "/dashboard/teacher/promocodes",
         },
     ];
 
@@ -220,16 +200,6 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             href: "/dashboard/supervisor/students",
         },
         {
-            icon: Eye,
-            label: t('admin.passwords'),
-            href: "/dashboard/supervisor/passwords",
-        },
-        {
-            icon: Wallet,
-            label: t('admin.balanceManagement'),
-            href: "/dashboard/supervisor/balances",
-        },
-        {
             icon: TrendingUp,
             label: t('admin.studentProgress'),
             href: "/dashboard/supervisor/progress",
@@ -245,14 +215,39 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             href: "/dashboard/supervisor/teachers",
         },
         {
-            icon: Ticket,
-            label: t('admin.promocodeManagement') || 'Promocode Management',
-            href: "/dashboard/supervisor/promocodes",
+            icon: BookOpen,
+            label: 'المواد',
+            href: "/dashboard/supervisor/courses",
         },
         {
-            icon: Ticket,
-            label: t('admin.subscriptionPlans') || 'Subscription Plans',
-            href: "/dashboard/supervisor/subscription-plans",
+            icon: Calendar,
+            label: 'إدارة الجداول الزمنية',
+            href: "/dashboard/supervisor/timetables",
+        },
+        {
+            icon: FileText,
+            label: 'إدارة الاختبارات',
+            href: "/dashboard/supervisor/quizzes",
+        },
+        {
+            icon: Award,
+            label: 'إدارة الشهادات',
+            href: "/dashboard/supervisor/certificates",
+        },
+        {
+            icon: Video,
+            label: 'إدارة البثوث',
+            href: "/dashboard/supervisor/livestreams",
+        },
+        {
+            icon: Award,
+            label: 'إدارة الدرجات',
+            href: "/dashboard/supervisor/grades",
+        },
+        {
+            icon: MessageSquare,
+            label: 'رسائل الطلاب',
+            href: "/dashboard/supervisor/messages",
         },
     ];
 

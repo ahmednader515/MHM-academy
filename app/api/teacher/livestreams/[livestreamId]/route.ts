@@ -10,20 +10,25 @@ export async function GET(
   try {
     const session = await auth();
     if (!session?.user?.id || !session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (session.user.role !== "TEACHER") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (session.user.role !== "TEACHER" && session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const userId = session.user.id;
     const user = session.user;
     const resolvedParams = await params;
     const { livestreamId } = resolvedParams;
 
+    // Admins and supervisors can access any livestream, teachers only their own
+    const whereClause = (user.role === "ADMIN" || user.role === "SUPERVISOR")
+      ? { id: livestreamId }
+      : { 
+          id: livestreamId,
+          course: {
+            userId: userId
+          }
+        };
+
     const liveStream = await db.liveStream.findFirst({
-      where: { 
-        id: livestreamId,
-        course: {
-          userId: userId
-        }
-      },
+      where: whereClause,
       include: {
         course: { select: { id: true, title: true } },
       },
@@ -47,7 +52,7 @@ export async function PATCH(
   try {
     const session = await auth();
     if (!session?.user?.id || !session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (session.user.role !== "TEACHER") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (session.user.role !== "TEACHER" && session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const userId = session.user.id;
     const user = session.user;
@@ -83,13 +88,18 @@ export async function PATCH(
       updateData.meetingType = meetingType;
     }
 
+    // Admins and supervisors can update any livestream, teachers only their own
+    const whereClause = (user.role === "ADMIN" || user.role === "SUPERVISOR")
+      ? { id: livestreamId }
+      : { 
+          id: livestreamId,
+          course: {
+            userId: userId
+          }
+        };
+
     const liveStream = await db.liveStream.updateMany({
-      where: { 
-        id: livestreamId,
-        course: {
-          userId: userId
-        }
-      },
+      where: whereClause,
       data: updateData,
     });
 
@@ -99,12 +109,7 @@ export async function PATCH(
 
     // Fetch the updated live stream
     const updatedLiveStream = await db.liveStream.findFirst({
-      where: { 
-        id: livestreamId,
-        course: {
-          userId: userId
-        }
-      },
+      where: { id: livestreamId },
       include: {
         course: { select: { id: true, title: true } },
       },
@@ -124,20 +129,25 @@ export async function DELETE(
   try {
     const session = await auth();
     if (!session?.user?.id || !session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (session.user.role !== "TEACHER") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (session.user.role !== "TEACHER" && session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const userId = session.user.id;
     const user = session.user;
     const resolvedParams = await params;
     const { livestreamId } = resolvedParams;
 
+    // Admins and supervisors can delete any livestream, teachers only their own
+    const whereClause = (user.role === "ADMIN" || user.role === "SUPERVISOR")
+      ? { id: livestreamId }
+      : { 
+          id: livestreamId,
+          course: {
+            userId: userId
+          }
+        };
+
     const deletedLiveStream = await db.liveStream.deleteMany({
-      where: { 
-        id: livestreamId,
-        course: {
-          userId: userId
-        }
-      },
+      where: whereClause,
     });
 
     if (deletedLiveStream.count === 0) {

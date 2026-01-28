@@ -16,11 +16,15 @@ export async function POST(
 
         const userId = session.user.id;
 
+        const user = session.user;
+        
+        // Check if user is admin, supervisor, or course owner
+        const whereClause = (user?.role === "ADMIN" || user?.role === "SUPERVISOR")
+            ? { id: resolvedParams.courseId }
+            : { id: resolvedParams.courseId, userId };
+
         const courseOwner = await db.course.findUnique({
-            where: {
-                id: resolvedParams.courseId,
-                userId,
-            }
+            where: whereClause
         });
 
         if (!courseOwner) {

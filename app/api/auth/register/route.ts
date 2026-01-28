@@ -136,8 +136,22 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error("[REGISTER]", error);
+    
+    // Handle Prisma unique constraint violations
+    if (error?.code === 'P2002') {
+      const target = error?.meta?.target;
+      if (Array.isArray(target)) {
+        if (target.includes('phoneNumber')) {
+          return new NextResponse("This phone number is already registered. Please use a different phone number or try logging in.", { status: 400 });
+        }
+        if (target.includes('email')) {
+          return new NextResponse("This email address is already registered. Please use a different email or try logging in.", { status: 400 });
+        }
+      }
+      return new NextResponse("This information is already registered. Please check your details and try again.", { status: 400 });
+    }
     
     // Handle foreign key constraint violation
     if (error instanceof Error && error.message.includes("Foreign key constraint violated")) {
@@ -154,6 +168,6 @@ export async function POST(req: Request) {
       return new NextResponse("Database not initialized. Please run database migrations.", { status: 503 });
     }
     
-    return new NextResponse("Internal Error", { status: 500 });
+    return new NextResponse("An error occurred during registration. Please try again later.", { status: 500 });
   }
 } 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,14 +26,16 @@ interface Course {
 
 export default function CreateLiveStreamPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t, isRTL } = useLanguage();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
+  const courseIdFromQuery = searchParams.get("courseId");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     meetingUrl: "",
-    courseId: "",
+    courseId: courseIdFromQuery || "",
     scheduledAt: "",
     duration: "",
   });
@@ -48,17 +50,29 @@ export default function CreateLiveStreamPage() {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await fetch("/api/courses/public");
+        // Fetch all courses, including unpublished ones, if a courseId is provided in the query
+        const response = await fetch("/api/admin/courses/all");
         if (response.ok) {
           const data = await response.json();
           setCourses(data);
+
+          // If courseId is in query, try to pre-select it
+          if (courseIdFromQuery) {
+            const preselectedCourse = data.find((course: Course) => course.id === courseIdFromQuery);
+            if (preselectedCourse) {
+              setFormData(prev => ({ ...prev, courseId: courseIdFromQuery }));
+            } else {
+              toast.error(t('admin.courseNotFound') || "Pre-selected course not found or not accessible.");
+            }
+          }
         }
       } catch (error) {
         console.error("Error fetching courses:", error);
+        toast.error(t('common.error') || 'Error loading courses');
       }
     };
     fetchCourses();
-  }, []);
+  }, [courseIdFromQuery, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -17,8 +17,8 @@ export async function GET(
         const userId = session.user.id;
         const user = session.user;
 
-        if (user.role !== "ADMIN") {
-            return NextResponse.json({ error: "Forbidden - Only admins can access this resource" }, { status: 403 });
+        if (user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
+            return NextResponse.json({ error: "Forbidden - Only admins and supervisors can access this resource" }, { status: 403 });
         }
 
         const resolvedParams = await params;
@@ -74,8 +74,8 @@ export async function PATCH(
         const userId = session.user.id;
         const user = session.user;
 
-        if (user.role !== "ADMIN") {
-            return NextResponse.json({ error: "Forbidden - Only admins can access this resource" }, { status: 403 });
+        if (user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
+            return NextResponse.json({ error: "Forbidden - Only admins and supervisors can access this resource" }, { status: 403 });
         }
 
         const resolvedParams = await params;
@@ -173,7 +173,7 @@ export async function DELETE(
         const userId = session.user.id;
         const user = session.user;
 
-        if (user.role !== "ADMIN") {
+        if (user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 

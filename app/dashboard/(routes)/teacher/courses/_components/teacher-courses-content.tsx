@@ -13,7 +13,7 @@ type Course = {
     title: string;
     description?: string | null;
     imageUrl?: string | null;
-    price?: number | null;
+    price: number;
     isPublished: boolean;
     targetFaculty?: string | null;
     targetLevel?: string | null;
@@ -34,17 +34,21 @@ interface TeacherCoursesContentProps {
     hasUnpublishedCourses: boolean;
     totalEnrolledStudents: number;
     isAdmin?: boolean;
+    basePath?: string;
 }
 
-export const TeacherCoursesContent = ({ courses, hasUnpublishedCourses, totalEnrolledStudents, isAdmin = false }: TeacherCoursesContentProps) => {
+export const TeacherCoursesContent = ({ courses, hasUnpublishedCourses, totalEnrolledStudents, isAdmin = false, basePath }: TeacherCoursesContentProps) => {
     const { t } = useLanguage();
     const columns = useColumns(isAdmin);
+    
+    // Determine base path for routes
+    const routeBasePath = basePath || (isAdmin ? "/dashboard/admin" : "/dashboard/teacher");
 
     return (
         <div className="p-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">{isAdmin ? t('dashboard.allCourses') : t('dashboard.myCourses')}</h1>
-                <Link href={isAdmin ? "/dashboard/admin/courses/create" : "/dashboard/teacher/courses/create"}>
+                <Link href={`${routeBasePath}/courses/create`}>
                     <Button className="bg-[#090919] hover:bg-[#090919]/90 text-white">
                         <PlusCircle className="h-4 w-4 mr-2" />
                         {t('dashboard.createNewCourse')}
@@ -71,7 +75,7 @@ export const TeacherCoursesContent = ({ courses, hasUnpublishedCourses, totalEnr
             )}
 
             <div className="mt-6">
-                <CoursesTable columns={columns} data={courses} isAdmin={isAdmin} />
+                <CoursesTable columns={columns} data={courses} isAdmin={isAdmin} basePath={routeBasePath} />
             </div>
         </div>
     );

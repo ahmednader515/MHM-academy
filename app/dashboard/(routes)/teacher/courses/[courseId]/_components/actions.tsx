@@ -89,7 +89,6 @@ export const Actions = ({
                                     <li>• {t('teacher.addCourseTitle')}</li>
                                     <li>• {t('teacher.addCourseDescription')}</li>
                                     <li>• {t('teacher.addCourseImage')}</li>
-                                    <li>• {t('teacher.setCoursePrice')} ({t('teacher.canBeFree')})</li>
                                     <li>• {t('teacher.addAtLeastOneChapterAndPublish')}</li>
                                 </ul>
                             </div>

@@ -4,11 +4,12 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 
 const updateTimetableSchema = z.object({
-  dayOfWeek: z.number().int().min(0).max(6).optional(),
-  startTime: z.string().regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/).optional(),
-  endTime: z.string().regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/).optional(),
-  title: z.string().min(1).optional(),
-  description: z.string().optional(),
+  imageUrl: z.string().min(1).optional(),
+  targetCurriculum: z.string().optional().nullable(),
+  targetCurriculumType: z.string().optional().nullable(), // نوع المنهج (morning/evening)
+  targetGrade: z.string().optional().nullable(),
+  targetSection: z.string().optional().nullable(),
+  courseId: z.string().min(1).optional(),
 });
 
 // GET - Get a specific timetable
@@ -25,50 +26,38 @@ export async function GET(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const userId = session.user.id;
     const user = session.user;
 
     const timetable = await db.timetable.findUnique({
       where: { id: timetableId },
-      include: {
-        course: {
-          select: {
-            id: true,
-            title: true,
-            userId: true,
-            user: {
-              select: {
-                id: true,
-                fullName: true,
-              },
-            },
-          },
-        },
-      },
     });
 
     if (!timetable) {
       return new NextResponse("Timetable not found", { status: 404 });
     }
 
-    // Check permissions
-    if (user.role === "ADMIN") {
-      // Admin can see all timetables
-    } else if (user.role === "TEACHER") {
-      if (timetable.course.userId !== userId) {
-        return new NextResponse("Forbidden", { status: 403 });
-      }
+    // Check permissions - students can only see timetables matching their profile
+    if (user.role === "ADMIN" || user.role === "SUPERVISOR" || user.role === "TEACHER") {
+      // Admin, Supervisor, and Teacher can see all timetables
     } else if (user.role === "USER") {
-      const enrollment = await db.purchase.findUnique({
-        where: {
-          userId_courseId: {
-            userId,
-            courseId: timetable.courseId,
-          },
-          status: "ACTIVE",
-        },
-      });
-      if (!enrollment) {
+      // Check if timetable matches student's profile
+      const matchesCurriculum = !timetable.targetCurriculum || timetable.targetCurriculum === user.curriculum;
+      const matchesGrade = !timetable.targetGrade || 
+        timetable.targetGrade === user.grade ||
+        (user.grade && (
+          timetable.targetGrade.includes(`,${user.grade},`) ||
+          timetable.targetGrade.startsWith(`${user.grade},`) ||
+          timetable.targetGrade.endsWith(`,${user.grade}`)
+        ));
+      const matchesSection = !timetable.targetSection || 
+        timetable.targetSection === user.language ||
+        (user.language && (
+          timetable.targetSection.includes(`,${user.language},`) ||
+          timetable.targetSection.startsWith(`${user.language},`) ||
+          timetable.targetSection.endsWith(`,${user.language}`)
+        ));
+
+      if (!matchesCurriculum || !matchesGrade || !matchesSection) {
         return new NextResponse("Forbidden", { status: 403 });
       }
     } else {
@@ -82,7 +71,7 @@ export async function GET(
   }
 }
 
-// PATCH - Update a timetable (Admin only)
+// PATCH - Update a timetable (Admin and Supervisor only)
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ timetableId: string }> }
@@ -96,10 +85,9 @@ export async function PATCH(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const userId = session.user.id;
     const user = session.user;
 
-    if (user.role !== "ADMIN") {
+    if (user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
       return new NextResponse("Forbidden", { status: 403 });
     }
 
@@ -114,52 +102,25 @@ export async function PATCH(
     const body = await req.json();
     const validatedData = updateTimetableSchema.parse(body);
 
-    // Validate time range if both times are provided
-    if (validatedData.startTime && validatedData.endTime) {
-      const [startHours, startMinutes] = validatedData.startTime.split(":").map(Number);
-      const [endHours, endMinutes] = validatedData.endTime.split(":").map(Number);
-      const startTotalMinutes = startHours * 60 + startMinutes;
-      const endTotalMinutes = endHours * 60 + endMinutes;
-
-      if (endTotalMinutes <= startTotalMinutes) {
-        return new NextResponse("End time must be after start time", { status: 400 });
-      }
-    } else if (validatedData.startTime && !validatedData.endTime) {
-      const [startHours, startMinutes] = validatedData.startTime.split(":").map(Number);
-      const [endHours, endMinutes] = timetable.endTime.split(":").map(Number);
-      const startTotalMinutes = startHours * 60 + startMinutes;
-      const endTotalMinutes = endHours * 60 + endMinutes;
-
-      if (endTotalMinutes <= startTotalMinutes) {
-        return new NextResponse("End time must be after start time", { status: 400 });
-      }
-    } else if (!validatedData.startTime && validatedData.endTime) {
-      const [startHours, startMinutes] = timetable.startTime.split(":").map(Number);
-      const [endHours, endMinutes] = validatedData.endTime.split(":").map(Number);
-      const startTotalMinutes = startHours * 60 + startMinutes;
-      const endTotalMinutes = endHours * 60 + endMinutes;
-
-      if (endTotalMinutes <= startTotalMinutes) {
-        return new NextResponse("End time must be after start time", { status: 400 });
+    // Verify course exists if courseId is provided
+    if (validatedData.courseId !== undefined) {
+      const course = await db.course.findUnique({
+        where: { id: validatedData.courseId },
+      });
+      if (!course) {
+        return new NextResponse("Course not found", { status: 404 });
       }
     }
 
     const updatedTimetable = await db.timetable.update({
       where: { id: timetableId },
-      data: validatedData,
-      include: {
-        course: {
-          select: {
-            id: true,
-            title: true,
-            user: {
-              select: {
-                id: true,
-                fullName: true,
-              },
-            },
-          },
-        },
+      data: {
+        ...(validatedData.imageUrl && { imageUrl: validatedData.imageUrl }),
+        targetCurriculum: validatedData.targetCurriculum !== undefined ? validatedData.targetCurriculum : timetable.targetCurriculum,
+        targetCurriculumType: validatedData.targetCurriculumType !== undefined ? validatedData.targetCurriculumType : timetable.targetCurriculumType,
+        targetGrade: validatedData.targetGrade !== undefined ? validatedData.targetGrade : timetable.targetGrade,
+        targetSection: validatedData.targetSection !== undefined ? validatedData.targetSection : timetable.targetSection,
+        ...(validatedData.courseId !== undefined && { courseId: validatedData.courseId }),
       },
     });
 
@@ -176,7 +137,7 @@ export async function PATCH(
   }
 }
 
-// DELETE - Delete a timetable (Admin only)
+// DELETE - Delete a timetable (Admin and Supervisor only)
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ timetableId: string }> }
@@ -190,10 +151,9 @@ export async function DELETE(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const userId = session.user.id;
     const user = session.user;
 
-    if (user.role !== "ADMIN") {
+    if (user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
       return new NextResponse("Forbidden", { status: 403 });
     }
 
@@ -215,4 +175,3 @@ export async function DELETE(
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
-

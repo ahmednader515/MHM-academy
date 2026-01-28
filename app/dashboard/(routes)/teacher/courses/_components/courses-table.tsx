@@ -46,6 +46,7 @@ interface DataTableProps<TData extends { id: string }, TValue> {
     data: TData[];
     hideActions?: boolean;
     isAdmin?: boolean;
+    basePath?: string;
 }
 
 export function CoursesTable<TData extends { id: string }, TValue>({
@@ -53,12 +54,16 @@ export function CoursesTable<TData extends { id: string }, TValue>({
     data,
     hideActions = false,
     isAdmin = false,
+    basePath,
 }: DataTableProps<TData, TValue>) {
     const { t, isRTL } = useLanguage();
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [filterValue, setFilterValue] = useState("");
     const router = useRouter();
+    
+    // Determine base path for routes
+    const routeBasePath = basePath || (isAdmin ? "/dashboard/admin" : "/dashboard/teacher");
 
     const table = useReactTable({
         data,
@@ -148,7 +153,7 @@ export function CoursesTable<TData extends { id: string }, TValue>({
                                     {!hideActions && (
                                         <TableCell className={isRTL ? "text-right" : "text-left"}>
                                             <div className="flex items-center gap-2">
-                                                <Link href={`/dashboard/${isAdmin ? 'admin' : 'teacher'}/courses/${row.original.id}`}>
+                                                <Link href={`${routeBasePath}/courses/${row.original.id}`}>
                                                     <Button variant="ghost" size="icon">
                                                         <Pencil className="h-4 w-4" />
                                                     </Button>

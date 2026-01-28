@@ -15,8 +15,8 @@ export async function GET(req: Request) {
         const userId = session.user.id;
         const user = session.user;
 
-        if (user.role !== "ADMIN") {
-            return new NextResponse("Forbidden - Only admins can access this resource", { status: 403 });
+        if (user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
+            return new NextResponse("Forbidden - Only admins and supervisors can access this resource", { status: 403 });
         }
 
         // Build the where clause - Admin can see all quiz results

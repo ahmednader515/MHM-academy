@@ -13,15 +13,12 @@ export async function GET() {
         const userId = session.user.id;
         const user = session.user;
 
-        if (user.role !== "ADMIN") {
+        if (user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        // Get all courses for admin
+        // Get all courses for admin (both published and unpublished)
         const courses = await db.course.findMany({
-            where: {
-                isPublished: true
-            },
             select: {
                 id: true,
                 title: true,

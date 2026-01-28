@@ -130,7 +130,7 @@ const GradesPage = () => {
     }, []);
     
     // Check if user is not an admin after all hooks are declared
-    if (session?.user?.role !== "ADMIN") {
+    if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERVISOR") {
         return (
             <div className="p-6">
                 <div className="text-center">{t('admin.loading')}</div>

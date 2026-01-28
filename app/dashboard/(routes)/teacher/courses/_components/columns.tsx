@@ -66,7 +66,8 @@ export const useColumns = (isAdmin: boolean = false): ColumnDef<Course>[] => {
                 );
             },
         }] : []),
-        {
+        // Only show price column for admin, not for teacher
+        ...(isAdmin ? [{
             accessorKey: "price",
             header: ({ column }) => {
                 return (
@@ -83,7 +84,7 @@ export const useColumns = (isAdmin: boolean = false): ColumnDef<Course>[] => {
                 const price = parseFloat(row.getValue("price"));
                 return <div>{formatPrice(price)}</div>;
             },
-        },
+        }] : []),
         {
             accessorKey: "enrolledStudentsCount",
             header: ({ column }) => {

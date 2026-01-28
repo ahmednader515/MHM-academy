@@ -15,8 +15,8 @@ export async function PUT(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        // Check if user is admin or course owner
-        const whereClause = user?.role === "ADMIN"
+        // Check if user is admin, supervisor, or course owner
+        const whereClause = (user?.role === "ADMIN" || user?.role === "SUPERVISOR")
             ? { id: resolvedParams.courseId }
             : { id: resolvedParams.courseId, userId };
 

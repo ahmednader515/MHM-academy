@@ -7,7 +7,7 @@ export async function PUT(
     { params }: { params: Promise<{ courseId: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const { userId, user } = await auth();
         const resolvedParams = await params;
         const { list } = await req.json();
 
@@ -15,11 +15,13 @@ export async function PUT(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
+        // Check if user is admin, supervisor, or course owner
+        const whereClause = (user?.role === "ADMIN" || user?.role === "SUPERVISOR")
+            ? { id: resolvedParams.courseId }
+            : { id: resolvedParams.courseId, userId };
+
         const courseOwner = await db.course.findUnique({
-            where: {
-                id: resolvedParams.courseId,
-                userId: userId,
-            }
+            where: whereClause
         });
 
         if (!courseOwner) {

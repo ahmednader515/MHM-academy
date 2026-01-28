@@ -59,7 +59,6 @@ export default async function CourseIdPage({
         course.title,
         course.description,
         course.imageUrl,
-        course.isFree || (course.price !== null && course.price !== undefined),
         course.chapters.some(chapter => chapter.isPublished)
     ];
 
@@ -75,7 +74,6 @@ export default async function CourseIdPage({
         title: !!course.title,
         description: !!course.description,
         imageUrl: !!course.imageUrl,
-        price: course.isFree || (course.price !== null && course.price !== undefined),
         publishedChapters: course.chapters.some(chapter => chapter.isPublished)
     };
 

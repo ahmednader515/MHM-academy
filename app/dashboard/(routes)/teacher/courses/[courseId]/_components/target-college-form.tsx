@@ -93,7 +93,12 @@ export const TargetCollegeForm = ({
                   initialData.targetCurriculum === 'saudi' ? 'المنهج السعودي' :
                   initialData.targetCurriculum === 'summer_courses' ? 'الكورسات الصيفية' :
                   initialData.targetCurriculum === 'center_mhm_academy' ? 'Center MHM Academy' : 
-                  initialData.targetCurriculum}${(initialData as any).targetCurriculumType ? ` - ${(initialData as any).targetCurriculumType === 'morning' ? 'صباحي' : (initialData as any).targetCurriculumType === 'evening' ? 'مسائي' : (initialData as any).targetCurriculumType}` : ''}${initialData.targetLevel ? ` - ${initialData.targetLevel}` : ''}${initialData.targetLanguage ? ` - ${initialData.targetLanguage === 'arabic' ? 'عربي' : 'لغات'}` : ''}${initialData.targetGrade ? ` - ${initialData.targetGrade}` : ''}` 
+                  initialData.targetCurriculum}${(initialData as any).targetCurriculumType ? ` - ${(initialData as any).targetCurriculumType === 'morning' ? 'صباحي' : (initialData as any).targetCurriculumType === 'evening' ? 'مسائي' : (initialData as any).targetCurriculumType}` : ''}${initialData.targetLevel ? ` - ${initialData.targetLevel}` : ''}${initialData.targetLanguage ? ` - ${initialData.targetLanguage.split(',').map((lang: string) => lang.trim() === 'arabic' ? 'عربي' : lang.trim() === 'languages' ? 'لغات' : lang.trim()).join('، ')}` : ''}${initialData.targetGrade ? ` - ${(() => {
+                  const { getGradeById } = require('@/lib/data/curriculum-data');
+                  const gradeIds = initialData.targetGrade.split(',').map((g: string) => g.trim()).filter(Boolean);
+                  const gradeNames = gradeIds.map((id: string) => getGradeById(id)?.name || id).join('، ');
+                  return gradeNames;
+                })()}` : ''}` 
                 : t('teacher.notSpecified')
             }
         </p>
@@ -106,7 +111,7 @@ export const TargetCollegeForm = ({
                             selectedCurriculum={form.watch("targetCurriculum") as 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy' | null}
                             selectedCurriculumType={form.watch("targetCurriculumType") as 'morning' | 'evening' | null}
                             selectedLevel={form.watch("targetLevel") as 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels' | null}
-                            selectedLanguage={form.watch("targetLanguage") as 'arabic' | 'languages' | null}
+                            selectedLanguage={form.watch("targetLanguage") as string | null}
                             selectedGrade={form.watch("targetGrade")}
                             onCurriculumChange={(curriculum) => {
                                 form.setValue("targetCurriculum", curriculum || "");

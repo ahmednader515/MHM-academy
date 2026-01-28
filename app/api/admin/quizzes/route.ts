@@ -14,8 +14,8 @@ export async function GET(req: Request) {
         const userId = session.user.id;
         const user = session.user;
 
-        if (user.role !== "ADMIN") {
-            return NextResponse.json({ error: "Forbidden - Only admins can access this resource" }, { status: 403 });
+        if (user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
+            return NextResponse.json({ error: "Forbidden - Only admins and supervisors can access this resource" }, { status: 403 });
         }
 
         // Admins can see all quizzes from all teachers
@@ -63,8 +63,8 @@ export async function POST(req: Request) {
         const userId = session.user.id;
         const user = session.user;
 
-        if (user.role !== "ADMIN") {
-            return NextResponse.json({ error: "Forbidden - Only admins can access this resource" }, { status: 403 });
+        if (user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
+            return NextResponse.json({ error: "Forbidden - Only admins and supervisors can access this resource" }, { status: 403 });
         }
 
         const { title, description, courseId, questions, position, timer, maxAttempts } = await req.json();

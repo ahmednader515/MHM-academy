@@ -14,8 +14,8 @@ export async function GET(req: NextRequest) {
         const userId = session.user.id;
         const user = session.user;
 
-        // Check if user is teacher or admin
-        if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+        // Check if user is teacher, admin, or supervisor
+        if (user.role !== "TEACHER" && user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
             return new NextResponse("Forbidden", { status: 403 });
         }
 

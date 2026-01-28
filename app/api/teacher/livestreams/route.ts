@@ -11,15 +11,20 @@ export async function GET() {
     const userId = session.user.id;
     const user = session.user;
     
-    if (user.role !== "TEACHER") return NextResponse.json({ error: "Forbidden - Only teachers can access this resource" }, { status: 403 });
+    if (user.role !== "TEACHER" && user.role !== "ADMIN" && user.role !== "SUPERVISOR") return NextResponse.json({ error: "Forbidden - Only teachers, admins, and supervisors can access this resource" }, { status: 403 });
 
     // Teachers can only see live streams for their own courses
+    // Admins and supervisors can see all live streams
+    const whereClause = (user.role === "ADMIN" || user.role === "SUPERVISOR")
+      ? {}
+      : {
+          course: {
+            userId: userId
+          }
+        };
+
     const liveStreams = await db.liveStream.findMany({
-      where: {
-        course: {
-          userId: userId
-        }
-      },
+      where: whereClause,
       include: {
         course: { select: { id: true, title: true } },
         attendance: {
@@ -86,12 +91,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Could not extract meeting ID" }, { status: 400 });
     }
 
-    // Validate course exists and belongs to the teacher
+    // Validate course exists and belongs to the teacher (or user is admin/supervisor)
+    const whereClause = (user.role === "ADMIN" || user.role === "SUPERVISOR")
+      ? { id: courseId }
+      : { 
+          id: courseId,
+          userId: userId
+        };
+
     const course = await db.course.findFirst({
-      where: { 
-        id: courseId,
-        userId: userId
-      }
+      where: whereClause
     });
 
     if (!course) {

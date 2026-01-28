@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,9 +21,11 @@ interface Course {
 
 export default function CreateTeacherLiveStreamPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useLanguage();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
+  const courseIdFromQuery = searchParams.get("courseId") || "";
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -40,16 +42,36 @@ export default function CreateTeacherLiveStreamPage() {
         const response = await fetch("/api/teacher/courses");
         if (response.ok) {
           const data = await response.json();
-          // Filter to only show published courses
-          const publishedCourses = data.filter((course: Course) => course.isPublished);
-          setCourses(publishedCourses);
+          // If courseId is in query params, include that course even if unpublished
+          // Otherwise, filter to only show published courses
+          let filteredCourses;
+          if (courseIdFromQuery) {
+            // Include the course from query params even if unpublished
+            const courseFromQuery = data.find((course: Course) => course.id === courseIdFromQuery);
+            const publishedCourses = data.filter((course: Course) => course.isPublished);
+            // Combine and deduplicate
+            const allCourses = courseFromQuery 
+              ? [...publishedCourses, courseFromQuery].filter((course, index, self) => 
+                  index === self.findIndex(c => c.id === course.id)
+                )
+              : publishedCourses;
+            filteredCourses = allCourses;
+          } else {
+            filteredCourses = data.filter((course: Course) => course.isPublished);
+          }
+          setCourses(filteredCourses);
+          
+          // Auto-select course if courseId is in query params and course exists
+          if (courseIdFromQuery && filteredCourses.some((course: Course) => course.id === courseIdFromQuery)) {
+            setFormData(prev => ({ ...prev, courseId: courseIdFromQuery }));
+          }
         }
       } catch (error) {
         console.error("Error fetching courses:", error);
       }
     };
     fetchCourses();
-  }, []);
+  }, [courseIdFromQuery]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

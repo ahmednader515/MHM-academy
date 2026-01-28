@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,6 +72,8 @@ interface EditUserData {
 
 const StaffPage = () => {
     const { t, isRTL } = useLanguage();
+    const pathname = usePathname();
+    const isSupervisor = pathname?.includes("/supervisor/");
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -572,8 +575,9 @@ const StaffPage = () => {
                                                                 <Select
                                                                     value={editData.role}
                                                                     onValueChange={(value) => setEditData({...editData, role: value})}
+                                                                    disabled={isSupervisor}
                                                                 >
-                                                                    <SelectTrigger className="col-span-3">
+                                                                    <SelectTrigger className="col-span-3" disabled={isSupervisor}>
                                                                         <SelectValue placeholder={t('dashboard.selectRole')} />
                                                                     </SelectTrigger>
                                                                     <SelectContent>
@@ -583,6 +587,11 @@ const StaffPage = () => {
                                                                         <SelectItem value="USER">{t('dashboard.student')}</SelectItem>
                                                                     </SelectContent>
                                                                 </Select>
+                                                                {isSupervisor && (
+                                                                    <p className="col-span-3 text-xs text-muted-foreground">
+                                                                        {t('admin.roleChangeDisabled') || "Role changes are not allowed for supervisors"}
+                                                                    </p>
+                                                                )}
                                                             </div>
                                                         </div>
                                                         <DialogFooter>

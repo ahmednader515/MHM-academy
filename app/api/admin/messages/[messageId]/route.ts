@@ -13,7 +13,7 @@ export async function PATCH(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        if (session.user.role !== "ADMIN") {
+        if (session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR") {
             return new NextResponse("Forbidden", { status: 403 });
         }
 
@@ -25,16 +25,29 @@ export async function PATCH(
             return new NextResponse("Message is required", { status: 400 });
         }
 
+        // Build update data object, converting empty strings to null
+        const updateData: any = {
+            message: message.trim(),
+            isActive: isActive ?? true,
+        };
+
+        // Handle target fields - convert empty strings to null, preserve null values
+        if (targetCurriculum !== undefined) {
+            updateData.targetCurriculum = targetCurriculum === "" || targetCurriculum === null ? null : targetCurriculum;
+        }
+        if (targetLevel !== undefined) {
+            updateData.targetLevel = targetLevel === "" || targetLevel === null ? null : targetLevel;
+        }
+        if (targetLanguage !== undefined) {
+            updateData.targetLanguage = targetLanguage === "" || targetLanguage === null ? null : targetLanguage;
+        }
+        if (targetGrade !== undefined) {
+            updateData.targetGrade = targetGrade === "" || targetGrade === null ? null : targetGrade;
+        }
+
         const updatedMessage = await db.studentMessage.update({
             where: { id: resolvedParams.messageId },
-            data: {
-                message: message.trim(),
-                isActive: isActive ?? true,
-                targetCurriculum: targetCurriculum || null,
-                targetLevel: targetLevel || null,
-                targetLanguage: targetLanguage || null,
-                targetGrade: targetGrade || null,
-            },
+            data: updateData,
             include: {
                 creator: {
                     select: {
@@ -63,7 +76,7 @@ export async function DELETE(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        if (session.user.role !== "ADMIN") {
+        if (session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR") {
             return new NextResponse("Forbidden", { status: 403 });
         }
 

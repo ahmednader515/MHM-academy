@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,6 +78,8 @@ interface EditUserData {
 const StudentsPage = () => {
     const { t, isRTL } = useLanguage();
     const { formatPrice } = useCurrency();
+    const pathname = usePathname();
+    const isSupervisor = pathname?.includes("/supervisor/");
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -140,13 +143,19 @@ const StudentsPage = () => {
     const handleSaveUser = async () => {
         if (!editingUser) return;
 
+        // Prevent role changes for supervisors
+        if (isSupervisor && editData.role !== editingUser.role) {
+            toast.error(t('admin.roleChangeDisabled') || "Role changes are not allowed for supervisors");
+            return;
+        }
+
         try {
             const response = await fetch(`/api/admin/users/${editingUser.id}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(editData),
+                body: JSON.stringify(isSupervisor ? { ...editData, role: editingUser.role } : editData),
             });
 
             if (response.ok) {
@@ -659,8 +668,9 @@ const StudentsPage = () => {
                             <Select
                                 value={editData.role}
                                 onValueChange={(value) => setEditData({...editData, role: value})}
+                                disabled={isSupervisor}
                             >
-                                <SelectTrigger className="col-span-3">
+                                <SelectTrigger className="col-span-3" disabled={isSupervisor}>
                                     <SelectValue placeholder={t('dashboard.selectRole')} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -670,6 +680,11 @@ const StudentsPage = () => {
                                     <SelectItem value="SUPERVISOR">{t('dashboard.supervisor')}</SelectItem>
                                 </SelectContent>
                             </Select>
+                            {isSupervisor && (
+                                <p className="col-span-3 text-xs text-muted-foreground">
+                                    {t('admin.roleChangeDisabled') || "Role changes are not allowed for supervisors"}
+                                </p>
+                            )}
                         </div>
                     </div>
                     <DialogFooter>

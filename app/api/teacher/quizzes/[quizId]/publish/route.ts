@@ -19,9 +19,9 @@ export async function PATCH(
 
         const { isPublished } = await req.json();
 
-        // Verify access: admin or owner teacher
+        // Verify access: admin, supervisor, or owner teacher
         const quiz = await db.quiz.findFirst({
-            where: user?.role === "ADMIN"
+            where: (user?.role === "ADMIN" || user?.role === "SUPERVISOR")
                 ? { id: resolvedParams.quizId }
                 : {
                     id: resolvedParams.quizId,

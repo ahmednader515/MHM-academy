@@ -8,50 +8,129 @@ const StudentTimetablesPage = async () => {
   if (!session?.user) return redirect("/");
 
   const userId = session.user.id;
-  const user = session.user;
 
   // Ensure only students can access this page
-  if (user.role !== "USER") {
+  if (session.user.role !== "USER") {
     return redirect("/dashboard");
   }
 
-  // Get student's enrolled courses
-  const enrolledCourses = await db.purchase.findMany({
-    where: {
-      userId,
-      status: "ACTIVE",
+  // Fetch full user data from database to get curriculum, grade, language, etc.
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      curriculum: true,
+      curriculumType: true,
+      grade: true,
+      language: true,
+      role: true,
     },
-    select: { courseId: true },
   });
 
-  const courseIds = enrolledCourses.map((p) => p.courseId);
+  if (!user) {
+    return redirect("/dashboard");
+  }
 
-  // Get timetables for enrolled courses with caching
-  const timetables = courseIds.length > 0
-    ? await db.timetable.findMany({
-        where: {
-          courseId: { in: courseIds },
-        },
-        include: {
-          course: {
-            select: {
-              id: true,
-              title: true,
-              user: {
-                select: {
-                  id: true,
-                  fullName: true,
-                },
-              },
-            },
+  // Get timetables matching student's profile
+  const conditions: any[] = [];
+
+  // Curriculum: if user has curriculum, timetable must either not specify curriculum or match user's curriculum
+  if (user.curriculum) {
+    conditions.push({
+      OR: [
+        { targetCurriculum: null },
+        { targetCurriculum: user.curriculum },
+      ],
+    });
+  } else {
+    conditions.push({ targetCurriculum: null });
+  }
+
+  // Curriculum Type: if user has curriculumType, timetable must either not specify curriculumType or match user's curriculumType
+  // If user doesn't have curriculumType, show all timetables (both with and without targetCurriculumType)
+  if (user.curriculumType) {
+    conditions.push({
+      OR: [
+        { targetCurriculumType: null },
+        { targetCurriculumType: user.curriculumType },
+      ],
+    });
+  }
+  // If user has no curriculumType, don't filter by targetCurriculumType (show all)
+
+  // Grade: if user has grade, timetable must either not specify grade or match user's grade
+  if (user.grade) {
+    const userGrade = user.grade;
+    conditions.push({
+      OR: [
+        { targetGrade: null },
+        { targetGrade: userGrade },
+        {
+          targetGrade: {
+            contains: `,${userGrade},`,
           },
         },
-        orderBy: [
-          { dayOfWeek: "asc" },
-          { startTime: "asc" },
-        ],
-      })
-    : [];
+        {
+          targetGrade: {
+            startsWith: `${userGrade},`,
+          },
+        },
+        {
+          targetGrade: {
+            endsWith: `,${userGrade}`,
+          },
+        },
+      ],
+    });
+  } else {
+    conditions.push({ targetGrade: null });
+  }
+
+  // Section (Language): if user has language, timetable must either not specify section or match user's language
+  if (user.language) {
+    const userLanguage = user.language;
+    conditions.push({
+      OR: [
+        { targetSection: null },
+        { targetSection: userLanguage },
+        {
+          targetSection: {
+            contains: `,${userLanguage},`,
+          },
+        },
+        {
+          targetSection: {
+            startsWith: `${userLanguage},`,
+          },
+        },
+        {
+          targetSection: {
+            endsWith: `,${userLanguage}`,
+          },
+        },
+      ],
+    });
+  } else {
+    conditions.push({ targetSection: null });
+  }
+
+  // Get timetables matching student's profile
+  const timetables = await db.timetable.findMany({
+    where: {
+      AND: conditions,
+    },
+    include: {
+      course: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
   return <TimetableViewContent timetables={timetables} role="student" />;
 };

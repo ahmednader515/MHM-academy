@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const session = await auth();
     if (!session?.user?.id || !session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (session.user.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const liveStreams = await db.liveStream.findMany({
       include: {
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id || !session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (session.user.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const { title, description, meetingUrl, courseId, scheduledAt, duration } = await req.json();
 

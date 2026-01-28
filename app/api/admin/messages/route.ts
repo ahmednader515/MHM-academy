@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        if (session.user.role !== "ADMIN") {
+        if (session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR") {
             return new NextResponse("Forbidden", { status: 403 });
         }
 
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        if (session.user.role !== "ADMIN") {
+        if (session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR") {
             return new NextResponse("Forbidden", { status: 403 });
         }
 

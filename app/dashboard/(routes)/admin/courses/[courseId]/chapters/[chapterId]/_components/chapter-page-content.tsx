@@ -19,6 +19,7 @@ interface ChapterPageContentProps {
     completionText: string;
     courseIsFree?: boolean;
     isAdmin?: boolean;
+    basePath?: string;
 }
 
 export const ChapterPageContent = ({
@@ -27,15 +28,19 @@ export const ChapterPageContent = ({
     chapterId,
     completionText,
     courseIsFree = false,
-    isAdmin = false
+    isAdmin = false,
+    basePath
 }: ChapterPageContentProps) => {
     const { t } = useLanguage();
+    
+    // Determine base path for routes
+    const routeBasePath = basePath || (isAdmin ? "/dashboard/admin" : "/dashboard/teacher");
 
     return (
         <div className="p-6">
             <div className="flex items-center justify-between">
                 <div className="flex flex-col gap-y-2">
-                    <Link href={`/dashboard/${isAdmin ? 'admin' : 'teacher'}/courses/${courseId}`}>
+                    <Link href={`${routeBasePath}/courses/${courseId}`}>
                         <Button variant="ghost" className="mb-4">
                             <ArrowLeft className="h-4 w-4 mr-2" />
                             {t('teacher.backToCourseSettings')}

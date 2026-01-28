@@ -6,48 +6,31 @@ import { PlusCircle, Calendar } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/language-context";
 import { TimetableDialog } from "./timetable-dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { AdminTimetableCalendar } from "./admin-timetable-calendar";
+import { TimetablesGrid } from "./timetables-grid";
 import axios from "axios";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-interface Course {
-  id: string;
-  title: string;
-  targetCurriculum?: string | null;
-  targetLevel?: string | null;
-  targetLanguage?: string | null;
-  targetGrade?: string | null;
-  user: {
-    id: string;
-    fullName: string;
-  };
-}
-
 interface Timetable {
   id: string;
-  courseId: string;
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-  title: string;
-  description?: string;
-  course: {
+  imageUrl: string;
+  targetCurriculum?: string | null;
+  targetGrade?: string | null;
+  targetSection?: string | null;
+  courseId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  course?: {
     id: string;
     title: string;
-    user: {
-      id: string;
-      fullName: string;
-    };
-  };
+  } | null;
 }
 
 interface TimetablesContentProps {
-  courses: Course[];
   timetables: Timetable[];
 }
 
-export const TimetablesContent = ({ courses, timetables: initialTimetables }: TimetablesContentProps) => {
+export const TimetablesContent = ({ timetables: initialTimetables }: TimetablesContentProps) => {
   const { t } = useLanguage();
   const router = useRouter();
   const [timetables, setTimetables] = useState<Timetable[]>(initialTimetables);
@@ -139,7 +122,7 @@ export const TimetablesContent = ({ courses, timetables: initialTimetables }: Ti
         <div>
           <h1 className="text-2xl font-bold">{t('admin.timetables') || "Timetables"}</h1>
           <p className="text-muted-foreground mt-1">
-            {t('admin.manageTimetables') || "Create and manage course timetables"}
+            {t('admin.manageTimetables') || "Upload and manage timetable images"}
           </p>
         </div>
         <Button onClick={handleCreate} className="bg-black hover:bg-black/90 text-white">
@@ -159,8 +142,7 @@ export const TimetablesContent = ({ courses, timetables: initialTimetables }: Ti
           </CardContent>
         </Card>
       ) : (
-        <AdminTimetableCalendar
-          key={`calendar-${timetables.length}-${timetables.map(t => t.id).join('-')}`} // Force re-render when timetables change
+        <TimetablesGrid
           timetables={timetables}
           onEdit={handleEdit}
           onDelete={handleDelete}
@@ -170,7 +152,6 @@ export const TimetablesContent = ({ courses, timetables: initialTimetables }: Ti
       <TimetableDialog
         open={isDialogOpen}
         onClose={handleDialogClose}
-        courses={courses}
         timetable={editingTimetable}
       />
     </div>

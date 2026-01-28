@@ -6,7 +6,6 @@ import { LayoutDashboard, ArrowLeft } from "lucide-react";
 import { TitleForm } from "./title-form";
 import { DescriptionForm } from "./description-form";
 import { ImageForm } from "./image-form";
-import { PriceForm } from "./price-form";
 import { TargetCollegeForm } from "./target-college-form";
 import { CourseContentForm } from "./course-content-form";
 import { IsFreeForm } from "./is-free-form";
@@ -44,7 +43,6 @@ interface CourseEditContentProps {
         title: boolean;
         description: boolean;
         imageUrl: boolean;
-        price: boolean;
         publishedChapters: boolean;
     };
     userRole?: string;
@@ -105,10 +103,6 @@ export const CourseEditContent = ({
                                         <span>{completionStatus.imageUrl ? '✓' : '✗'}</span>
                                         <span>{t('teacher.image')}</span>
                                     </div>
-                                    <div className={`flex items-center gap-1 ${completionStatus.price ? 'text-green-600' : 'text-red-600'}`}>
-                                        <span>{completionStatus.price ? '✓' : '✗'}</span>
-                                        <span>{t('teacher.price')}</span>
-                                    </div>
                                     <div className={`flex items-center gap-1 ${completionStatus.publishedChapters ? 'text-green-600' : 'text-red-600'}`}>
                                         <span>{completionStatus.publishedChapters ? '✓' : '✗'}</span>
                                         <span>{t('teacher.publishedChapter')}</span>
@@ -136,10 +130,6 @@ export const CourseEditContent = ({
                             courseId={course.id}
                         />
                         <DescriptionForm
-                            initialData={course}
-                            courseId={course.id}
-                        />
-                        <PriceForm
                             initialData={course}
                             courseId={course.id}
                         />

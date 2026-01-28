@@ -14,16 +14,19 @@ export async function GET(req: Request) {
         const userId = session.user.id;
         const user = session.user;
 
-        if (user.role !== "TEACHER") {
-            return NextResponse.json({ error: "Forbidden - Only teachers can access this resource" }, { status: 403 });
+        if (user.role !== "TEACHER" && user.role !== "SUPERVISOR" && user.role !== "ADMIN") {
+            return NextResponse.json({ error: "Forbidden - Only teachers, supervisors, and admins can access this resource" }, { status: 403 });
         }
 
+        // Supervisors and admins can see all quizzes, teachers only see their own
         const quizzes = await db.quiz.findMany({
-            where: {
-                course: {
-                    userId: userId
-                }
-            },
+            where: (user.role === "ADMIN" || user.role === "SUPERVISOR")
+                ? {}
+                : {
+                    course: {
+                        userId: userId
+                    }
+                },
             include: {
                 course: {
                     select: {
@@ -82,8 +85,8 @@ export async function POST(req: Request) {
         const userId = session.user.id;
         const user = session.user;
 
-        if (user.role !== "TEACHER") {
-            return NextResponse.json({ error: "Forbidden - Only teachers can access this resource" }, { status: 403 });
+        if (user.role !== "TEACHER" && user.role !== "SUPERVISOR" && user.role !== "ADMIN") {
+            return NextResponse.json({ error: "Forbidden - Only teachers, supervisors, and admins can access this resource" }, { status: 403 });
         }
 
         // Validate required fields
@@ -95,12 +98,13 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Course ID is required" }, { status: 400 });
         }
 
-        // Verify the course belongs to the teacher
+        // Verify the course belongs to the teacher, or user is admin/supervisor
+        const whereClause = (user.role === "ADMIN" || user.role === "SUPERVISOR")
+            ? { id: courseId }
+            : { id: courseId, userId: userId };
+
         const course = await db.course.findUnique({
-            where: {
-                id: courseId,
-                userId: userId
-            }
+            where: whereClause
         });
 
         if (!course) {

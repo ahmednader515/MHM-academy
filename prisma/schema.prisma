@@ -329,19 +329,28 @@ model Certificate {
 }
 
 model Timetable {
-  id          String   @id @default(uuid())
-  courseId    String
-  dayOfWeek   Int
-  startTime   String
-  endTime     String
-  title       String
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id               String    @id @default(uuid())
+  imageUrl         String
+  targetCurriculum String?
+  targetCurriculumType String? // نوع المنهج (morning/evening)
+  targetGrade      String?
+  targetSection    String?   // القسم
+  courseId         String?   // Keep for backward compatibility, but make optional
+  dayOfWeek        Int?      // Keep for backward compatibility
+  startTime        String?   // Keep for backward compatibility
+  endTime          String?   // Keep for backward compatibility
+  title            String?   // Keep for backward compatibility
+  description      String?   // Keep for backward compatibility
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  course           Course?   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@index([courseId])
   @@index([dayOfWeek])
+  @@index([targetCurriculum])
+  @@index([targetCurriculumType])
+  @@index([targetGrade])
+  @@index([targetSection])
 }
 
 model PromoCode {

@@ -156,23 +156,48 @@ export default function SignUpPage() {
       const axiosError = error as AxiosError;
       if (axiosError.response?.status === 400) {
         const errorMessage = axiosError.response.data as string;
-        if (errorMessage.includes("Phone number already exists")) {
-          toast.error(t('auth.phoneAlreadyExists'));
-        } else if (errorMessage.includes("Email already exists")) {
-          toast.error(t('auth.emailAlreadyExists'));
-        } else if (errorMessage.includes("Invalid email format")) {
-          toast.error(t('auth.invalidEmailFormat'));
-        } else if (errorMessage.includes("Passwords do not match")) {
+        // Check for phone number errors
+        if (errorMessage.includes("phone number") || errorMessage.includes("Phone number") || errorMessage.includes("phoneNumber")) {
+          if (errorMessage.includes("already registered") || errorMessage.includes("already exists")) {
+            toast.error(t('auth.phoneAlreadyExists') || 'رقم الهاتف مسجل بالفعل. يرجى استخدام رقم آخر أو محاولة تسجيل الدخول');
+          } else {
+            toast.error(errorMessage || t('auth.phoneAlreadyExists'));
+          }
+        } 
+        // Check for email errors
+        else if (errorMessage.includes("email") || errorMessage.includes("Email")) {
+          if (errorMessage.includes("already registered") || errorMessage.includes("already exists")) {
+            toast.error(t('auth.emailAlreadyExists') || 'البريد الإلكتروني مسجل بالفعل. يرجى استخدام بريد آخر أو محاولة تسجيل الدخول');
+          } else if (errorMessage.includes("Invalid") || errorMessage.includes("invalid")) {
+            toast.error(t('auth.invalidEmailFormat'));
+          } else {
+            toast.error(errorMessage || t('auth.emailAlreadyExists'));
+          }
+        }
+        // Check for password errors
+        else if (errorMessage.includes("Passwords do not match") || errorMessage.includes("password")) {
           toast.error(t('auth.passwordsDoNotMatch'));
-        } else if (errorMessage.includes("reCAPTCHA") || errorMessage.includes("Invalid reCAPTCHA")) {
+        }
+        // Check for reCAPTCHA errors
+        else if (errorMessage.includes("reCAPTCHA") || errorMessage.includes("Invalid reCAPTCHA")) {
           toast.error(t('auth.recaptchaFailed') || 'فشل التحقق من reCAPTCHA. يرجى المحاولة مرة أخرى');
           recaptchaRef.current?.reset();
           setRecaptchaToken(null);
-        } else {
-          toast.error(t('auth.signUpError'));
+        }
+        // Check for parent phone number errors
+        else if (errorMessage.includes("parent") || errorMessage.includes("Parent")) {
+          toast.error(errorMessage || 'خطأ في رقم هاتف ولي الأمر');
+        }
+        // Check for missing fields
+        else if (errorMessage.includes("Missing required fields") || errorMessage.includes("required")) {
+          toast.error('يرجى ملء جميع الحقول المطلوبة');
+        }
+        // For any other error, show the actual error message from the API
+        else {
+          toast.error(errorMessage || t('auth.signUpError'));
         }
       } else {
-        toast.error(t('auth.signUpError'));
+        toast.error(t('auth.signUpError') || 'حدث خطأ أثناء إنشاء الحساب. يرجى المحاولة مرة أخرى');
       }
       // Reset reCAPTCHA on error
       recaptchaRef.current?.reset();

@@ -20,9 +20,9 @@ export async function GET(
 
         console.log("[TEACHER_QUIZ_GET] Fetching quiz:", resolvedParams.quizId, "for user:", userId);
 
-        // Get the quiz; if not admin, ensure it belongs to the teacher
+        // Get the quiz; if not admin or supervisor, ensure it belongs to the teacher
         const quiz = await db.quiz.findFirst({
-            where: user?.role === "ADMIN"
+            where: (user?.role === "ADMIN" || user?.role === "SUPERVISOR")
                 ? { id: resolvedParams.quizId }
                 : {
                     id: resolvedParams.quizId,
@@ -115,8 +115,8 @@ export async function PATCH(
             return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
         }
 
-        // Only owner or admin can modify
-        if (user?.role !== "ADMIN" && currentQuiz.course.userId !== userId) {
+        // Only owner, admin, or supervisor can modify
+        if (user?.role !== "ADMIN" && user?.role !== "SUPERVISOR" && currentQuiz.course.userId !== userId) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 

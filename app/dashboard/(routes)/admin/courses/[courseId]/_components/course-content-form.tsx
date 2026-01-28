@@ -174,12 +174,12 @@ export const CourseContentForm = ({
                 </div>
             )}
             
-            <div className="flex flex-row gap-2 mt-4 pt-4 border-t">
+            <div className="flex flex-row gap-2 mt-4 pt-4 border-t flex-wrap">
                 <Button 
                     onClick={() => router.push(`/dashboard/${isAdmin ? 'admin' : 'teacher'}/quizzes/create?courseId=${courseId}`)} 
                     variant="ghost"
                     size="sm"
-                    className="flex-1 justify-center"
+                    className="flex-1 justify-center min-w-[120px]"
                 >
                     <PlusCircle className="h-4 w-4 mr-2" />
                     {t('teacher.addQuiz')}
@@ -188,7 +188,7 @@ export const CourseContentForm = ({
                     onClick={() => setIsCreating((current) => !current)} 
                     variant="ghost"
                     size="sm"
-                    className="flex-1 justify-center"
+                    className="flex-1 justify-center min-w-[120px]"
                 >
                     {isCreating ? (
                         <>{t('common.cancel')}</>
@@ -198,6 +198,15 @@ export const CourseContentForm = ({
                             {t('teacher.addChapter')}
                         </>
                     )}
+                </Button>
+                <Button 
+                    onClick={() => router.push(`/dashboard/teacher/livestreams/create?courseId=${courseId}`)} 
+                    variant="ghost"
+                    size="sm"
+                    className="flex-1 justify-center min-w-[120px]"
+                >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    {t('admin.createLiveStream') || 'إنشاء بث مباشر'}
                 </Button>
             </div>
         </div>

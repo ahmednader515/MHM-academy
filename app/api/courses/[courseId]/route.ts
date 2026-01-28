@@ -75,7 +75,7 @@ export async function PATCH(
         const userId = session.user.id;
         const user = session.user;
 
-        const whereClause = user?.role === "ADMIN"
+        const whereClause = (user?.role === "ADMIN" || user?.role === "SUPERVISOR")
             ? { id: resolvedParams.courseId }
             : { id: resolvedParams.courseId, userId };
 
@@ -123,8 +123,8 @@ export async function DELETE(
             return new NextResponse("Not found", { status: 404 });
         }
 
-        // Only owner or admin can delete
-        if (user?.role !== "ADMIN" && course.userId !== userId) {
+        // Only owner, admin, or supervisor can delete
+        if (user?.role !== "ADMIN" && user?.role !== "SUPERVISOR" && course.userId !== userId) {
             return new NextResponse("Forbidden", { status: 403 });
         }
 

@@ -4,20 +4,18 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 
 const createTimetableSchema = z.object({
+  imageUrl: z.string().min(1),
+  targetCurriculum: z.string().optional().nullable(),
+  targetCurriculumType: z.string().optional().nullable(), // نوع المنهج (morning/evening)
+  targetGrade: z.string().optional().nullable(),
+  targetSection: z.string().optional().nullable(), // القسم (language: arabic/languages)
   courseId: z.string().min(1),
-  dayOfWeek: z.number().int().min(0).max(6),
-  startTime: z.string().regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/),
-  endTime: z.string().regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/),
-  title: z.string().min(1),
-  description: z.string().optional(),
 });
 
-// GET - Get all timetables (filtered by role)
+// GET - Get all timetables (filtered by role and student profile)
 export async function GET(req: Request) {
   try {
     const session = await auth();
-    const { searchParams } = new URL(req.url);
-    const courseId = searchParams.get("courseId");
 
     if (!session?.user?.id || !session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -28,41 +26,106 @@ export async function GET(req: Request) {
 
     let whereClause: any = {};
 
-    // Admin can see all timetables
-    if (user.role === "ADMIN") {
-      if (courseId) {
-        whereClause.courseId = courseId;
-      }
+    // Admin and Supervisor can see all timetables
+    if (user.role === "ADMIN" || user.role === "SUPERVISOR") {
+      // No filtering - show all
     }
-    // Teacher can see timetables for their courses
+    // Teacher can see all timetables (for now, can be restricted later)
     else if (user.role === "TEACHER") {
-      const teacherCourses = await db.course.findMany({
-        where: { userId },
-        select: { id: true },
-      });
-      const courseIds = teacherCourses.map((c) => c.id);
-      whereClause.courseId = { in: courseIds };
-      if (courseId && courseIds.includes(courseId)) {
-        whereClause.courseId = courseId;
-      } else if (courseId && !courseIds.includes(courseId)) {
-        return new NextResponse("Forbidden", { status: 403 });
-      }
+      // Show all timetables
     }
-    // Students can see timetables for courses they're enrolled in
+    // Students see timetables matching their profile
     else if (user.role === "USER") {
-      const enrolledCourses = await db.purchase.findMany({
-        where: {
-          userId,
-          status: "ACTIVE",
-        },
-        select: { courseId: true },
-      });
-      const courseIds = enrolledCourses.map((p) => p.courseId);
-      whereClause.courseId = { in: courseIds };
-      if (courseId && courseIds.includes(courseId)) {
-        whereClause.courseId = courseId;
-      } else if (courseId && !courseIds.includes(courseId)) {
-        return new NextResponse("Forbidden", { status: 403 });
+      const conditions: any[] = [];
+
+      // Curriculum: if user has curriculum, timetable must either not specify curriculum or match user's curriculum
+      if (user.curriculum) {
+        conditions.push({
+          OR: [
+            { targetCurriculum: null },
+            { targetCurriculum: user.curriculum },
+          ],
+        });
+      } else {
+        // If user has no curriculum, only show timetables with no curriculum specified
+        conditions.push({ targetCurriculum: null });
+      }
+
+      // Curriculum Type: if user has curriculumType, timetable must either not specify curriculumType or match user's curriculumType
+      // If user doesn't have curriculumType, show all timetables (both with and without targetCurriculumType)
+      if (user.curriculumType) {
+        conditions.push({
+          OR: [
+            { targetCurriculumType: null },
+            { targetCurriculumType: user.curriculumType },
+          ],
+        });
+      }
+      // If user has no curriculumType, don't filter by targetCurriculumType (show all)
+
+      // Grade: if user has grade, timetable must either not specify grade or match user's grade
+      // Handle comma-separated grades
+      if (user.grade) {
+        const userGrade = user.grade;
+        conditions.push({
+          OR: [
+            { targetGrade: null },
+            { targetGrade: userGrade }, // Exact match for single grade
+            // Check if user's grade is included in comma-separated targetGrade
+            {
+              targetGrade: {
+                contains: `,${userGrade},`,
+              },
+            },
+            {
+              targetGrade: {
+                startsWith: `${userGrade},`,
+              },
+            },
+            {
+              targetGrade: {
+                endsWith: `,${userGrade}`,
+              },
+            },
+          ],
+        });
+      } else {
+        conditions.push({ targetGrade: null });
+      }
+
+      // Section (Language): if user has language, timetable must either not specify section or match user's language
+      // Handle comma-separated sections
+      if (user.language) {
+        const userLanguage = user.language;
+        conditions.push({
+          OR: [
+            { targetSection: null },
+            { targetSection: userLanguage }, // Exact match for single section
+            // Check if user's language is included in comma-separated targetSection
+            {
+              targetSection: {
+                contains: `,${userLanguage},`,
+              },
+            },
+            {
+              targetSection: {
+                startsWith: `${userLanguage},`,
+              },
+            },
+            {
+              targetSection: {
+                endsWith: `,${userLanguage}`,
+              },
+            },
+          ],
+        });
+      } else {
+        conditions.push({ targetSection: null });
+      }
+
+      // All conditions must be met (AND)
+      if (conditions.length > 0) {
+        whereClause.AND = conditions;
       }
     } else {
       return new NextResponse("Forbidden", { status: 403 });
@@ -70,25 +133,9 @@ export async function GET(req: Request) {
 
     const timetables = await db.timetable.findMany({
       where: whereClause,
-      include: {
-        course: {
-          select: {
-            id: true,
-            title: true,
-            userId: true,
-            user: {
-              select: {
-                id: true,
-                fullName: true,
-              },
-            },
-          },
-        },
+      orderBy: {
+        createdAt: "desc",
       },
-      orderBy: [
-        { dayOfWeek: "asc" },
-        { startTime: "asc" },
-      ],
     });
 
     return NextResponse.json(timetables);
@@ -98,7 +145,7 @@ export async function GET(req: Request) {
   }
 }
 
-// POST - Create a new timetable (Admin only)
+// POST - Create a new timetable (Admin and Supervisor only)
 export async function POST(req: Request) {
   try {
     const session = await auth();
@@ -107,57 +154,39 @@ export async function POST(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const userId = session.user.id;
     const user = session.user;
 
-    if (user.role !== "ADMIN") {
+    if (user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
       return new NextResponse("Forbidden", { status: 403 });
     }
 
     const body = await req.json();
     const validatedData = createTimetableSchema.parse(body);
 
+    if (!validatedData.imageUrl) {
+      return new NextResponse("Image URL is required", { status: 400 });
+    }
+
+    if (!validatedData.courseId) {
+      return new NextResponse("Course ID is required", { status: 400 });
+    }
+
     // Verify course exists
     const course = await db.course.findUnique({
       where: { id: validatedData.courseId },
     });
-
     if (!course) {
       return new NextResponse("Course not found", { status: 404 });
     }
 
-    // Validate time range
-    const [startHours, startMinutes] = validatedData.startTime.split(":").map(Number);
-    const [endHours, endMinutes] = validatedData.endTime.split(":").map(Number);
-    const startTotalMinutes = startHours * 60 + startMinutes;
-    const endTotalMinutes = endHours * 60 + endMinutes;
-
-    if (endTotalMinutes <= startTotalMinutes) {
-      return new NextResponse("End time must be after start time", { status: 400 });
-    }
-
     const timetable = await db.timetable.create({
       data: {
+        imageUrl: validatedData.imageUrl,
+        targetCurriculum: validatedData.targetCurriculum || null,
+        targetCurriculumType: validatedData.targetCurriculumType || null,
+        targetGrade: validatedData.targetGrade || null,
+        targetSection: validatedData.targetSection || null,
         courseId: validatedData.courseId,
-        dayOfWeek: validatedData.dayOfWeek,
-        startTime: validatedData.startTime,
-        endTime: validatedData.endTime,
-        title: validatedData.title,
-        description: validatedData.description,
-      },
-      include: {
-        course: {
-          select: {
-            id: true,
-            title: true,
-            user: {
-              select: {
-                id: true,
-                fullName: true,
-              },
-            },
-          },
-        },
       },
     });
 
@@ -173,4 +202,3 @@ export async function POST(req: Request) {
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
-

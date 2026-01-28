@@ -14,8 +14,8 @@ export async function POST(req: Request) {
     const userId = session.user.id;
     const user = session.user;
 
-    // Check if user is teacher or admin
-    if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+    // Check if user is teacher, admin, or supervisor
+    if (user.role !== "TEACHER" && user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
       return new NextResponse("Forbidden", { status: 403 });
     }
 
@@ -82,13 +82,13 @@ export async function GET(req: Request) {
     const userId = session.user.id;
     const user = session.user;
 
-    // Check if user is teacher or admin
-    if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+    // Check if user is teacher, admin, or supervisor
+    if (user.role !== "TEACHER" && user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
       return new NextResponse("Forbidden", { status: 403 });
     }
 
     // Filter by assigner if teacher (only see their own certificates)
-    // Admin can see all certificates
+    // Admin and supervisor can see all certificates
     const whereClause = user.role === "TEACHER" 
       ? { assignedBy: userId }
       : {};

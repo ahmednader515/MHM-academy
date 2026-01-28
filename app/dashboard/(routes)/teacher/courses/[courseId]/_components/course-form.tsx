@@ -178,7 +178,7 @@ export const CourseForm = ({
             selectedCurriculum={form.watch("targetCurriculum") as 'egyptian' | 'saudi' | 'summer_courses' | 'center_mhm_academy' | null}
             selectedCurriculumType={form.watch("targetCurriculumType") as 'morning' | 'evening' | null}
             selectedLevel={form.watch("targetLevel") as 'kg' | 'primary' | 'preparatory' | 'secondary' | 'summer_levels' | null}
-            selectedLanguage={form.watch("targetLanguage") as 'arabic' | 'languages' | null}
+            selectedLanguage={form.watch("targetLanguage") as string | null}
             selectedGrade={form.watch("targetGrade")}
             onCurriculumChange={(curriculum) => {
                 form.setValue("targetCurriculum", curriculum || "");
