@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,17 +17,11 @@ import {
 import { ArrowLeft, Calendar, Clock, Link, Video } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/contexts/language-context";
-import {
-  CURRICULA,
-  getGradesByLanguage,
-  getGradesByLevel,
-  getLanguagesByLevel,
-  getLevelsByCurriculum,
-} from "@/lib/data/curriculum-data";
 
 interface Course {
   id: string;
   title: string;
+  isPublished: boolean;
   targetCurriculum?: string | null;
   targetCurriculumType?: string | null;
   targetLevel?: string | null;
@@ -42,46 +36,50 @@ export default function CreateLiveStreamClient() {
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
-
-  const courseIdFromQuery = searchParams.get("courseId");
-
+  const courseIdFromQuery = searchParams.get("courseId") || "";
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     meetingUrl: "",
-    courseId: courseIdFromQuery || "",
+    courseId: "",
     scheduledAt: "",
     duration: "",
   });
-
-  // Filter states
-  const [selectedCurriculumType, setSelectedCurriculumType] = useState<string>("");
-  const [selectedCurriculum, setSelectedCurriculum] = useState<string>("");
-  const [selectedLevel, setSelectedLevel] = useState<string>("");
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("");
-  const [selectedGrade, setSelectedGrade] = useState<string>("");
 
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         const response = await fetch("/api/admin/courses/all");
-        if (response.ok) {
-          const data = await response.json();
-          setCourses(data);
-
-          if (courseIdFromQuery) {
-            const preselectedCourse = data.find(
-              (course: Course) => course.id === courseIdFromQuery
-            );
-            if (preselectedCourse) {
-              setFormData((prev) => ({ ...prev, courseId: courseIdFromQuery }));
-            } else {
-              toast.error(
-                t("admin.courseNotFound") ||
-                  "Pre-selected course not found or not accessible."
-              );
-            }
-          }
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Failed to fetch courses:", response.status, errorData);
+          toast.error(errorData.error || t("common.error") || "Error loading courses");
+          return;
+        }
+        
+        const data = await response.json();
+        // If courseId is in query params, include that course even if unpublished
+        // Otherwise, filter to only show published courses
+        let filteredCourses;
+        if (courseIdFromQuery) {
+          // Include the course from query params even if unpublished
+          const courseFromQuery = data.find((course: Course) => course.id === courseIdFromQuery);
+          const publishedCourses = data.filter((course: Course) => course.isPublished);
+          // Combine and deduplicate
+          const allCourses = courseFromQuery 
+            ? [...publishedCourses, courseFromQuery].filter((course, index, self) => 
+                index === self.findIndex(c => c.id === course.id)
+              )
+            : publishedCourses;
+          filteredCourses = allCourses;
+        } else {
+          filteredCourses = data.filter((course: Course) => course.isPublished);
+        }
+        setCourses(filteredCourses);
+        
+        // Auto-select course if courseId is in query params and course exists
+        if (courseIdFromQuery && filteredCourses.some((course: Course) => course.id === courseIdFromQuery)) {
+          setFormData(prev => ({ ...prev, courseId: courseIdFromQuery }));
         }
       } catch (error) {
         console.error("Error fetching courses:", error);
@@ -132,109 +130,6 @@ export default function CreateLiveStreamClient() {
     }
   };
 
-  // Get available options based on selections
-  const availableLevels = selectedCurriculum
-    ? getLevelsByCurriculum(selectedCurriculum as any)
-    : [];
-
-  const availableLanguages =
-    selectedCurriculum && selectedLevel
-      ? getLanguagesByLevel(selectedCurriculum as any, selectedLevel as any)
-      : [];
-
-  const availableGrades =
-    selectedCurriculum && selectedLevel
-      ? selectedLanguage
-        ? getGradesByLanguage(
-            selectedCurriculum as any,
-            selectedLevel as any,
-            selectedLanguage as any
-          )
-        : getGradesByLevel(selectedCurriculum as any, selectedLevel as any)
-      : [];
-
-  // Handle filter changes
-  const handleCurriculumTypeChange = (value: string) => {
-    setSelectedCurriculumType(value === "all" ? "" : value);
-    setSelectedLevel("");
-    setSelectedLanguage("");
-    setSelectedGrade("");
-    setFormData((prev) => ({ ...prev, courseId: "" }));
-  };
-
-  const handleCurriculumChange = (value: string) => {
-    const newCurriculum = value === "all" ? "" : value;
-    setSelectedCurriculum(newCurriculum);
-    if (newCurriculum !== "egyptian") setSelectedCurriculumType("");
-    setSelectedLevel("");
-    setSelectedLanguage("");
-    setSelectedGrade("");
-    setFormData((prev) => ({ ...prev, courseId: "" }));
-  };
-
-  const handleLevelChange = (value: string) => {
-    setSelectedLevel(value === "all" ? "" : value);
-    setSelectedLanguage("");
-    setSelectedGrade("");
-    setFormData((prev) => ({ ...prev, courseId: "" }));
-  };
-
-  const handleLanguageChange = (value: string) => {
-    setSelectedLanguage(value === "all" ? "" : value);
-    setSelectedGrade("");
-    setFormData((prev) => ({ ...prev, courseId: "" }));
-  };
-
-  const handleGradeChange = (value: string) => {
-    setSelectedGrade(value === "all" ? "" : value);
-    setFormData((prev) => ({ ...prev, courseId: "" }));
-  };
-
-  // Filter courses based on selected criteria
-  const filteredCourses = useMemo(() => {
-    let filtered = courses;
-
-    if (selectedCurriculum === "egyptian" && selectedCurriculumType) {
-      filtered = filtered.filter(
-        (course) =>
-          !course.targetCurriculumType ||
-          course.targetCurriculumType === selectedCurriculumType
-      );
-    }
-
-    if (selectedCurriculum) {
-      filtered = filtered.filter(
-        (course) => !course.targetCurriculum || course.targetCurriculum === selectedCurriculum
-      );
-    }
-
-    if (selectedLevel) {
-      filtered = filtered.filter(
-        (course) => !course.targetLevel || course.targetLevel === selectedLevel
-      );
-    }
-
-    if (selectedLanguage) {
-      filtered = filtered.filter(
-        (course) => !course.targetLanguage || course.targetLanguage === selectedLanguage
-      );
-    }
-
-    if (selectedGrade) {
-      filtered = filtered.filter(
-        (course) => !course.targetGrade || course.targetGrade === selectedGrade
-      );
-    }
-
-    return filtered;
-  }, [
-    courses,
-    selectedCurriculum,
-    selectedCurriculumType,
-    selectedGrade,
-    selectedLanguage,
-    selectedLevel,
-  ]);
 
   return (
     <div className="p-6 space-y-6">
@@ -259,126 +154,6 @@ export default function CreateLiveStreamClient() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Course Filter Section */}
-            <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-              <Label className="text-base font-semibold">
-                {t("admin.filterCourses") || "Filter Courses"}
-              </Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                {/* Curriculum */}
-                <div className="space-y-2">
-                  <Label className="text-sm">{t("admin.curriculum")}</Label>
-                  <Select
-                    value={selectedCurriculum || "all"}
-                    onValueChange={handleCurriculumChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("admin.selectCurriculum")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{t("common.all")}</SelectItem>
-                      {CURRICULA.map((curriculum) => (
-                        <SelectItem key={curriculum.id} value={curriculum.id}>
-                          {curriculum.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Curriculum Type (Egyptian only) */}
-                {selectedCurriculum === "egyptian" && (
-                  <div className="space-y-2">
-                    <Label className="text-sm">
-                      {t("admin.curriculumType") || "Curriculum Type"}
-                    </Label>
-                    <Select
-                      value={selectedCurriculumType || "all"}
-                      onValueChange={handleCurriculumTypeChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={t("admin.selectCurriculumType") || "Select Type"}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t("common.all")}</SelectItem>
-                        <SelectItem value="morning">
-                          {t("admin.morning") || "Morning"}
-                        </SelectItem>
-                        <SelectItem value="evening">
-                          {t("admin.evening") || "Evening"}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {/* Level */}
-                {selectedCurriculum && availableLevels.length > 0 && (
-                  <div className="space-y-2">
-                    <Label className="text-sm">{t("admin.level")}</Label>
-                    <Select value={selectedLevel || "all"} onValueChange={handleLevelChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("admin.selectLevel")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t("common.all")}</SelectItem>
-                        {availableLevels.map((level) => (
-                          <SelectItem key={level.id} value={level.id}>
-                            {level.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {/* Language */}
-                {selectedCurriculum && selectedLevel && availableLanguages.length > 0 && (
-                  <div className="space-y-2">
-                    <Label className="text-sm">{t("admin.language")}</Label>
-                    <Select
-                      value={selectedLanguage || "all"}
-                      onValueChange={handleLanguageChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("admin.selectLanguage")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t("common.all")}</SelectItem>
-                        {availableLanguages.map((language) => (
-                          <SelectItem key={language.id} value={language.id}>
-                            {language.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {/* Grade */}
-                {selectedCurriculum && selectedLevel && availableGrades.length > 0 && (
-                  <div className="space-y-2">
-                    <Label className="text-sm">{t("admin.grade")}</Label>
-                    <Select value={selectedGrade || "all"} onValueChange={handleGradeChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("admin.selectGrade")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t("common.all")}</SelectItem>
-                        {availableGrades.map((grade) => (
-                          <SelectItem key={grade.id} value={grade.id}>
-                            {grade.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="title">{t("admin.liveStreamTitle")} *</Label>
@@ -402,24 +177,13 @@ export default function CreateLiveStreamClient() {
                     <SelectValue placeholder={t("admin.selectCourse")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredCourses.length === 0 ? (
-                      <SelectItem value="none" disabled>
-                        {t("admin.noCoursesFound") || "No courses found"}
+                    {courses.map((course) => (
+                      <SelectItem key={course.id} value={course.id}>
+                        {course.title}
                       </SelectItem>
-                    ) : (
-                      filteredCourses.map((course) => (
-                        <SelectItem key={course.id} value={course.id}>
-                          {course.title}
-                        </SelectItem>
-                      ))
-                    )}
+                    ))}
                   </SelectContent>
                 </Select>
-                {filteredCourses.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    {t("dashboard.coursesAvailable", { count: filteredCourses.length })}
-                  </p>
-                )}
               </div>
             </div>
 

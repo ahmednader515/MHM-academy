@@ -7,19 +7,24 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ courseId: string; livestreamId: string }> }
 ) {
+  const resolvedParams = await params;
+  const { courseId, livestreamId } = resolvedParams;
+  
   try {
     const session = await auth();
-    const resolvedParams = await params;
-    const { courseId, livestreamId } = resolvedParams;
+
+    console.log("[COURSE_LIVESTREAM_GET] Request received:", { courseId, livestreamId });
 
     if (!session?.user?.id || !session?.user) {
+      console.log("[COURSE_LIVESTREAM_GET] Unauthorized - no session");
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const userId = session.user.id;
+    console.log("[COURSE_LIVESTREAM_GET] User authenticated:", { userId, role: session.user.role });
 
     // Check if user has access to the course
-    const course = await db.course.findUnique({
+    const course = await db.course.findFirst({
       where: {
         id: courseId,
         isPublished: true,
@@ -51,7 +56,8 @@ export async function GET(
     }
 
     // Get the live stream
-    const liveStream = await db.liveStream.findUnique({
+    console.log("[COURSE_LIVESTREAM_GET] Fetching livestream:", { livestreamId, courseId });
+    const liveStream = await db.liveStream.findFirst({
       where: {
         id: livestreamId,
         courseId: courseId,
@@ -60,8 +66,31 @@ export async function GET(
     });
 
     if (!liveStream) {
+      console.log("[COURSE_LIVESTREAM_GET] Livestream not found. Checking if it exists unpublished...");
+      // Check if livestream exists but is unpublished
+      const unpublishedStream = await db.liveStream.findFirst({
+        where: {
+          id: livestreamId,
+          courseId: courseId
+        },
+        select: { id: true, isPublished: true, meetingType: true }
+      });
+      
+      if (unpublishedStream) {
+        console.log("[COURSE_LIVESTREAM_GET] Livestream exists but is unpublished:", unpublishedStream);
+        return new NextResponse("Live stream not published", { status: 404 });
+      }
+      
+      console.log("[COURSE_LIVESTREAM_GET] Livestream does not exist at all");
       return new NextResponse("Live stream not found", { status: 404 });
     }
+
+    console.log("[COURSE_LIVESTREAM_GET] Livestream found:", { 
+      id: liveStream.id, 
+      title: liveStream.title,
+      meetingType: liveStream.meetingType,
+      isPublished: liveStream.isPublished 
+    });
 
     // Check if livestream is expired (for students only)
     const isExpired = liveStream.scheduledAt && liveStream.duration
@@ -73,6 +102,7 @@ export async function GET(
     }
 
     // Get all course content to determine navigation
+    // Note: LiveStreams don't have a position field, so we'll use createdAt for ordering
     const [chapters, quizzes, liveStreams] = await Promise.all([
       db.chapter.findMany({
         where: { courseId, isPublished: true },
@@ -92,10 +122,15 @@ export async function GET(
     ]);
 
     // Combine and sort all content by position
-    const allContent = [
-      ...chapters.map(c => ({ id: c.id, position: c.position, type: 'chapter' as const })),
-      ...quizzes.map(q => ({ id: q.id, position: q.position, type: 'quiz' as const })),
-      ...liveStreams.map(l => ({ id: l.id, position: l.position, type: 'livestream' as const }))
+    type ContentItem = { id: string; position: number; type: 'chapter' | 'quiz' | 'livestream' };
+    const allContent: ContentItem[] = [
+      ...chapters.map((c: { id: string; position: number }) => ({ id: c.id, position: c.position, type: 'chapter' as const })),
+      ...quizzes.map((q: { id: string; position: number }) => ({ id: q.id, position: q.position, type: 'quiz' as const })),
+      ...liveStreams.map((l: { id: string; position: number }) => ({ 
+        id: l.id, 
+        position: l.position,
+        type: 'livestream' as const 
+      }))
     ].sort((a, b) => a.position - b.position);
 
     // Find current livestream position
@@ -120,6 +155,12 @@ export async function GET(
     return NextResponse.json(response);
   } catch (error) {
     console.error("[COURSE_LIVESTREAM_GET]", error);
+    console.error("[COURSE_LIVESTREAM_GET] Error details:", {
+      courseId: resolvedParams.courseId,
+      livestreamId: resolvedParams.livestreamId,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

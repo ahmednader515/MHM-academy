@@ -28,9 +28,10 @@ export async function PUT(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        // Separate chapters and quizzes
+        // Separate chapters, quizzes, and livestreams
         const chapters = list.filter((item: any) => item.type === "chapter");
         const quizzes = list.filter((item: any) => item.type === "quiz");
+        const livestreams = list.filter((item: any) => item.type === "livestream");
 
         // Update chapters
         for (const item of chapters) {
@@ -43,6 +44,14 @@ export async function PUT(
         // Update quizzes
         for (const item of quizzes) {
             await db.quiz.update({
+                where: { id: item.id },
+                data: { position: item.position }
+            });
+        }
+
+        // Update livestreams
+        for (const item of livestreams) {
+            await db.liveStream.update({
                 where: { id: item.id },
                 data: { position: item.position }
             });

@@ -13,15 +13,17 @@ export async function GET(req: Request) {
         const userId = session.user.id;
         const user = session.user;
 
-        if (user.role !== "TEACHER") {
-            return NextResponse.json({ error: "Forbidden - Only teachers can access this resource" }, { status: 403 });
+        if (user.role !== "TEACHER" && user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
+            return NextResponse.json({ error: "Forbidden - Only teachers, admins, and supervisors can access this resource" }, { status: 403 });
         }
 
-        // Teachers can only see their own courses
+        // Teachers can only see their own courses, but admins and supervisors can see all courses
+        const whereClause = (user.role === "ADMIN" || user.role === "SUPERVISOR")
+            ? {}
+            : { userId: userId };
+
         const courses = await db.course.findMany({
-            where: {
-                userId: userId
-            },
+            where: whereClause,
             select: {
                 id: true,
                 title: true,

@@ -14,15 +14,15 @@ interface CourseItem {
     title: string;
     position: number;
     isPublished: boolean;
-    type: "chapter" | "quiz";
+    type: "chapter" | "quiz" | "livestream";
     isFree?: boolean; // Only for chapters
 }
 
 interface CourseContentListProps {
     items: CourseItem[];
-    onReorder: (updateData: { id: string; position: number; type: "chapter" | "quiz" }[]) => void;
-    onEdit: (id: string, type: "chapter" | "quiz") => void;
-    onDelete: (id: string, type: "chapter" | "quiz") => void;
+    onReorder: (updateData: { id: string; position: number; type: "chapter" | "quiz" | "livestream" }[]) => void;
+    onEdit: (id: string, type: "chapter" | "quiz" | "livestream") => void;
+    onDelete: (id: string, type: "chapter" | "quiz" | "livestream") => void;
 }
 
 export const CourseContentList = ({
@@ -81,7 +81,7 @@ export const CourseContentList = ({
                                             <span className="font-medium text-foreground break-words">{item.title}</span>
                                             <div className="flex items-center gap-1.5 flex-wrap">
                                                 <Badge variant="outline" className="text-xs whitespace-nowrap">
-                                                    {item.type === "chapter" ? t('teacher.chapter') : t('teacher.quiz')}
+                                                    {item.type === "chapter" ? t('teacher.chapter') : item.type === "quiz" ? t('teacher.quiz') : t('admin.liveStream') || 'Live Stream'}
                                                 </Badge>
                                                 <Badge
                                                     className={cn(
@@ -117,10 +117,10 @@ export const CourseContentList = ({
                                                     className="hover:opacity-75 transition text-xs sm:text-sm h-8"
                                                 >
                                                     <span className="hidden sm:inline">
-                                                        {item.type === "chapter" ? t('teacher.addVideo') : t('teacher.addQuestions')}
+                                                        {item.type === "chapter" ? t('teacher.addVideo') : item.type === "quiz" ? t('teacher.addQuestions') : t('common.edit')}
                                                     </span>
                                                     <span className="sm:hidden text-xs">
-                                                        {item.type === "chapter" ? t('teacher.addVideo') : t('teacher.addQuestions')}
+                                                        {item.type === "chapter" ? t('teacher.addVideo') : item.type === "quiz" ? t('teacher.addQuestions') : t('common.edit')}
                                                     </span>
                                                 </Button>
                                             )}

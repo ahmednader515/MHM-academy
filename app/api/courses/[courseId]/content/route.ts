@@ -51,7 +51,7 @@ export async function GET(
                     isPublished: true
                 },
                 orderBy: {
-                    createdAt: "asc"
+                    position: "asc"
                 },
             })
         ]);
@@ -78,8 +78,7 @@ export async function GET(
             })),
             ...activeLiveStreams.map(liveStream => ({
                 ...liveStream,
-                type: 'livestream' as const,
-                position: 999 // Live streams appear at the end
+                type: 'livestream' as const
             }))
         ].sort((a, b) => a.position - b.position);
 

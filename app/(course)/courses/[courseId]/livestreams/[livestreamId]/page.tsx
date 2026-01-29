@@ -42,7 +42,19 @@ const LiveStreamPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!routeParams.courseId || !routeParams.livestreamId) {
+        console.error("Missing route parameters:", routeParams);
+        toast.error(t('student.unknownError'));
+        setLoading(false);
+        return;
+      }
+
       try {
+        console.log("Fetching livestream data:", {
+          courseId: routeParams.courseId,
+          livestreamId: routeParams.livestreamId
+        });
+
         const [liveStreamResponse, progressResponse, accessResponse] = await Promise.all([
           axios.get(`/api/courses/${routeParams.courseId}/livestreams/${routeParams.livestreamId}`),
           axios.get(`/api/courses/${routeParams.courseId}/progress`),
@@ -56,9 +68,28 @@ const LiveStreamPage = () => {
         setSubscriptionEndDate(accessResponse.data.subscriptionEndDate || null);
       } catch (error) {
         const axiosError = error as AxiosError;
-        console.error("Error fetching data:", axiosError);
+        console.error("Error fetching livestream data:", {
+          error: axiosError,
+          response: axiosError.response,
+          status: axiosError.response?.status,
+          data: axiosError.response?.data,
+          courseId: routeParams.courseId,
+          livestreamId: routeParams.livestreamId
+        });
+        
         if (axiosError.response) {
-          toast.error(`${t('student.failedToLoadChapter')}: ${axiosError.response.data}`);
+          const status = axiosError.response.status;
+          const errorMessage = typeof axiosError.response.data === 'string' 
+            ? axiosError.response.data 
+            : axiosError.response.data?.error || axiosError.response.data?.message || 'Unknown error';
+          
+          if (status === 404) {
+            toast.error(t('admin.liveStreamNotFound') || 'Live stream not found');
+          } else if (status === 403) {
+            toast.error(t('student.chapterLocked') || 'Access denied');
+          } else {
+            toast.error(`${t('student.failedToLoadChapter')}: ${errorMessage}`);
+          }
         } else if (axiosError.request) {
           toast.error(t('student.connectionFailed'));
         } else {

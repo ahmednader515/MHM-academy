@@ -40,6 +40,11 @@ export default async function AdminCourseIdPage({
                     position: "asc",
                 },
             },
+            liveStreams: {
+                orderBy: {
+                    position: "asc",
+                },
+            },
         }
     });
 

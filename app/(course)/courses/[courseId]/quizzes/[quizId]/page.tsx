@@ -57,8 +57,8 @@ export default function QuizPage({
     const [navigation, setNavigation] = useState<{
         nextContentId: string | null;
         previousContentId: string | null;
-        nextContentType: 'chapter' | 'quiz' | null;
-        previousContentType: 'chapter' | 'quiz' | null;
+        nextContentType: 'chapter' | 'quiz' | 'livestream' | null;
+        previousContentType: 'chapter' | 'quiz' | 'livestream' | null;
     } | null>(null);
     const [redirectToResult, setRedirectToResult] = useState(false);
     const [subscriptionExpired, setSubscriptionExpired] = useState(false);
@@ -183,6 +183,8 @@ export default function QuizPage({
                 router.push(`/courses/${courseId}/chapters/${navigation.nextContentId}`);
             } else if (navigation.nextContentType === 'quiz') {
                 router.push(`/courses/${courseId}/quizzes/${navigation.nextContentId}`);
+            } else if (navigation.nextContentType === 'livestream') {
+                router.push(`/courses/${courseId}/livestreams/${navigation.nextContentId}`);
             }
             router.refresh();
         }
@@ -194,6 +196,8 @@ export default function QuizPage({
                 router.push(`/courses/${courseId}/chapters/${navigation.previousContentId}`);
             } else if (navigation.previousContentType === 'quiz') {
                 router.push(`/courses/${courseId}/quizzes/${navigation.previousContentId}`);
+            } else if (navigation.previousContentType === 'livestream') {
+                router.push(`/courses/${courseId}/livestreams/${navigation.previousContentId}`);
             }
             router.refresh();
         }

@@ -107,6 +107,32 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Course not found or access denied" }, { status: 404 });
     }
 
+    // Get the next position (max position + 1)
+    const lastContent = await db.$transaction([
+      db.chapter.findFirst({
+        where: { courseId },
+        orderBy: { position: 'desc' },
+        select: { position: true }
+      }),
+      db.quiz.findFirst({
+        where: { courseId },
+        orderBy: { position: 'desc' },
+        select: { position: true }
+      }),
+      db.liveStream.findFirst({
+        where: { courseId },
+        orderBy: { position: 'desc' },
+        select: { position: true }
+      })
+    ]);
+
+    const maxPosition = Math.max(
+      lastContent[0]?.position || 0,
+      lastContent[1]?.position || 0,
+      lastContent[2]?.position || 0
+    );
+    const nextPosition = maxPosition + 1;
+
     const liveStream = await db.liveStream.create({
       data: {
         title,
@@ -115,6 +141,7 @@ export async function POST(req: Request) {
         meetingId,
         meetingType,
         courseId,
+        position: nextPosition,
         scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
         duration: duration ? parseInt(duration) : null,
       },

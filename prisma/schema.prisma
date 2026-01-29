@@ -243,6 +243,7 @@ model LiveStream {
   meetingUrl  String
   meetingId   String
   meetingType String
+  position    Int                    @default(0)
   isPublished Boolean                @default(false)
   scheduledAt DateTime?
   duration    Int?

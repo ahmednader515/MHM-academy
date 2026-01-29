@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Chapter, Course, Quiz } from "@prisma/client";
+import { Chapter, Course, Quiz, LiveStream } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/lib/contexts/language-context";
 
 interface CourseContentFormProps {
-    initialData: Course & { chapters: Chapter[]; quizzes: Quiz[] };
+    initialData: Course & { chapters: Chapter[]; quizzes: Quiz[]; liveStreams: LiveStream[] };
     courseId: string;
     isAdmin?: boolean;
 }
@@ -47,15 +47,18 @@ export const CourseContentForm = ({
         }
     }
 
-    const onDelete = async (id: string, type: "chapter" | "quiz") => {
+    const onDelete = async (id: string, type: "chapter" | "quiz" | "livestream") => {
         try {
             setIsUpdating(true);
             if (type === "chapter") {
                 await axios.delete(`/api/courses/${courseId}/chapters/${id}`);
                 toast.success(t('teacher.chapterDeletedSuccessfully'));
-            } else {
+            } else if (type === "quiz") {
                 await axios.delete(`/api/teacher/quizzes/${id}`);
                 toast.success(t('teacher.quizDeletedSuccessfully'));
+            } else if (type === "livestream") {
+                await axios.delete(`/api/${isAdmin ? 'admin' : 'teacher'}/livestreams/${id}`);
+                toast.success(t('admin.liveStreamDeletedSuccessfully') || 'Live stream deleted successfully');
             }
             router.refresh();
         } catch {
@@ -65,7 +68,7 @@ export const CourseContentForm = ({
         }
     }
 
-    const onReorder = async (updateData: { id: string; position: number; type: "chapter" | "quiz" }[]) => {
+    const onReorder = async (updateData: { id: string; position: number; type: "chapter" | "quiz" | "livestream" }[]) => {
         try {
             setIsUpdating(true);
             await axios.put(`/api/courses/${courseId}/reorder`, {
@@ -80,15 +83,17 @@ export const CourseContentForm = ({
         }
     }
 
-    const onEdit = (id: string, type: "chapter" | "quiz") => {
+    const onEdit = (id: string, type: "chapter" | "quiz" | "livestream") => {
         if (type === "chapter") {
             router.push(`/dashboard/${isAdmin ? 'admin' : 'teacher'}/courses/${courseId}/chapters/${id}`);
-        } else {
+        } else if (type === "quiz") {
             router.push(`/dashboard/${isAdmin ? 'admin' : 'teacher'}/quizzes/${id}/edit`);
+        } else if (type === "livestream") {
+            router.push(`/dashboard/${isAdmin ? 'admin' : 'teacher'}/livestreams/${id}`);
         }
     }
 
-    // Combine chapters and quizzes for display
+    // Combine chapters, quizzes, and livestreams for display
     const courseItems = [
         ...initialData.chapters.map(chapter => ({
             id: chapter.id,
@@ -104,6 +109,13 @@ export const CourseContentForm = ({
             position: quiz.position,
             isPublished: quiz.isPublished,
             type: "quiz" as const
+        })),
+        ...initialData.liveStreams.map(livestream => ({
+            id: livestream.id,
+            title: livestream.title,
+            position: livestream.position,
+            isPublished: livestream.isPublished,
+            type: "livestream" as const
         }))
     ].sort((a, b) => a.position - b.position);
 
@@ -200,7 +212,7 @@ export const CourseContentForm = ({
                     )}
                 </Button>
                 <Button 
-                    onClick={() => router.push(`/dashboard/teacher/livestreams/create?courseId=${courseId}`)} 
+                    onClick={() => router.push(`/dashboard/${isAdmin ? 'admin' : 'teacher'}/livestreams/create?courseId=${courseId}`)} 
                     variant="ghost"
                     size="sm"
                     className="flex-1 justify-center min-w-[120px]"

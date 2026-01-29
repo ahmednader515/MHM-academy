@@ -22,7 +22,12 @@ export async function GET() {
             select: {
                 id: true,
                 title: true,
-                isPublished: true
+                isPublished: true,
+                targetCurriculum: true,
+                targetCurriculumType: true,
+                targetLevel: true,
+                targetLanguage: true,
+                targetGrade: true
             },
             orderBy: {
                 createdAt: "desc"

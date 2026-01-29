@@ -31,6 +31,11 @@ interface Course {
         id: string;
         position: number;
     }>;
+    liveStreams: Array<{
+        id: string;
+        position: number;
+        isPublished: boolean;
+    }>;
 }
 
 interface CourseEditContentProps {
