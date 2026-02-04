@@ -49,6 +49,7 @@ interface User {
     phoneNumber: string;
     email: string;
     curriculum?: string;
+    curriculumType?: string;
     level?: string;
     language?: string;
     grade?: string;
@@ -100,6 +101,7 @@ const StudentsPage = () => {
 
     // Filter states
     const [selectedCurriculum, setSelectedCurriculum] = useState<string>("");
+    const [selectedCurriculumType, setSelectedCurriculumType] = useState<string>("");
     const [selectedLevel, setSelectedLevel] = useState<string>("");
     const [selectedLanguage, setSelectedLanguage] = useState<string>("");
     const [selectedGrade, setSelectedGrade] = useState<string>("");
@@ -213,9 +215,15 @@ const StudentsPage = () => {
     // Handle filter changes
     const handleCurriculumChange = (value: string) => {
         setSelectedCurriculum(value === "all" ? "" : value);
+        setSelectedCurriculumType("");
         setSelectedLevel("");
         setSelectedLanguage("");
         setSelectedGrade("");
+        setDisplayedCount(25);
+    };
+
+    const handleCurriculumTypeChange = (value: string) => {
+        setSelectedCurriculumType(value === "all" ? "" : value);
         setDisplayedCount(25);
     };
 
@@ -247,11 +255,12 @@ const StudentsPage = () => {
 
         // Classification filters
         const matchesCurriculum = !selectedCurriculum || user.curriculum === selectedCurriculum;
+        const matchesCurriculumType = !selectedCurriculumType || user.curriculumType === selectedCurriculumType;
         const matchesLevel = !selectedLevel || user.level === selectedLevel;
         const matchesLanguage = !selectedLanguage || user.language === selectedLanguage;
         const matchesGrade = !selectedGrade || user.grade === selectedGrade;
 
-        return matchesSearch && matchesCurriculum && matchesLevel && matchesLanguage && matchesGrade;
+        return matchesSearch && matchesCurriculum && matchesCurriculumType && matchesLevel && matchesLanguage && matchesGrade;
     });
 
     // Reset displayed count when search term changes
@@ -281,7 +290,7 @@ const StudentsPage = () => {
                     <CardTitle>{t('admin.filterStudents')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         {/* Curriculum Filter */}
                         <div className="space-y-2">
                             <Label>{t('admin.curriculum')}</Label>
@@ -299,6 +308,23 @@ const StudentsPage = () => {
                                 </SelectContent>
                             </Select>
                         </div>
+
+                        {/* Curriculum Type Filter - Only show for Egyptian curriculum */}
+                        {selectedCurriculum === "egyptian" && (
+                            <div className="space-y-2">
+                                <Label>{t('admin.curriculumType') || 'نوع المنهج'}</Label>
+                                <Select value={selectedCurriculumType || "all"} onValueChange={handleCurriculumTypeChange}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={t('admin.selectCurriculumType') || 'اختر النوع'} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('common.all')}</SelectItem>
+                                        <SelectItem value="morning">{t('admin.morning') || 'صباحي'}</SelectItem>
+                                        <SelectItem value="evening">{t('admin.evening') || 'مسائي'}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
 
                         {/* Level Filter */}
                         {selectedCurriculum && availableLevels.length > 0 && (

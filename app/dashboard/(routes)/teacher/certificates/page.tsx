@@ -16,6 +16,7 @@ import { ar } from "date-fns/locale";
 import { useLanguage } from "@/lib/contexts/language-context";
 import { toast } from "sonner";
 import axios from "axios";
+import { CURRICULA, getLevelsByCurriculum, getLanguagesByLevel, getGradesByLanguage, getGradesByLevel } from "@/lib/data/curriculum-data";
 
 interface Certificate {
     id: string;
@@ -41,6 +42,11 @@ interface User {
     phoneNumber: string;
     email: string;
     role: string;
+    curriculum?: string;
+    curriculumType?: string;
+    level?: string;
+    language?: string;
+    grade?: string;
 }
 
 const CertificatesPage = () => {
@@ -57,6 +63,14 @@ const CertificatesPage = () => {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [uploading, setUploading] = useState(false);
+
+    // Filter states for student selection
+    const [studentSearchTerm, setStudentSearchTerm] = useState<string>("");
+    const [selectedCurriculum, setSelectedCurriculum] = useState<string>("");
+    const [selectedCurriculumType, setSelectedCurriculumType] = useState<string>("");
+    const [selectedLevel, setSelectedLevel] = useState<string>("");
+    const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+    const [selectedGrade, setSelectedGrade] = useState<string>("");
 
     useEffect(() => {
         fetchCertificates();
@@ -90,6 +104,67 @@ const CertificatesPage = () => {
         }
     };
 
+    // Get available options based on selections
+    const availableLevels = selectedCurriculum 
+        ? getLevelsByCurriculum(selectedCurriculum as any)
+        : [];
+
+    const availableLanguages = selectedCurriculum && selectedLevel
+        ? getLanguagesByLevel(selectedCurriculum as any, selectedLevel as any)
+        : [];
+
+    const availableGrades = selectedCurriculum && selectedLevel
+        ? (selectedLanguage 
+            ? getGradesByLanguage(selectedCurriculum as any, selectedLevel as any, selectedLanguage as any)
+            : getGradesByLevel(selectedCurriculum as any, selectedLevel as any))
+        : [];
+
+    // Handle filter changes
+    const handleCurriculumChange = (value: string) => {
+        setSelectedCurriculum(value === "all" ? "" : value);
+        setSelectedCurriculumType("");
+        setSelectedLevel("");
+        setSelectedLanguage("");
+        setSelectedGrade("");
+    };
+
+    const handleCurriculumTypeChange = (value: string) => {
+        setSelectedCurriculumType(value === "all" ? "" : value);
+    };
+
+    const handleLevelChange = (value: string) => {
+        setSelectedLevel(value === "all" ? "" : value);
+        setSelectedLanguage("");
+        setSelectedGrade("");
+    };
+
+    const handleLanguageChange = (value: string) => {
+        setSelectedLanguage(value === "all" ? "" : value);
+        setSelectedGrade("");
+    };
+
+    const handleGradeChange = (value: string) => {
+        setSelectedGrade(value === "all" ? "" : value);
+    };
+
+    // Filter students based on search and classification
+    const filteredStudents = students.filter(student => {
+        // Search filter
+        const matchesSearch = 
+            student.fullName.toLowerCase().includes(studentSearchTerm.toLowerCase()) ||
+            student.phoneNumber.includes(studentSearchTerm) ||
+            (student.email && student.email.toLowerCase().includes(studentSearchTerm.toLowerCase()));
+
+        // Classification filters
+        const matchesCurriculum = !selectedCurriculum || student.curriculum === selectedCurriculum;
+        const matchesCurriculumType = !selectedCurriculumType || student.curriculumType === selectedCurriculumType;
+        const matchesLevel = !selectedLevel || student.level === selectedLevel;
+        const matchesLanguage = !selectedLanguage || student.language === selectedLanguage;
+        const matchesGrade = !selectedGrade || student.grade === selectedGrade;
+
+        return matchesSearch && matchesCurriculum && matchesCurriculumType && matchesLevel && matchesLanguage && matchesGrade;
+    });
+
     const handleSubmit = async () => {
         if (!selectedStudentId || !certificateImageUrl) {
             toast.error(t('certificates.fillRequired') || 'Please fill in all required fields');
@@ -112,6 +187,12 @@ const CertificatesPage = () => {
             setCertificateImageUrl("");
             setTitle("");
             setDescription("");
+            setStudentSearchTerm("");
+            setSelectedCurriculum("");
+            setSelectedCurriculumType("");
+            setSelectedLevel("");
+            setSelectedLanguage("");
+            setSelectedGrade("");
             // Refresh certificates list
             fetchCertificates();
         } catch (error) {
@@ -155,32 +236,182 @@ const CertificatesPage = () => {
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                     {t('certificates.managementTitle') || 'Certificates Management'}
                 </h1>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                    setIsDialogOpen(open);
+                    if (!open) {
+                        // Reset form and filters when dialog closes
+                        setSelectedStudentId("");
+                        setCertificateImageUrl("");
+                        setTitle("");
+                        setDescription("");
+                        setStudentSearchTerm("");
+                        setSelectedCurriculum("");
+                        setSelectedCurriculumType("");
+                        setSelectedLevel("");
+                        setSelectedLanguage("");
+                        setSelectedGrade("");
+                    }
+                }}>
                     <DialogTrigger asChild>
                         <Button>
                             <Plus className="h-4 w-4 mr-2" />
                             {t('certificates.createCertificate') || 'Create Certificate'}
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto sm:max-w-4xl">
                         <DialogHeader>
                             <DialogTitle>{t('certificates.createCertificate') || 'Create Certificate'}</DialogTitle>
                         </DialogHeader>
-                        <div className="space-y-4">
-                            <div>
-                                <Label className="mb-2 block">{t('certificates.selectStudent') || 'Select Student'}</Label>
-                                <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder={t('certificates.selectStudentPlaceholder') || 'Select a student'} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {students.map((student) => (
-                                            <SelectItem key={student.id} value={student.id}>
-                                                {student.fullName} ({student.phoneNumber})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                        <div className="space-y-6">
+                            {/* Student Filter Section */}
+                            <div className="space-y-4">
+                                <Label className="text-lg font-semibold">{t('certificates.selectStudent') || 'Select Student'}</Label>
+                                
+                                {/* Filter Card */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="text-sm">{t('admin.filterStudents') || 'Filter Students'}</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-4">
+                                            {/* Search */}
+                                            <div>
+                                                <Label>{t('dashboard.searchByNameOrPhone') || 'Search'}</Label>
+                                                <Input
+                                                    placeholder={t('dashboard.searchByNameOrPhone') || 'Search by name, phone, or email'}
+                                                    value={studentSearchTerm}
+                                                    onChange={(e) => setStudentSearchTerm(e.target.value)}
+                                                />
+                                            </div>
+
+                                            {/* Filter Grid */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                                                {/* Curriculum Filter */}
+                                                <div className="space-y-2">
+                                                    <Label>{t('admin.curriculum') || 'Curriculum'}</Label>
+                                                    <Select value={selectedCurriculum || "all"} onValueChange={handleCurriculumChange}>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder={t('admin.selectCurriculum') || 'Select Curriculum'} />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="all">{t('common.all') || 'All'}</SelectItem>
+                                                            {CURRICULA.map((curriculum) => (
+                                                                <SelectItem key={curriculum.id} value={curriculum.id}>
+                                                                    {curriculum.name}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                {/* Curriculum Type Filter - Only show for Egyptian curriculum */}
+                                                {selectedCurriculum === "egyptian" && (
+                                                    <div className="space-y-2">
+                                                        <Label>{t('admin.curriculumType') || 'نوع المنهج'}</Label>
+                                                        <Select value={selectedCurriculumType || "all"} onValueChange={handleCurriculumTypeChange}>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder={t('admin.selectCurriculumType') || 'اختر النوع'} />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="all">{t('common.all') || 'All'}</SelectItem>
+                                                                <SelectItem value="morning">{t('admin.morning') || 'صباحي'}</SelectItem>
+                                                                <SelectItem value="evening">{t('admin.evening') || 'مسائي'}</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                )}
+
+                                                {/* Level Filter */}
+                                                {selectedCurriculum && availableLevels.length > 0 && (
+                                                    <div className="space-y-2">
+                                                        <Label>{t('admin.level') || 'Level'}</Label>
+                                                        <Select value={selectedLevel || "all"} onValueChange={handleLevelChange}>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder={t('admin.selectLevel') || 'Select Level'} />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="all">{t('common.all') || 'All'}</SelectItem>
+                                                                {availableLevels.map((level) => (
+                                                                    <SelectItem key={level.id} value={level.id}>
+                                                                        {level.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                )}
+
+                                                {/* Language Filter */}
+                                                {selectedCurriculum && selectedLevel && availableLanguages.length > 0 && (
+                                                    <div className="space-y-2">
+                                                        <Label>{t('admin.language') || 'Language'}</Label>
+                                                        <Select value={selectedLanguage || "all"} onValueChange={handleLanguageChange}>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder={t('admin.selectLanguage') || 'Select Language'} />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="all">{t('common.all') || 'All'}</SelectItem>
+                                                                {availableLanguages.map((language) => (
+                                                                    <SelectItem key={language.id} value={language.id}>
+                                                                        {language.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                )}
+
+                                                {/* Grade Filter */}
+                                                {selectedCurriculum && selectedLevel && availableGrades.length > 0 && (
+                                                    <div className="space-y-2">
+                                                        <Label>{t('admin.grade') || 'Grade'}</Label>
+                                                        <Select value={selectedGrade || "all"} onValueChange={handleGradeChange}>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder={t('admin.selectGrade') || 'Select Grade'} />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="all">{t('common.all') || 'All'}</SelectItem>
+                                                                {availableGrades.map((grade) => (
+                                                                    <SelectItem key={grade.id} value={grade.id}>
+                                                                        {grade.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                {/* Student Select */}
+                                <div>
+                                    <Label className="mb-2 block">{t('certificates.selectStudent') || 'Select Student'}</Label>
+                                    <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t('certificates.selectStudentPlaceholder') || 'Select a student'} />
+                                        </SelectTrigger>
+                                        <SelectContent className="max-h-[300px]">
+                                            {filteredStudents.length === 0 ? (
+                                                <SelectItem value="" disabled>
+                                                    {t('admin.noStudentsFound') || 'No students found'}
+                                                </SelectItem>
+                                            ) : (
+                                                filteredStudents.map((student) => (
+                                                    <SelectItem key={student.id} value={student.id}>
+                                                        {student.fullName} ({student.phoneNumber})
+                                                    </SelectItem>
+                                                ))
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                    {filteredStudents.length > 0 && (
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            {filteredStudents.length} {t('admin.studentsFound') || 'student(s) found'}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
                             <div>

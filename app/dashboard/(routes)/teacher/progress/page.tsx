@@ -8,17 +8,32 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Search, Eye, BookOpen, CheckCircle, Clock, Image as ImageIcon, ClipboardList } from "lucide-react";
+import { Search, Eye, BookOpen, CheckCircle, Clock, Image as ImageIcon, ClipboardList, Upload, X } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useLanguage } from "@/lib/contexts/language-context";
 import { toast } from "sonner";
+import { FileUpload } from "@/components/file-upload";
+import { CURRICULA, getLevelsByCurriculum, getLanguagesByLevel, getGradesByLanguage, getGradesByLevel } from "@/lib/data/curriculum-data";
+import { Label } from "@/components/ui/label";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 interface User {
     id: string;
     fullName: string;
     phoneNumber: string;
     role: string;
+    curriculum?: string;
+    curriculumType?: string;
+    level?: string;
+    language?: string;
+    grade?: string;
     _count: {
         purchases: number;
         userProgress: number;
@@ -63,6 +78,7 @@ interface Purchase {
 interface HomeworkSubmission {
     id: string;
     imageUrl: string;
+    correctedImageUrl?: string | null;
     createdAt: string;
     student: {
         id: string;
@@ -127,23 +143,86 @@ const ProgressPage = () => {
     const [allStudentActivities, setAllStudentActivities] = useState<ActivitySubmission[]>([]);
     const [allActivitiesDialogOpen, setAllActivitiesDialogOpen] = useState(false);
     const [loadingActivities, setLoadingActivities] = useState(false);
+    const [displayedCount, setDisplayedCount] = useState(25);
+    const [uploadingCorrectedHomework, setUploadingCorrectedHomework] = useState<{ [homeworkId: string]: boolean }>({});
+
+    // Filter states
+    const [selectedCurriculum, setSelectedCurriculum] = useState<string>("");
+    const [selectedCurriculumType, setSelectedCurriculumType] = useState<string>("");
+    const [selectedLevel, setSelectedLevel] = useState<string>("");
+    const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+    const [selectedGrade, setSelectedGrade] = useState<string>("");
 
     useEffect(() => {
         fetchUsers();
     }, []);
+
+    useEffect(() => {
+        setDisplayedCount(25);
+    }, [searchTerm]);
 
     const fetchUsers = async () => {
         try {
             const response = await fetch("/api/teacher/users");
             if (response.ok) {
                 const data = await response.json();
-                setUsers(data);
+                // Filter only students (USER role)
+                const studentData = data.filter((user: User) => user.role === "USER");
+                setUsers(studentData);
             }
         } catch (error) {
             console.error("Error fetching users:", error);
         } finally {
             setLoading(false);
         }
+    };
+
+    // Get available options based on selections
+    const availableLevels = selectedCurriculum 
+        ? getLevelsByCurriculum(selectedCurriculum as any)
+        : [];
+
+    const availableLanguages = selectedCurriculum && selectedLevel
+        ? getLanguagesByLevel(selectedCurriculum as any, selectedLevel as any)
+        : [];
+
+    const availableGrades = selectedCurriculum && selectedLevel
+        ? (selectedLanguage 
+            ? getGradesByLanguage(selectedCurriculum as any, selectedLevel as any, selectedLanguage as any)
+            : getGradesByLevel(selectedCurriculum as any, selectedLevel as any))
+        : [];
+
+    // Handle filter changes
+    const handleCurriculumChange = (value: string) => {
+        setSelectedCurriculum(value === "all" ? "" : value);
+        setSelectedCurriculumType("");
+        setSelectedLevel("");
+        setSelectedLanguage("");
+        setSelectedGrade("");
+        setDisplayedCount(25);
+    };
+
+    const handleCurriculumTypeChange = (value: string) => {
+        setSelectedCurriculumType(value === "all" ? "" : value);
+        setDisplayedCount(25);
+    };
+
+    const handleLevelChange = (value: string) => {
+        setSelectedLevel(value === "all" ? "" : value);
+        setSelectedLanguage("");
+        setSelectedGrade("");
+        setDisplayedCount(25);
+    };
+
+    const handleLanguageChange = (value: string) => {
+        setSelectedLanguage(value === "all" ? "" : value);
+        setSelectedGrade("");
+        setDisplayedCount(25);
+    };
+
+    const handleGradeChange = (value: string) => {
+        setSelectedGrade(value === "all" ? "" : value);
+        setDisplayedCount(25);
     };
 
     const fetchUserProgress = async (userId: string) => {
@@ -195,6 +274,46 @@ const ProgressPage = () => {
         setHomeworkDialogOpen(true);
     };
 
+    const handleUploadCorrectedHomework = async (homeworkId: string, chapterId: string, imageUrl: string) => {
+        setUploadingCorrectedHomework(prev => ({ ...prev, [homeworkId]: true }));
+        try {
+            const response = await fetch(`/api/teacher/homework/${chapterId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    homeworkId,
+                    correctedImageUrl: imageUrl,
+                }),
+            });
+
+            if (response.ok) {
+                toast.success(t('dashboard.correctedHomeworkUploaded') || 'Corrected homework uploaded successfully!');
+                // Refresh homework data
+                const homeworkResponse = await fetch(`/api/teacher/homework/${chapterId}`);
+                if (homeworkResponse.ok) {
+                    const updatedHomework = await homeworkResponse.json();
+                    const filteredHomework = updatedHomework.filter((h: HomeworkSubmission) => 
+                        h.student.id === selectedUser?.id
+                    );
+                    setSelectedChapterHomework({ chapterId, homework: filteredHomework });
+                }
+                // Also refresh all homeworks if dialog is open
+                if (allHomeworksDialogOpen && selectedUser) {
+                    handleRefreshAllHomeworks();
+                }
+            } else {
+                toast.error(t('dashboard.errorUploadingCorrectedHomework') || 'Failed to upload corrected homework');
+            }
+        } catch (error) {
+            console.error("Error uploading corrected homework:", error);
+            toast.error(t('dashboard.errorUploadingCorrectedHomework') || 'Failed to upload corrected homework');
+        } finally {
+            setUploadingCorrectedHomework(prev => ({ ...prev, [homeworkId]: false }));
+        }
+    };
+
     const handleViewAllHomeworks = async (studentId: string) => {
         // Find the user to set selected user
         const student = users.find(u => u.id === studentId);
@@ -214,6 +333,22 @@ const ProgressPage = () => {
             }
         } catch (error) {
             console.error("Error fetching homeworks:", error);
+        } finally {
+            setLoadingHomeworks(false);
+        }
+    };
+
+    const handleRefreshAllHomeworks = async () => {
+        if (!selectedUser) return;
+        setLoadingHomeworks(true);
+        try {
+            const response = await fetch(`/api/teacher/students/${selectedUser.id}/homework`);
+            if (response.ok) {
+                const data = await response.json();
+                setAllStudentHomeworks(data);
+            }
+        } catch (error) {
+            console.error("Error refreshing homeworks:", error);
         } finally {
             setLoadingHomeworks(false);
         }
@@ -246,12 +381,24 @@ const ProgressPage = () => {
         }
     };
 
-    const filteredUsers = users.filter(user =>
-        user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.phoneNumber.includes(searchTerm)
-    );
+    // Filter users based on search and classification
+    const filteredUsers = users.filter(user => {
+        // Search filter
+        const matchesSearch = 
+            user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.phoneNumber.includes(searchTerm);
 
-    const studentUsers = filteredUsers.filter(user => user.role === "USER");
+        // Classification filters
+        const matchesCurriculum = !selectedCurriculum || user.curriculum === selectedCurriculum;
+        const matchesCurriculumType = !selectedCurriculumType || user.curriculumType === selectedCurriculumType;
+        const matchesLevel = !selectedLevel || user.level === selectedLevel;
+        const matchesLanguage = !selectedLanguage || user.language === selectedLanguage;
+        const matchesGrade = !selectedGrade || user.grade === selectedGrade;
+
+        return matchesSearch && matchesCurriculum && matchesCurriculumType && matchesLevel && matchesLanguage && matchesGrade;
+    });
+
+    const studentUsers = filteredUsers;
 
     const completedProgress = userProgress.filter(p => p.isCompleted).length;
     const inProgressChapters = userProgress.filter(p => !p.isCompleted).length;
@@ -274,6 +421,111 @@ const ProgressPage = () => {
                     {t('dashboard.studentProgress') || 'Student Progress'}
                 </h1>
             </div>
+
+            {/* Filter Section */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>{t('admin.filterStudents') || 'Filter Students'}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        {/* Curriculum Filter */}
+                        <div className="space-y-2">
+                            <Label>{t('admin.curriculum') || 'Curriculum'}</Label>
+                            <Select value={selectedCurriculum || "all"} onValueChange={handleCurriculumChange}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder={t('admin.selectCurriculum') || 'Select Curriculum'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t('common.all') || 'All'}</SelectItem>
+                                    {CURRICULA.map((curriculum) => (
+                                        <SelectItem key={curriculum.id} value={curriculum.id}>
+                                            {curriculum.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Curriculum Type Filter - Only show for Egyptian curriculum */}
+                        {selectedCurriculum === "egyptian" && (
+                            <div className="space-y-2">
+                                <Label>{t('admin.curriculumType') || 'نوع المنهج'}</Label>
+                                <Select value={selectedCurriculumType || "all"} onValueChange={handleCurriculumTypeChange}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={t('admin.selectCurriculumType') || 'اختر النوع'} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('common.all') || 'All'}</SelectItem>
+                                        <SelectItem value="morning">{t('admin.morning') || 'صباحي'}</SelectItem>
+                                        <SelectItem value="evening">{t('admin.evening') || 'مسائي'}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        {/* Level Filter */}
+                        {selectedCurriculum && availableLevels.length > 0 && (
+                            <div className="space-y-2">
+                                <Label>{t('admin.level') || 'Level'}</Label>
+                                <Select value={selectedLevel || "all"} onValueChange={handleLevelChange}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={t('admin.selectLevel') || 'Select Level'} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('common.all') || 'All'}</SelectItem>
+                                        {availableLevels.map((level) => (
+                                            <SelectItem key={level.id} value={level.id}>
+                                                {level.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        {/* Language Filter */}
+                        {selectedCurriculum && selectedLevel && availableLanguages.length > 0 && (
+                            <div className="space-y-2">
+                                <Label>{t('admin.language') || 'Language'}</Label>
+                                <Select value={selectedLanguage || "all"} onValueChange={handleLanguageChange}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={t('admin.selectLanguage') || 'Select Language'} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('common.all') || 'All'}</SelectItem>
+                                        {availableLanguages.map((language) => (
+                                            <SelectItem key={language.id} value={language.id}>
+                                                {language.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        {/* Grade Filter */}
+                        {selectedCurriculum && selectedLevel && availableGrades.length > 0 && (
+                            <div className="space-y-2">
+                                <Label>{t('admin.grade') || 'Grade'}</Label>
+                                <Select value={selectedGrade || "all"} onValueChange={handleGradeChange}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={t('admin.selectGrade') || 'Select Grade'} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('common.all') || 'All'}</SelectItem>
+                                        {availableGrades.map((grade) => (
+                                            <SelectItem key={grade.id} value={grade.id}>
+                                                {grade.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
 
             <Card>
                 <CardHeader>
@@ -300,7 +552,7 @@ const ProgressPage = () => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {studentUsers.map((user) => (
+                            {studentUsers.slice(0, displayedCount).map((user) => (
                                 <TableRow key={user.id}>
                                     <TableCell className={`font-medium ${isRTL ? "text-right" : "text-left"}`}>
                                         {user.fullName}
@@ -350,6 +602,16 @@ const ProgressPage = () => {
                             ))}
                         </TableBody>
                     </Table>
+                    {studentUsers.length > displayedCount && (
+                        <div className="flex justify-center mt-4">
+                            <Button
+                                variant="outline"
+                                onClick={() => setDisplayedCount(prev => prev + 25)}
+                            >
+                                {t('common.showMore') || 'Show More'}
+                            </Button>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
@@ -478,7 +740,7 @@ const ProgressPage = () => {
 
             {/* Homework Dialog */}
             <Dialog open={homeworkDialogOpen} onOpenChange={setHomeworkDialogOpen}>
-                <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
                     <DialogHeader>
                         <DialogTitle>
                             {t('dashboard.homeworkSubmissions') || 'Homework Submissions'}
@@ -486,7 +748,7 @@ const ProgressPage = () => {
                         </DialogTitle>
                     </DialogHeader>
                     {selectedChapterHomework && selectedChapterHomework.homework.length > 0 ? (
-                        <div className="space-y-4">
+                        <div className="space-y-4 overflow-y-auto flex-1 pr-2">
                             {selectedChapterHomework.homework.map((submission) => (
                                 <Card key={submission.id}>
                                     <CardHeader>
@@ -503,22 +765,95 @@ const ProgressPage = () => {
                                         </div>
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="relative w-full">
-                                            <img 
-                                                src={submission.imageUrl} 
-                                                alt={`Homework by ${submission.student.fullName}`}
-                                                className="w-full h-auto rounded-md border cursor-pointer"
-                                                onClick={() => window.open(submission.imageUrl, '_blank')}
-                                            />
+                                        <div className="space-y-4">
+                                            {/* Student's Submitted Homework */}
+                                            <div>
+                                                <Label className="mb-2 block text-sm font-medium">
+                                                    {t('dashboard.studentHomework') || 'Student\'s Homework'}
+                                                </Label>
+                                                <div className="relative w-full overflow-hidden">
+                                                    <img 
+                                                        src={submission.imageUrl} 
+                                                        alt={`Homework by ${submission.student.fullName}`}
+                                                        className="w-full h-auto max-w-full rounded-md border cursor-pointer object-contain"
+                                                        onClick={() => window.open(submission.imageUrl, '_blank')}
+                                                    />
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    className="w-full mt-2"
+                                                    onClick={() => window.open(submission.imageUrl, '_blank')}
+                                                >
+                                                    <ImageIcon className="h-4 w-4 mr-2" />
+                                                    {t('dashboard.viewFullSize') || 'View Full Size'}
+                                                </Button>
+                                            </div>
+
+                                            {/* Corrected Homework Section */}
+                                            <div className="border-t pt-4">
+                                                <Label className="mb-2 block text-sm font-medium">
+                                                    {t('dashboard.correctedHomework') || 'Corrected Homework'}
+                                                </Label>
+                                                {submission.correctedImageUrl ? (
+                                                    <div className="space-y-2">
+                                                        <div className="relative w-full overflow-hidden">
+                                                            <img 
+                                                                src={submission.correctedImageUrl} 
+                                                                alt={`Corrected homework for ${submission.student.fullName}`}
+                                                                className="w-full h-auto max-w-full rounded-md border cursor-pointer object-contain"
+                                                                onClick={() => window.open(submission.correctedImageUrl!, '_blank')}
+                                                            />
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            <Button
+                                                                variant="outline"
+                                                                className="w-full"
+                                                                onClick={() => window.open(submission.correctedImageUrl!, '_blank')}
+                                                            >
+                                                                <ImageIcon className="h-4 w-4 mr-2" />
+                                                                {t('dashboard.viewFullSize') || 'View Full Size'}
+                                                            </Button>
+                                                            <div className="relative">
+                                                                {uploadingCorrectedHomework[submission.id] && (
+                                                                    <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10 rounded-md">
+                                                                        <span className="text-sm">{t('dashboard.uploading') || 'Uploading...'}</span>
+                                                                    </div>
+                                                                )}
+                                                                <FileUpload
+                                                                    endpoint="homeworkImage"
+                                                                    onChange={(res) => {
+                                                                        if (res?.url) {
+                                                                            handleUploadCorrectedHomework(submission.id, submission.chapter.id, res.url);
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-2">
+                                                        <p className="text-sm text-muted-foreground">
+                                                            {t('dashboard.noCorrectedHomework') || 'No corrected homework uploaded yet.'}
+                                                        </p>
+                                                        <div className="relative">
+                                                            {uploadingCorrectedHomework[submission.id] && (
+                                                                <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10 rounded-md">
+                                                                    <span className="text-sm">{t('dashboard.uploading') || 'Uploading...'}</span>
+                                                                </div>
+                                                            )}
+                                                            <FileUpload
+                                                                endpoint="homeworkImage"
+                                                                onChange={(res) => {
+                                                                    if (res?.url) {
+                                                                        handleUploadCorrectedHomework(submission.id, submission.chapter.id, res.url);
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                        <Button
-                                            variant="outline"
-                                            className="w-full mt-4"
-                                            onClick={() => window.open(submission.imageUrl, '_blank')}
-                                        >
-                                            <ImageIcon className="h-4 w-4 mr-2" />
-                                            {t('dashboard.viewFullSize') || 'View Full Size'}
-                                        </Button>
                                     </CardContent>
                                 </Card>
                             ))}
@@ -533,7 +868,7 @@ const ProgressPage = () => {
 
             {/* All Homeworks Dialog - Grouped by Chapter */}
             <Dialog open={allHomeworksDialogOpen} onOpenChange={setAllHomeworksDialogOpen}>
-                <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
+                <DialogContent className="max-w-5xl max-h-[80vh] overflow-hidden flex flex-col">
                     <DialogHeader>
                         <DialogTitle>
                             {t('dashboard.allHomeworkSubmissions') || 'All Homework Submissions'} - {selectedUser?.fullName}
@@ -542,7 +877,7 @@ const ProgressPage = () => {
                     {loadingHomeworks ? (
                         <div className="text-center py-8">{t('dashboard.loadingUsers') || 'Loading...'}</div>
                     ) : allStudentHomeworks.length > 0 ? (
-                        <div className="space-y-6">
+                        <div className="space-y-6 overflow-y-auto flex-1 pr-2">
                             {/* Group homeworks by chapter */}
                             {(() => {
                                 // Group by chapter
@@ -592,23 +927,96 @@ const ProgressPage = () => {
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                        <div className="relative w-full max-w-2xl mb-3">
-                                                            <img 
-                                                                src={submission.imageUrl} 
-                                                                alt={`Homework by ${submission.student.fullName} for ${chapter.title}`}
-                                                                className="w-full h-auto rounded-md border cursor-pointer hover:opacity-90 transition-opacity"
+                                                        
+                                                        {/* Student's Submitted Homework */}
+                                                        <div className="mb-4">
+                                                            <Label className="mb-2 block text-sm font-medium">
+                                                                {t('dashboard.studentHomework') || 'Student\'s Homework'}
+                                                            </Label>
+                                                            <div className="relative w-full max-w-2xl mb-2 overflow-hidden">
+                                                                <img 
+                                                                    src={submission.imageUrl} 
+                                                                    alt={`Homework by ${submission.student.fullName} for ${chapter.title}`}
+                                                                    className="w-full h-auto max-w-full rounded-md border cursor-pointer hover:opacity-90 transition-opacity object-contain"
+                                                                    onClick={() => window.open(submission.imageUrl, '_blank')}
+                                                                />
+                                                            </div>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="w-full sm:w-auto"
                                                                 onClick={() => window.open(submission.imageUrl, '_blank')}
-                                                            />
+                                                            >
+                                                                <ImageIcon className="h-4 w-4 mr-2" />
+                                                                {t('dashboard.viewFullSize') || 'View Full Size'}
+                                                            </Button>
                                                         </div>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="w-full sm:w-auto"
-                                                            onClick={() => window.open(submission.imageUrl, '_blank')}
-                                                        >
-                                                            <ImageIcon className="h-4 w-4 mr-2" />
-                                                            {t('dashboard.viewFullSize') || 'View Full Size'}
-                                                        </Button>
+
+                                                        {/* Corrected Homework Section */}
+                                                        <div className="border-t pt-4">
+                                                            <Label className="mb-2 block text-sm font-medium">
+                                                                {t('dashboard.correctedHomework') || 'Corrected Homework'}
+                                                            </Label>
+                                                            {submission.correctedImageUrl ? (
+                                                                <div className="space-y-2">
+                                                                    <div className="relative w-full max-w-2xl overflow-hidden">
+                                                                        <img 
+                                                                            src={submission.correctedImageUrl} 
+                                                                            alt={`Corrected homework for ${submission.student.fullName}`}
+                                                                            className="w-full h-auto max-w-full rounded-md border cursor-pointer hover:opacity-90 transition-opacity object-contain"
+                                                                            onClick={() => window.open(submission.correctedImageUrl!, '_blank')}
+                                                                        />
+                                                                    </div>
+                                                                    <div className="flex flex-col gap-2">
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            className="w-full"
+                                                                            onClick={() => window.open(submission.correctedImageUrl!, '_blank')}
+                                                                        >
+                                                                            <ImageIcon className="h-4 w-4 mr-2" />
+                                                                            {t('dashboard.viewFullSize') || 'View Full Size'}
+                                                                        </Button>
+                                                                        <div className="relative">
+                                                                            {uploadingCorrectedHomework[submission.id] && (
+                                                                                <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10 rounded-md">
+                                                                                    <span className="text-sm">{t('dashboard.uploading') || 'Uploading...'}</span>
+                                                                                </div>
+                                                                            )}
+                                                                            <FileUpload
+                                                                                endpoint="homeworkImage"
+                                                                                onChange={(res) => {
+                                                                                    if (res?.url) {
+                                                                                        handleUploadCorrectedHomework(submission.id, submission.chapter.id, res.url);
+                                                                                    }
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="space-y-2">
+                                                                    <p className="text-sm text-muted-foreground">
+                                                                        {t('dashboard.noCorrectedHomework') || 'No corrected homework uploaded yet.'}
+                                                                    </p>
+                                                                    <div className="relative">
+                                                                        {uploadingCorrectedHomework[submission.id] && (
+                                                                            <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10 rounded-md">
+                                                                                <span className="text-sm">{t('dashboard.uploading') || 'Uploading...'}</span>
+                                                                            </div>
+                                                                        )}
+                                                                        <FileUpload
+                                                                            endpoint="homeworkImage"
+                                                                            onChange={(res) => {
+                                                                                if (res?.url) {
+                                                                                    handleUploadCorrectedHomework(submission.id, submission.chapter.id, res.url);
+                                                                                }
+                                                                            }}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>

@@ -49,7 +49,7 @@ const ChapterPage = () => {
   const [hasAccess, setHasAccess] = useState(false);
   const [subscriptionExpired, setSubscriptionExpired] = useState(false);
   const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
-  const [homework, setHomework] = useState<{ id: string; imageUrl: string; createdAt: string } | null>(null);
+  const [homework, setHomework] = useState<{ id: string; imageUrl: string; correctedImageUrl?: string | null; createdAt: string } | null>(null);
   const [uploadingHomework, setUploadingHomework] = useState(false);
   const [activities, setActivities] = useState<Array<{ id: string; title: string; description: string | null; isRequired: boolean }>>([]);
   const [activitySubmissions, setActivitySubmissions] = useState<{ [activityId: string]: { id: string; imageUrl: string; createdAt: string } | null }>({});
@@ -452,6 +452,38 @@ const ChapterPage = () => {
                       {t('student.viewFullSize') || 'View Full Size'}
                     </Button>
                   </div>
+                  
+                  {/* Corrected Homework Section */}
+                  {homework.correctedImageUrl && (
+                    <div className="mt-4 p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-md">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                          {t('student.correctedHomework') || 'Corrected Homework'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        {t('student.correctedHomeworkMessage') || 'Your teacher has reviewed and corrected your homework.'}
+                      </p>
+                      <div className="relative w-full max-w-md mb-2">
+                        <img 
+                          src={homework.correctedImageUrl} 
+                          alt="Corrected homework"
+                          className="w-full h-auto rounded-md border border-green-300 dark:border-green-700"
+                        />
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(homework.correctedImageUrl!, '_blank')}
+                        className="flex items-center gap-1"
+                      >
+                        <ImageIcon className="h-4 w-4" />
+                        {t('student.viewFullSize') || 'View Full Size'}
+                      </Button>
+                    </div>
+                  )}
+
                   <div className="text-sm text-muted-foreground">
                     {t('student.homeworkSubmittedMessage') || 'You can update your submission by uploading a new image.'}
                   </div>

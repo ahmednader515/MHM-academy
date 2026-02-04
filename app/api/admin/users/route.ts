@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
                 phoneNumber: true,
                 email: true,
                 curriculum: true,
+                curriculumType: true,
                 level: true,
                 language: true,
                 grade: true,
