@@ -139,13 +139,20 @@ export async function PATCH(
       return new NextResponse("Forbidden", { status: 403 });
     }
 
-    // Update homework with corrected image
+    // Get current corrected images array (handle both old and new schema)
+    const currentImages = (homework as any).correctedImageUrls || 
+                         ((homework as any).correctedImageUrl ? [(homework as any).correctedImageUrl] : []);
+
+    // Append new image to the array (don't replace)
+    const updatedImages = [...currentImages, correctedImageUrl];
+
+    // Update homework with corrected images array
     const updatedHomework = await db.homeworkSubmission.update({
       where: {
         id: homeworkId,
       },
       data: {
-        correctedImageUrl,
+        correctedImageUrls: updatedImages,
       },
       include: {
         student: {

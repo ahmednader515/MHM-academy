@@ -49,7 +49,7 @@ const ChapterPage = () => {
   const [hasAccess, setHasAccess] = useState(false);
   const [subscriptionExpired, setSubscriptionExpired] = useState(false);
   const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
-  const [homework, setHomework] = useState<{ id: string; imageUrl: string; correctedImageUrl?: string | null; createdAt: string } | null>(null);
+  const [homework, setHomework] = useState<{ id: string; imageUrl: string; imageUrls?: string[]; correctedImageUrl?: string | null; correctedImageUrls?: string[]; createdAt: string } | null>(null);
   const [uploadingHomework, setUploadingHomework] = useState(false);
   const [activities, setActivities] = useState<Array<{ id: string; title: string; description: string | null; isRequired: boolean }>>([]);
   const [activitySubmissions, setActivitySubmissions] = useState<{ [activityId: string]: { id: string; imageUrl: string; createdAt: string } | null }>({});
@@ -425,67 +425,105 @@ const ChapterPage = () => {
               
               {homework ? (
                 <div className="space-y-4">
-                  <div className="flex items-start gap-4 p-4 bg-secondary/50 border rounded-md">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm font-medium">{t('student.submittedHomework') || 'Submitted Homework'}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-3">
-                        {t('student.submittedOn') || 'Submitted on'}: {new Date(homework.createdAt).toLocaleDateString()}
-                      </p>
-                      <div className="relative w-full max-w-md">
-                        <img 
-                          src={homework.imageUrl} 
-                          alt="Homework submission"
-                          className="w-full h-auto rounded-md border"
-                        />
-                      </div>
+                  <div className="p-4 bg-secondary/50 border rounded-md">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">{t('student.submittedHomework') || 'Submitted Homework'}</span>
+                      {(() => {
+                        const submittedImages = homework.imageUrls || (homework.imageUrl ? [homework.imageUrl] : []);
+                        return submittedImages.length > 1 && (
+                          <span className="text-xs text-muted-foreground">
+                            ({submittedImages.length} {t('student.images') || 'images'})
+                          </span>
+                        );
+                      })()}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => window.open(homework.imageUrl, '_blank')}
-                      className="flex items-center gap-1"
-                    >
-                      <ImageIcon className="h-4 w-4" />
-                      {t('student.viewFullSize') || 'View Full Size'}
-                    </Button>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      {t('student.submittedOn') || 'Submitted on'}: {new Date(homework.createdAt).toLocaleDateString()}
+                    </p>
+                    {(() => {
+                      // Get submitted images (support both old and new format)
+                      const submittedImages = homework.imageUrls || (homework.imageUrl ? [homework.imageUrl] : []);
+                      
+                      return (
+                        <div className="space-y-3">
+                          {submittedImages.map((imageUrl, index) => (
+                            <div key={index} className="space-y-2">
+                              <div className="relative w-full max-w-md">
+                                <img 
+                                  src={imageUrl} 
+                                  alt={`Homework submission ${index + 1}`}
+                                  className="w-full h-auto rounded-md border cursor-pointer hover:opacity-90 transition-opacity"
+                                  onClick={() => window.open(imageUrl, '_blank')}
+                                />
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(imageUrl, '_blank')}
+                                className="flex items-center gap-1"
+                              >
+                                <ImageIcon className="h-4 w-4" />
+                                {t('student.viewFullSize') || 'View Full Size'} {submittedImages.length > 1 ? `(${index + 1})` : ''}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                   
                   {/* Corrected Homework Section */}
-                  {homework.correctedImageUrl && (
-                    <div className="mt-4 p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-md">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                          {t('student.correctedHomework') || 'Corrected Homework'}
-                        </span>
+                  {(() => {
+                    // Get corrected images (support both old and new format)
+                    const correctedImages = homework.correctedImageUrls || 
+                                           (homework.correctedImageUrl ? [homework.correctedImageUrl] : []);
+                    
+                    return correctedImages.length > 0 && (
+                      <div className="mt-4 p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-md">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                            {t('student.correctedHomework') || 'Corrected Homework'}
+                          </span>
+                          {correctedImages.length > 1 && (
+                            <span className="text-xs text-muted-foreground">
+                              ({correctedImages.length} {t('student.images') || 'images'})
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          {t('student.correctedHomeworkMessage') || 'Your teacher has reviewed and corrected your homework.'}
+                        </p>
+                        <div className="space-y-3">
+                          {correctedImages.map((imageUrl, index) => (
+                            <div key={index} className="space-y-2">
+                              <div className="relative w-full max-w-md">
+                                <img 
+                                  src={imageUrl} 
+                                  alt={`Corrected homework ${index + 1}`}
+                                  className="w-full h-auto rounded-md border border-green-300 dark:border-green-700 cursor-pointer hover:opacity-90 transition-opacity"
+                                  onClick={() => window.open(imageUrl, '_blank')}
+                                />
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(imageUrl, '_blank')}
+                                className="flex items-center gap-1"
+                              >
+                                <ImageIcon className="h-4 w-4" />
+                                {t('student.viewFullSize') || 'View Full Size'} {correctedImages.length > 1 ? `(${index + 1})` : ''}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground mb-3">
-                        {t('student.correctedHomeworkMessage') || 'Your teacher has reviewed and corrected your homework.'}
-                      </p>
-                      <div className="relative w-full max-w-md mb-2">
-                        <img 
-                          src={homework.correctedImageUrl} 
-                          alt="Corrected homework"
-                          className="w-full h-auto rounded-md border border-green-300 dark:border-green-700"
-                        />
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => window.open(homework.correctedImageUrl!, '_blank')}
-                        className="flex items-center gap-1"
-                      >
-                        <ImageIcon className="h-4 w-4" />
-                        {t('student.viewFullSize') || 'View Full Size'}
-                      </Button>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   <div className="text-sm text-muted-foreground">
-                    {t('student.homeworkSubmittedMessage') || 'You can update your submission by uploading a new image.'}
+                    {t('student.homeworkSubmittedMessage') || 'You can add more images to your submission by uploading additional images.'}
                   </div>
                   <FileUpload
                     endpoint="homeworkImage"
@@ -493,13 +531,15 @@ const ChapterPage = () => {
                       if (res?.url) {
                         setUploadingHomework(true);
                         try {
-                          await axios.post(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/homework`, {
+                          const response = await axios.post(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/homework`, {
                             imageUrl: res.url,
                           });
-                          toast.success(t('student.homeworkSubmittedSuccess') || 'Homework submitted successfully!');
+                          toast.success(t('student.homeworkSubmittedSuccess') || 'Image added to homework submission successfully!');
                           // Refresh homework data
                           const homeworkResponse = await axios.get(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/homework`);
-                          setHomework(homeworkResponse.data);
+                          if (homeworkResponse.data) {
+                            setHomework(homeworkResponse.data);
+                          }
                         } catch (error) {
                           toast.error(t('student.homeworkSubmitFailed') || 'Failed to submit homework');
                           console.error("Error submitting homework:", error);

@@ -65,23 +65,39 @@ export async function POST(
       },
     });
 
-    const homework = existingHomework
-      ? await db.homeworkSubmission.update({
-          where: {
-            id: existingHomework.id,
-          },
-          data: {
-            imageUrl,
-            updatedAt: new Date(),
-          },
-        })
-      : await db.homeworkSubmission.create({
-          data: {
-            studentId: userId,
-            chapterId: resolvedParams.chapterId,
-            imageUrl,
-          },
-        });
+    if (existingHomework) {
+      // Get current images array (handle both old and new schema)
+      const currentImages = (existingHomework as any).imageUrls || 
+                           ((existingHomework as any).imageUrl ? [(existingHomework as any).imageUrl] : []);
+
+      // Append new image to the array (don't replace)
+      const updatedImages = [...currentImages, imageUrl];
+
+      const homework = await db.homeworkSubmission.update({
+        where: {
+          id: existingHomework.id,
+        },
+        data: {
+          imageUrls: updatedImages,
+          imageUrl: imageUrl, // Keep for backward compatibility
+          updatedAt: new Date(),
+        },
+      });
+
+      return NextResponse.json(homework);
+    } else {
+      // Create new submission with array
+      const homework = await db.homeworkSubmission.create({
+        data: {
+          studentId: userId,
+          chapterId: resolvedParams.chapterId,
+          imageUrls: [imageUrl],
+          imageUrl: imageUrl, // Keep for backward compatibility
+        },
+      });
+
+      return NextResponse.json(homework);
+    }
 
     return NextResponse.json(homework);
   } catch (error) {

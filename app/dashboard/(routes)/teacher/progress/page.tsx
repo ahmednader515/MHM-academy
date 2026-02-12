@@ -77,8 +77,10 @@ interface Purchase {
 
 interface HomeworkSubmission {
     id: string;
-    imageUrl: string;
-    correctedImageUrl?: string | null;
+    imageUrl: string; // Legacy field for backward compatibility
+    imageUrls?: string[]; // New array field for multiple student images
+    correctedImageUrl?: string | null; // Legacy field for backward compatibility
+    correctedImageUrls?: string[]; // New array field
     createdAt: string;
     student: {
         id: string;
@@ -770,23 +772,45 @@ const ProgressPage = () => {
                                             <div>
                                                 <Label className="mb-2 block text-sm font-medium">
                                                     {t('dashboard.studentHomework') || 'Student\'s Homework'}
+                                                    {(() => {
+                                                        const submittedImages = submission.imageUrls || (submission.imageUrl ? [submission.imageUrl] : []);
+                                                        return submittedImages.length > 1 && (
+                                                            <span className="text-xs text-muted-foreground ml-2">
+                                                                ({submittedImages.length} {t('dashboard.images') || 'images'})
+                                                            </span>
+                                                        );
+                                                    })()}
                                                 </Label>
-                                                <div className="relative w-full overflow-hidden">
-                                                    <img 
-                                                        src={submission.imageUrl} 
-                                                        alt={`Homework by ${submission.student.fullName}`}
-                                                        className="w-full h-auto max-w-full rounded-md border cursor-pointer object-contain"
-                                                        onClick={() => window.open(submission.imageUrl, '_blank')}
-                                                    />
-                                                </div>
-                                                <Button
-                                                    variant="outline"
-                                                    className="w-full mt-2"
-                                                    onClick={() => window.open(submission.imageUrl, '_blank')}
-                                                >
-                                                    <ImageIcon className="h-4 w-4 mr-2" />
-                                                    {t('dashboard.viewFullSize') || 'View Full Size'}
-                                                </Button>
+                                                {(() => {
+                                                    // Get submitted images (support both old and new format)
+                                                    const submittedImages = submission.imageUrls || (submission.imageUrl ? [submission.imageUrl] : []);
+                                                    
+                                                    return (
+                                                        <div className="space-y-3">
+                                                            {submittedImages.map((imageUrl, index) => (
+                                                                <div key={index} className="space-y-2">
+                                                                    <div className="relative w-full overflow-hidden">
+                                                                        <img 
+                                                                            src={imageUrl} 
+                                                                            alt={`Homework ${index + 1} by ${submission.student.fullName}`}
+                                                                            className="w-full h-auto max-w-full rounded-md border cursor-pointer object-contain hover:opacity-90 transition-opacity"
+                                                                            onClick={() => window.open(imageUrl, '_blank')}
+                                                                        />
+                                                                    </div>
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        className="w-full"
+                                                                        onClick={() => window.open(imageUrl, '_blank')}
+                                                                    >
+                                                                        <ImageIcon className="h-4 w-4 mr-2" />
+                                                                        {t('dashboard.viewFullSize') || 'View Full Size'} {submittedImages.length > 1 ? `(${index + 1})` : ''}
+                                                                    </Button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    );
+                                                })()}
                                             </div>
 
                                             {/* Corrected Homework Section */}
@@ -794,25 +818,38 @@ const ProgressPage = () => {
                                                 <Label className="mb-2 block text-sm font-medium">
                                                     {t('dashboard.correctedHomework') || 'Corrected Homework'}
                                                 </Label>
-                                                {submission.correctedImageUrl ? (
-                                                    <div className="space-y-2">
-                                                        <div className="relative w-full overflow-hidden">
-                                                            <img 
-                                                                src={submission.correctedImageUrl} 
-                                                                alt={`Corrected homework for ${submission.student.fullName}`}
-                                                                className="w-full h-auto max-w-full rounded-md border cursor-pointer object-contain"
-                                                                onClick={() => window.open(submission.correctedImageUrl!, '_blank')}
-                                                            />
-                                                        </div>
-                                                        <div className="flex flex-col gap-2">
-                                                            <Button
-                                                                variant="outline"
-                                                                className="w-full"
-                                                                onClick={() => window.open(submission.correctedImageUrl!, '_blank')}
-                                                            >
-                                                                <ImageIcon className="h-4 w-4 mr-2" />
-                                                                {t('dashboard.viewFullSize') || 'View Full Size'}
-                                                            </Button>
+                                                {(() => {
+                                                    // Get corrected images (support both old and new format)
+                                                    const correctedImages = submission.correctedImageUrls || 
+                                                                           (submission.correctedImageUrl ? [submission.correctedImageUrl] : []);
+                                                    
+                                                    return correctedImages.length > 0 ? (
+                                                        <div className="space-y-4">
+                                                            {/* Display all corrected images */}
+                                                            <div className="grid grid-cols-1 gap-3">
+                                                                {correctedImages.map((imageUrl, index) => (
+                                                                    <div key={index} className="space-y-2">
+                                                                        <div className="relative w-full overflow-hidden">
+                                                                            <img 
+                                                                                src={imageUrl} 
+                                                                                alt={`Corrected homework ${index + 1} for ${submission.student.fullName}`}
+                                                                                className="w-full h-auto max-w-full rounded-md border cursor-pointer object-contain hover:opacity-90 transition-opacity"
+                                                                                onClick={() => window.open(imageUrl, '_blank')}
+                                                                            />
+                                                                        </div>
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            className="w-full"
+                                                                            onClick={() => window.open(imageUrl, '_blank')}
+                                                                        >
+                                                                            <ImageIcon className="h-4 w-4 mr-2" />
+                                                                            {t('dashboard.viewFullSize') || 'View Full Size'} ({index + 1})
+                                                                        </Button>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                            {/* Upload additional images */}
                                                             <div className="relative">
                                                                 {uploadingCorrectedHomework[submission.id] && (
                                                                     <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10 rounded-md">
@@ -829,29 +866,29 @@ const ProgressPage = () => {
                                                                 />
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="space-y-2">
-                                                        <p className="text-sm text-muted-foreground">
-                                                            {t('dashboard.noCorrectedHomework') || 'No corrected homework uploaded yet.'}
-                                                        </p>
-                                                        <div className="relative">
-                                                            {uploadingCorrectedHomework[submission.id] && (
-                                                                <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10 rounded-md">
-                                                                    <span className="text-sm">{t('dashboard.uploading') || 'Uploading...'}</span>
-                                                                </div>
-                                                            )}
-                                                            <FileUpload
-                                                                endpoint="homeworkImage"
-                                                                onChange={(res) => {
-                                                                    if (res?.url) {
-                                                                        handleUploadCorrectedHomework(submission.id, submission.chapter.id, res.url);
-                                                                    }
-                                                                }}
-                                                            />
+                                                    ) : (
+                                                        <div className="space-y-2">
+                                                            <p className="text-sm text-muted-foreground">
+                                                                {t('dashboard.noCorrectedHomework') || 'No corrected homework uploaded yet.'}
+                                                            </p>
+                                                            <div className="relative">
+                                                                {uploadingCorrectedHomework[submission.id] && (
+                                                                    <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10 rounded-md">
+                                                                        <span className="text-sm">{t('dashboard.uploading') || 'Uploading...'}</span>
+                                                                    </div>
+                                                                )}
+                                                                <FileUpload
+                                                                    endpoint="homeworkImage"
+                                                                    onChange={(res) => {
+                                                                        if (res?.url) {
+                                                                            handleUploadCorrectedHomework(submission.id, submission.chapter.id, res.url);
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )}
+                                                    );
+                                                })()}
                                             </div>
                                         </div>
                                     </CardContent>
@@ -932,24 +969,45 @@ const ProgressPage = () => {
                                                         <div className="mb-4">
                                                             <Label className="mb-2 block text-sm font-medium">
                                                                 {t('dashboard.studentHomework') || 'Student\'s Homework'}
+                                                                {(() => {
+                                                                    const submittedImages = submission.imageUrls || (submission.imageUrl ? [submission.imageUrl] : []);
+                                                                    return submittedImages.length > 1 && (
+                                                                        <span className="text-xs text-muted-foreground ml-2">
+                                                                            ({submittedImages.length} {t('dashboard.images') || 'images'})
+                                                                        </span>
+                                                                    );
+                                                                })()}
                                                             </Label>
-                                                            <div className="relative w-full max-w-2xl mb-2 overflow-hidden">
-                                                                <img 
-                                                                    src={submission.imageUrl} 
-                                                                    alt={`Homework by ${submission.student.fullName} for ${chapter.title}`}
-                                                                    className="w-full h-auto max-w-full rounded-md border cursor-pointer hover:opacity-90 transition-opacity object-contain"
-                                                                    onClick={() => window.open(submission.imageUrl, '_blank')}
-                                                                />
-                                                            </div>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                className="w-full sm:w-auto"
-                                                                onClick={() => window.open(submission.imageUrl, '_blank')}
-                                                            >
-                                                                <ImageIcon className="h-4 w-4 mr-2" />
-                                                                {t('dashboard.viewFullSize') || 'View Full Size'}
-                                                            </Button>
+                                                            {(() => {
+                                                                // Get submitted images (support both old and new format)
+                                                                const submittedImages = submission.imageUrls || (submission.imageUrl ? [submission.imageUrl] : []);
+                                                                
+                                                                return (
+                                                                    <div className="space-y-3">
+                                                                        {submittedImages.map((imageUrl, index) => (
+                                                                            <div key={index} className="space-y-2">
+                                                                                <div className="relative w-full max-w-2xl overflow-hidden">
+                                                                                    <img 
+                                                                                        src={imageUrl} 
+                                                                                        alt={`Homework ${index + 1} by ${submission.student.fullName} for ${chapter.title}`}
+                                                                                        className="w-full h-auto max-w-full rounded-md border cursor-pointer hover:opacity-90 transition-opacity object-contain"
+                                                                                        onClick={() => window.open(imageUrl, '_blank')}
+                                                                                    />
+                                                                                </div>
+                                                                                <Button
+                                                                                    variant="outline"
+                                                                                    size="sm"
+                                                                                    className="w-full sm:w-auto"
+                                                                                    onClick={() => window.open(imageUrl, '_blank')}
+                                                                                >
+                                                                                    <ImageIcon className="h-4 w-4 mr-2" />
+                                                                                    {t('dashboard.viewFullSize') || 'View Full Size'} {submittedImages.length > 1 ? `(${index + 1})` : ''}
+                                                                                </Button>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                );
+                                                            })()}
                                                         </div>
 
                                                         {/* Corrected Homework Section */}
@@ -957,26 +1015,38 @@ const ProgressPage = () => {
                                                             <Label className="mb-2 block text-sm font-medium">
                                                                 {t('dashboard.correctedHomework') || 'Corrected Homework'}
                                                             </Label>
-                                                            {submission.correctedImageUrl ? (
-                                                                <div className="space-y-2">
-                                                                    <div className="relative w-full max-w-2xl overflow-hidden">
-                                                                        <img 
-                                                                            src={submission.correctedImageUrl} 
-                                                                            alt={`Corrected homework for ${submission.student.fullName}`}
-                                                                            className="w-full h-auto max-w-full rounded-md border cursor-pointer hover:opacity-90 transition-opacity object-contain"
-                                                                            onClick={() => window.open(submission.correctedImageUrl!, '_blank')}
-                                                                        />
-                                                                    </div>
-                                                                    <div className="flex flex-col gap-2">
-                                                                        <Button
-                                                                            variant="outline"
-                                                                            size="sm"
-                                                                            className="w-full"
-                                                                            onClick={() => window.open(submission.correctedImageUrl!, '_blank')}
-                                                                        >
-                                                                            <ImageIcon className="h-4 w-4 mr-2" />
-                                                                            {t('dashboard.viewFullSize') || 'View Full Size'}
-                                                                        </Button>
+                                                            {(() => {
+                                                                // Get corrected images (support both old and new format)
+                                                                const correctedImages = submission.correctedImageUrls || 
+                                                                                       (submission.correctedImageUrl ? [submission.correctedImageUrl] : []);
+                                                                
+                                                                return correctedImages.length > 0 ? (
+                                                                    <div className="space-y-4">
+                                                                        {/* Display all corrected images */}
+                                                                        <div className="grid grid-cols-1 gap-3">
+                                                                            {correctedImages.map((imageUrl, index) => (
+                                                                                <div key={index} className="space-y-2">
+                                                                                    <div className="relative w-full max-w-2xl overflow-hidden">
+                                                                                        <img 
+                                                                                            src={imageUrl} 
+                                                                                            alt={`Corrected homework ${index + 1} for ${submission.student.fullName}`}
+                                                                                            className="w-full h-auto max-w-full rounded-md border cursor-pointer hover:opacity-90 transition-opacity object-contain"
+                                                                                            onClick={() => window.open(imageUrl, '_blank')}
+                                                                                        />
+                                                                                    </div>
+                                                                                    <Button
+                                                                                        variant="outline"
+                                                                                        size="sm"
+                                                                                        className="w-full"
+                                                                                        onClick={() => window.open(imageUrl, '_blank')}
+                                                                                    >
+                                                                                        <ImageIcon className="h-4 w-4 mr-2" />
+                                                                                        {t('dashboard.viewFullSize') || 'View Full Size'} ({index + 1})
+                                                                                    </Button>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                        {/* Upload additional images */}
                                                                         <div className="relative">
                                                                             {uploadingCorrectedHomework[submission.id] && (
                                                                                 <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10 rounded-md">
@@ -993,29 +1063,29 @@ const ProgressPage = () => {
                                                                             />
                                                                         </div>
                                                                     </div>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="space-y-2">
-                                                                    <p className="text-sm text-muted-foreground">
-                                                                        {t('dashboard.noCorrectedHomework') || 'No corrected homework uploaded yet.'}
-                                                                    </p>
-                                                                    <div className="relative">
-                                                                        {uploadingCorrectedHomework[submission.id] && (
-                                                                            <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10 rounded-md">
-                                                                                <span className="text-sm">{t('dashboard.uploading') || 'Uploading...'}</span>
-                                                                            </div>
-                                                                        )}
-                                                                        <FileUpload
-                                                                            endpoint="homeworkImage"
-                                                                            onChange={(res) => {
-                                                                                if (res?.url) {
-                                                                                    handleUploadCorrectedHomework(submission.id, submission.chapter.id, res.url);
-                                                                                }
-                                                                            }}
-                                                                        />
+                                                                ) : (
+                                                                    <div className="space-y-2">
+                                                                        <p className="text-sm text-muted-foreground">
+                                                                            {t('dashboard.noCorrectedHomework') || 'No corrected homework uploaded yet.'}
+                                                                        </p>
+                                                                        <div className="relative">
+                                                                            {uploadingCorrectedHomework[submission.id] && (
+                                                                                <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10 rounded-md">
+                                                                                    <span className="text-sm">{t('dashboard.uploading') || 'Uploading...'}</span>
+                                                                                </div>
+                                                                            )}
+                                                                            <FileUpload
+                                                                                endpoint="homeworkImage"
+                                                                                onChange={(res) => {
+                                                                                    if (res?.url) {
+                                                                                        handleUploadCorrectedHomework(submission.id, submission.chapter.id, res.url);
+                                                                                    }
+                                                                                }}
+                                                                            />
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            )}
+                                                                );
+                                                            })()}
                                                         </div>
                                                     </div>
                                                 ))}

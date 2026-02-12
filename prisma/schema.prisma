@@ -273,8 +273,9 @@ model HomeworkSubmission {
   id              String   @id @default(uuid())
   studentId       String
   chapterId       String
-  imageUrl        String
-  correctedImageUrl String?
+  imageUrl        String   // Legacy field for backward compatibility
+  imageUrls       String[] @default([]) // New array field for multiple images
+  correctedImageUrls String[] @default([])
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   chapter         Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
