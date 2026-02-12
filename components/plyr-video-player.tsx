@@ -179,9 +179,17 @@ export const PlyrVideoPlayer = ({
           className="w-full h-full" 
           playsInline 
           crossOrigin="anonymous"
+          preload="metadata"
           key={videoUrl}
         >
-          {videoUrl ? <source src={videoUrl} type="video/mp4" /> : null}
+          {videoUrl ? (
+            <>
+              <source src={videoUrl} type="video/mp4" />
+              <source src={videoUrl} type="video/webm" />
+              <source src={videoUrl} type="video/ogg" />
+              Your browser does not support the video tag.
+            </>
+          ) : null}
         </video>
       )}
       <style jsx global>{`
