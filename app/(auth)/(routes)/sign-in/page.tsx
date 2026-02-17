@@ -111,6 +111,18 @@ export default function SignInPage() {
         console.warn("Could not fetch user role from session, defaulting to USER");
       }
       
+      // Check if account is suspended
+      const isSuspended = sessionData?.user?.isSuspended || false;
+      if (isSuspended && userRole === "USER") {
+        // Redirect to suspended page
+        if (typeof window !== "undefined") {
+          window.location.href = "/account-suspended";
+        } else {
+          router.replace("/account-suspended");
+        }
+        return;
+      }
+      
       const dashboardUrl = getDashboardUrlByRole(userRole);
 
       // Use window.location.href for a hard navigation that ensures cookies are sent

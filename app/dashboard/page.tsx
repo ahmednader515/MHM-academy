@@ -10,6 +10,11 @@ const CoursesPage = async () => {
     return redirect("/");
   }
 
+  // Check if user is suspended (for students only)
+  if (session.user.role === "USER" && session.user.isSuspended) {
+    return redirect("/account-suspended");
+  }
+
   // Redirect non-students to their role-specific dashboard
   if (session.user.role !== "USER") {
     const dashboardUrl = getDashboardUrlByRole(session.user.role);

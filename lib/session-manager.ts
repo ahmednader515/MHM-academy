@@ -88,7 +88,8 @@ export class SessionManager {
         email: true,
         role: true,
         image: true,
-        sessionId: true
+        sessionId: true,
+        isSuspended: true
       },
       cacheStrategy: { ttl: 30 } // Cache session validation for 30 seconds (reduces queries while maintaining security)
     });

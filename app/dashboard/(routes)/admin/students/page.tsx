@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Edit, Trash2 } from "lucide-react";
+import { Search, Edit, Trash2, Ban, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { toast } from "sonner";
@@ -56,6 +56,7 @@ interface User {
     role: string;
     balance: number;
     points: number;
+    isSuspended?: boolean;
     createdAt: string;
     updatedAt: string;
     _count: {
@@ -97,6 +98,7 @@ const StudentsPage = () => {
     });
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isSuspending, setIsSuspending] = useState(false);
     const [displayedCount, setDisplayedCount] = useState(25);
 
     // Filter states
@@ -194,6 +196,32 @@ const StudentsPage = () => {
             toast.error(t('common.error'));
         } finally {
             setIsDeleting(false);
+        }
+    };
+
+    const handleSuspendUser = async (userId: string, isSuspended: boolean) => {
+        setIsSuspending(true);
+        try {
+            const response = await fetch(`/api/admin/users/${userId}/suspend`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ isSuspended }),
+            });
+
+            if (response.ok) {
+                toast.success(isSuspended ? t('admin.accountSuspended') || "Account suspended" : t('admin.accountUnsuspended') || "Account unsuspended");
+                fetchUsers(); // Refresh the list
+            } else {
+                const error = await response.text();
+                toast.error(error || t('common.error'));
+            }
+        } catch (error) {
+            console.error("Error suspending user:", error);
+            toast.error(t('common.error'));
+        } finally {
+            setIsSuspending(false);
         }
     };
 
@@ -475,6 +503,51 @@ const StudentsPage = () => {
                                                 >
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
+                                                
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button
+                                                            variant={user.isSuspended ? "default" : "outline"}
+                                                            size="sm"
+                                                            disabled={isSuspending}
+                                                            className={user.isSuspended ? "bg-orange-500 hover:bg-orange-600 text-white" : ""}
+                                                        >
+                                                            {user.isSuspended ? (
+                                                                <CheckCircle className="h-4 w-4" />
+                                                            ) : (
+                                                                <Ban className="h-4 w-4" />
+                                                            )}
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>
+                                                                {user.isSuspended 
+                                                                    ? t('admin.unsuspendAccount') || "Unsuspend Account"
+                                                                    : t('admin.suspendAccount') || "Suspend Account"
+                                                                }
+                                                            </AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                {user.isSuspended
+                                                                    ? t('admin.unsuspendAccountConfirm') || "Are you sure you want to unsuspend this account? The user will be able to access the platform again."
+                                                                    : t('admin.suspendAccountConfirm') || "Are you sure you want to suspend this account? The user will only see a suspension message when they sign in."
+                                                                }
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                                                            <AlertDialogAction
+                                                                onClick={() => handleSuspendUser(user.id, !user.isSuspended)}
+                                                                className={user.isSuspended ? "" : "bg-orange-500 hover:bg-orange-600"}
+                                                            >
+                                                                {user.isSuspended 
+                                                                    ? t('admin.unsuspend') || "Unsuspend"
+                                                                    : t('admin.suspend') || "Suspend"
+                                                                }
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                                 
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>

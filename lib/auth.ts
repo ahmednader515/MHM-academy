@@ -63,6 +63,7 @@ const config: NextAuthConfig = {
             role: user.role,
             points: user.points,
             parentPhoneNumber: user.parentPhoneNumber,
+            isSuspended: user.isSuspended,
           } as any;
         } catch (error) {
           // Re-throw known errors
@@ -119,7 +120,7 @@ const config: NextAuthConfig = {
           if (now - lastValidation > VALIDATION_INTERVAL) {
             try {
               // Validate session (but cache the result)
-              const { isValid } = await SessionManager.validateSession(token.sessionId as string);
+              const { isValid, user: validatedUser } = await SessionManager.validateSession(token.sessionId as string);
               
               if (!isValid) {
                 // Session is invalid, clear the sessionId but don't return null
@@ -127,8 +128,11 @@ const config: NextAuthConfig = {
                 token.sessionId = undefined;
                 token.lastSessionValidation = undefined;
               } else {
-                // Update last validation timestamp
+                // Update last validation timestamp and sync isSuspended status
                 token.lastSessionValidation = now;
+                if (validatedUser) {
+                  token.isSuspended = validatedUser.isSuspended || false;
+                }
               }
             } catch (error) {
               console.error("Session validation error:", error);
@@ -148,6 +152,7 @@ const config: NextAuthConfig = {
         session.user.role = token.role as string;
         session.user.points = token.points as number;
         session.user.parentPhoneNumber = token.parentPhoneNumber as string;
+        session.user.isSuspended = (token.isSuspended as boolean) || false;
       }
 
       return session;
@@ -168,6 +173,7 @@ const config: NextAuthConfig = {
             role: user.role,
             points: (user as any).points || 0,
             parentPhoneNumber: (user as any).parentPhoneNumber || null,
+            isSuspended: (user as any).isSuspended || false,
             sessionId: sessionId,
           };
         } catch (error) {
@@ -182,6 +188,8 @@ const config: NextAuthConfig = {
             picture: (user as any).picture,
             role: user.role,
             points: (user as any).points || 0,
+            parentPhoneNumber: (user as any).parentPhoneNumber || null,
+            isSuspended: (user as any).isSuspended || false,
           };
         }
       }

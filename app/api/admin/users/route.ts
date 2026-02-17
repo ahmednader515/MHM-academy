@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
                 role: true,
                 balance: true,
                 points: true,
+                isSuspended: true,
                 createdAt: true,
                 updatedAt: true,
                 _count: {

@@ -11,6 +11,7 @@ declare module "next-auth" {
       role: string;
       points?: number;
       parentPhoneNumber?: string;
+      isSuspended?: boolean;
     };
   }
 
@@ -34,6 +35,7 @@ declare module "next-auth/jwt" {
     role: string;
     points?: number;
     parentPhoneNumber?: string;
+    isSuspended?: boolean;
     sessionId?: string;
   }
 } 

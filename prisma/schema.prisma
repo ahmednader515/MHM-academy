@@ -28,6 +28,7 @@ model User {
   parentPhoneNumber    String?
   sessionId            String?                @unique
   lastLoginAt          DateTime?
+  isSuspended          Boolean                @default(false)
   createdAt            DateTime               @default(now())
   updatedAt            DateTime               @updatedAt
   activitySubmissions  ActivitySubmission[]

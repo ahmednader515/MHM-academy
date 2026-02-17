@@ -45,9 +45,17 @@ export async function proxy(request: NextRequest) {
   const isParentRoute = pathname.startsWith("/dashboard/parent");
   const isParent = token?.role === "PARENT";
 
-  // If user is on auth page and is authenticated, redirect to appropriate dashboard
+  // If user is on auth page and is authenticated, check suspension first
   if (isAuthPage && token) {
+    const isSuspended = (token?.isSuspended as boolean | undefined) || false;
     const userRole = token.role as string || "USER";
+    
+    // If suspended student, redirect to suspended page
+    if (isSuspended && userRole === "USER") {
+      return NextResponse.redirect(new URL("/account-suspended", request.url));
+    }
+    
+    // Otherwise redirect to appropriate dashboard
     const dashboardUrl = getDashboardUrlByRole(userRole);
     return NextResponse.redirect(new URL(dashboardUrl, request.url));
   }
@@ -70,6 +78,20 @@ export async function proxy(request: NextRequest) {
   }
 
   const role = (token?.role as string | undefined) || "USER";
+  const isSuspended = (token?.isSuspended as boolean | undefined) || false;
+  const isSuspendedPage = pathname === "/account-suspended";
+
+  // If user is suspended and not on the suspended page, redirect to suspended page
+  // Only check for students (USER role), not admins/teachers
+  if (isSuspended && role === "USER" && !isSuspendedPage && !isAuthPage) {
+    return NextResponse.redirect(new URL("/account-suspended", request.url));
+  }
+
+  // If user is not suspended and on suspended page, redirect to dashboard
+  if (isSuspendedPage && token && !isSuspended) {
+    const dashboardUrl = getDashboardUrlByRole(role);
+    return NextResponse.redirect(new URL(dashboardUrl, request.url));
+  }
 
   // Check for admin routes
   const isAdminRoute = pathname.startsWith("/dashboard/admin");
