@@ -19,6 +19,15 @@ const nextConfig = {
         protocol: 'https',
         hostname: '7o7q29b8xy.ufs.sh',
       },
+      // Keep R2 allowed since the DB still contains legacy R2 URLs
+      {
+        protocol: 'https',
+        hostname: '**.r2.dev',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.r2.cloudflarestorage.com',
+      },
     ],
   },
   serverExternalPackages: ['@prisma/client', 'bcrypt'],
