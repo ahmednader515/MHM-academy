@@ -36,10 +36,6 @@ export const ourFileRouter = {
         return { url: file.url, name: file.name };
     }),
 
-    chapterVideo: f({ video: {maxFileCount: 1, maxFileSize: "512GB"} })
-    .middleware(() => handleAuth())
-    .onUploadComplete(() => {}),
-
     homeworkImage: f({ image: {maxFileSize: "8MB", maxFileCount: 1} })
     .middleware(() => handleAuth())
     .onUploadComplete(async ({ file }) => {
