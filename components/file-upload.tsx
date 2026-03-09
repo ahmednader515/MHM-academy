@@ -7,16 +7,19 @@ import { X } from "lucide-react";
 import toast from "react-hot-toast";
 import { ourFileRouter } from "@/lib/uploadthing/core";
 import type { OurFileRouter } from "@/lib/uploadthing/core";
+import { getUploadErrorMessage, type UploadThingClientError } from "@/lib/uploadthing-errors";
+import { useLanguage } from "@/lib/contexts/language-context";
 
 interface FileUploadProps {
     onChange: (res?: { url: string; name: string }) => void;
-    endpoint: "courseImage" | "courseAttachment" | "chapterVideo" | "homeworkImage" | "activityImage" | "certificateImage" | "transactionImage" | "timetableImage";
+    endpoint: "courseImage" | "courseAttachment" | "homeworkImage" | "activityImage" | "certificateImage" | "transactionImage" | "timetableImage";
 }
 
 export const FileUpload = ({
     onChange,
     endpoint,
 }: FileUploadProps) => {
+    const { t } = useLanguage();
     const [preview, setPreview] = useState<string | null>(null);
     const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
     const [uploadedName, setUploadedName] = useState<string | null>(null);
@@ -70,7 +73,8 @@ export const FileUpload = ({
                     }}
                     onUploadError={(error: Error) => {
                         console.error("[UPLOADTHING_ERROR]", error);
-                        toast.error(error.message || "Failed to upload file");
+                        const message = getUploadErrorMessage(error as UploadThingClientError, t);
+                        toast.error(message);
                     }}
                 />
             )}

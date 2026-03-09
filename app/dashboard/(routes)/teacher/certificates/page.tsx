@@ -394,7 +394,7 @@ const CertificatesPage = () => {
                                         </SelectTrigger>
                                         <SelectContent className="max-h-[300px]">
                                             {filteredStudents.length === 0 ? (
-                                                <SelectItem value="" disabled>
+                                                <SelectItem value="__no_students__" disabled>
                                                     {t('admin.noStudentsFound') || 'No students found'}
                                                 </SelectItem>
                                             ) : (

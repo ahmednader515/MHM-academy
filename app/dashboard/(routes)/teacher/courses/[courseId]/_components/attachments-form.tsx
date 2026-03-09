@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import axios from "axios";
 import { UploadButton } from "@/lib/uploadthing";
+import { getUploadErrorMessage, type UploadThingClientError } from "@/lib/uploadthing-errors";
+import { useLanguage } from "@/lib/contexts/language-context";
 
 interface AttachmentsFormProps {
     initialData: {
@@ -24,6 +26,7 @@ export const AttachmentsForm = ({
     initialData,
     courseId
 }: AttachmentsFormProps) => {
+    const { t } = useLanguage();
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
     const router = useRouter();
 
@@ -66,7 +69,7 @@ export const AttachmentsForm = ({
                         }
                     }}
                     onUploadError={(error: Error) => {
-                        toast.error(`حدث خطأ: ${error.message}`);
+                        toast.error(getUploadErrorMessage(error as UploadThingClientError, t));
                     }}
                 />
             </div>

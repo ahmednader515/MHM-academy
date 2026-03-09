@@ -13,11 +13,8 @@
     "test:quiz-options": "node scripts/test-quiz-options.js",
     "migrate-uploadthing": "npx tsx ./scripts/migrate-uploadthing-files.ts",
     "download-uploadthing": "npx tsx ./scripts/download-uploadthing-files.ts",
-    "upload-to-r2": "npx tsx ./scripts/upload-to-r2.ts",
     "backup-db-urls": "npx tsx ./scripts/backup-db-urls.ts",
     "restore-db-urls": "npx tsx ./scripts/restore-db-urls.ts",
-    "migrate-db-to-r2": "npx tsx ./scripts/migrate-db-urls-to-r2.ts",
-    "setup-r2-cors": "npx tsx ./scripts/setup-r2-cors.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

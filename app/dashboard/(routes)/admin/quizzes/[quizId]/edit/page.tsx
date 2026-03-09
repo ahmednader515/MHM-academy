@@ -14,6 +14,7 @@ import { useRouter, useParams } from "next/navigation";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { UploadDropzone } from "@/lib/uploadthing";
 import { useLanguage } from "@/lib/contexts/language-context";
+import { getUploadErrorMessage, type UploadThingClientError } from "@/lib/uploadthing-errors";
 
 interface Course {
     id: string;
@@ -611,7 +612,7 @@ const EditQuizPage = () => {
                                                         setUploadingImages(prev => ({ ...prev, [index]: false }));
                                                     }}
                                                     onUploadError={(error: Error) => {
-                                                        toast.error(`${t('quiz.errorUploadingImage')}: ${error.message}`);
+                                                        toast.error(getUploadErrorMessage(error as UploadThingClientError, t));
                                                         setUploadingImages(prev => ({ ...prev, [index]: false }));
                                                     }}
                                                     onUploadBegin={() => {

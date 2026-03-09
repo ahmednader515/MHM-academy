@@ -10,7 +10,14 @@ if (!process.env.UPLOADTHING_APP_ID) {
     console.error("[UPLOADTHING] UPLOADTHING_APP_ID is not set in environment variables!");
 }
 
-const f = createUploadthing();
+const f = createUploadthing({
+    errorFormatter: (err) => {
+        return {
+            code: err.code ?? "INTERNAL_SERVER_ERROR",
+            message: err.message || "An unknown error occurred",
+        };
+    },
+});
 
 const handleAuth = async () => {
     const session = await auth();
