@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { deleteS3ObjectByUrl } from "@/lib/s3";
 
 const updateTimetableSchema = z.object({
   imageUrl: z.string().min(1).optional(),
@@ -124,6 +125,10 @@ export async function PATCH(
       },
     });
 
+    if (validatedData.imageUrl && timetable.imageUrl !== validatedData.imageUrl) {
+      await deleteS3ObjectByUrl(timetable.imageUrl);
+    }
+
     return NextResponse.json(updatedTimetable);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -168,6 +173,8 @@ export async function DELETE(
     await db.timetable.delete({
       where: { id: timetableId },
     });
+
+    await deleteS3ObjectByUrl(timetable.imageUrl);
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {

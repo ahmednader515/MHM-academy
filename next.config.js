@@ -1,4 +1,10 @@
 /** @type {import('next').NextConfig} */
+const publicBaseUrl = process.env.AWS_S3_PUBLIC_BASE_URL
+  ? new URL(process.env.AWS_S3_PUBLIC_BASE_URL)
+  : (process.env.AWS_S3_BUCKET && process.env.AWS_REGION
+      ? new URL(`https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com`)
+      : null);
+
 const nextConfig = {
   output: 'standalone',
   experimental: {
@@ -11,13 +17,19 @@ const nextConfig = {
   },
   images: {
     remotePatterns: [
+      ...(publicBaseUrl ? [
+        {
+          protocol: publicBaseUrl.protocol.replace(":", ""),
+          hostname: publicBaseUrl.hostname,
+        },
+      ] : []),
       {
         protocol: 'https',
         hostname: 'utfs.io',
       },
       {
         protocol: 'https',
-        hostname: '7o7q29b8xy.ufs.sh',
+        hostname: 'ufs.sh',
       },
     ],
   },

@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { deleteS3ObjectByUrl } from "@/lib/s3";
 
 export async function POST(
     req: Request,
@@ -31,6 +32,13 @@ export async function POST(
             return new NextResponse("Missing URL", { status: 400 });
         }
 
+        const existingChapter = await db.chapter.findUnique({
+            where: {
+                id: resolvedParams.chapterId,
+                courseId: resolvedParams.courseId,
+            }
+        });
+
         // Update chapter with document URL and name
         await db.chapter.update({
             where: {
@@ -42,6 +50,10 @@ export async function POST(
                 documentName: name || null,
             }
         });
+
+        if (existingChapter?.documentUrl && existingChapter.documentUrl !== url) {
+            await deleteS3ObjectByUrl(existingChapter.documentUrl);
+        }
 
         return NextResponse.json({ 
             success: true,
@@ -76,6 +88,13 @@ export async function DELETE(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
+        const existingChapter = await db.chapter.findUnique({
+            where: {
+                id: resolvedParams.chapterId,
+                courseId: resolvedParams.courseId,
+            }
+        });
+
         // Remove document URL and name from chapter
         await db.chapter.update({
             where: {
@@ -87,6 +106,8 @@ export async function DELETE(
                 documentName: null,
             }
         });
+
+        await deleteS3ObjectByUrl(existingChapter?.documentUrl);
 
         return NextResponse.json({ 
             success: true

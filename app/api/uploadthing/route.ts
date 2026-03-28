@@ -1,14 +1,9 @@
-import { createRouteHandler } from "uploadthing/next";
+import { NextResponse } from "next/server";
 
-import { ourFileRouter } from "../../../lib/uploadthing/core";
-
-// Log UploadThing configuration on route handler initialization
-if (process.env.NODE_ENV === "development") {
-    console.log("[UPLOADTHING_ROUTE] Initializing route handler");
-    console.log("[UPLOADTHING_ROUTE] UPLOADTHING_SECRET:", process.env.UPLOADTHING_SECRET ? "✓ Set" : "✗ Missing");
-    console.log("[UPLOADTHING_ROUTE] UPLOADTHING_APP_ID:", process.env.UPLOADTHING_APP_ID ? "✓ Set" : "✗ Missing");
+export async function GET() {
+  return NextResponse.json({ message: "UploadThing is no longer used. Use /api/uploads/s3 instead." }, { status: 410 });
 }
 
-export const { GET, POST } = createRouteHandler({
-  router: ourFileRouter,
-});
+export async function POST() {
+  return NextResponse.json({ message: "UploadThing is no longer used. Use /api/uploads/s3 instead." }, { status: 410 });
+}

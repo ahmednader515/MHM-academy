@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { grantCourseAccessToSubscriptions } from "@/lib/subscription-utils";
+import { deleteS3ObjectByUrl } from "@/lib/s3";
 
 export async function GET(
     req: Request,
@@ -79,12 +80,22 @@ export async function PATCH(
             ? { id: resolvedParams.courseId }
             : { id: resolvedParams.courseId, userId };
 
+        const existingCourse = await db.course.findUnique({
+            where: {
+                id: resolvedParams.courseId,
+            }
+        });
+
         const course = await db.course.update({
             where: whereClause,
             data: {
                 ...values,
             }
         });
+
+        if (values.imageUrl && existingCourse?.imageUrl && existingCourse.imageUrl !== values.imageUrl) {
+            await deleteS3ObjectByUrl(existingCourse.imageUrl);
+        }
 
         // If course is published and target fields are being updated, grant access to matching subscriptions
         if (course.isPublished && (values.targetCurriculum || values.targetGrade || values.targetLevel || values.targetLanguage)) {

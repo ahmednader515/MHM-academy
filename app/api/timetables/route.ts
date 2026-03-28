@@ -21,7 +21,6 @@ export async function GET(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const userId = session.user.id;
     const user = session.user;
 
     let whereClause: any = {};
