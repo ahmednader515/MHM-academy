@@ -18,7 +18,7 @@ interface Chapter {
   description: string | null;
   isFree: boolean;
   videoUrl: string | null;
-  videoType: "UPLOAD" | "YOUTUBE" | null;
+  videoType: "UPLOAD" | "YOUTUBE" | "GOOGLE_DRIVE" | null;
   youtubeVideoId: string | null;
   documentUrl: string | null;
   documentName: string | null;
@@ -360,17 +360,24 @@ const ChapterPage = () => {
             {chapter.videoUrl ? (
               (() => {
                 console.log("🔍 Rendering PlyrVideoPlayer with props:", {
-                  videoUrl: chapter.videoType === "UPLOAD" ? chapter.videoUrl : undefined,
+                  videoUrl:
+                    chapter.videoType === "UPLOAD" || chapter.videoType === "GOOGLE_DRIVE"
+                      ? chapter.videoUrl
+                      : undefined,
                   youtubeVideoId: chapter.videoType === "YOUTUBE" ? chapter.youtubeVideoId || undefined : undefined,
-                  videoType: (chapter.videoType as "UPLOAD" | "YOUTUBE") || "UPLOAD",
+                  videoType: (chapter.videoType as "UPLOAD" | "YOUTUBE" | "GOOGLE_DRIVE") || "UPLOAD",
                   key: `${chapter.id}-${chapter.videoUrl}-${chapter.videoType}`
                 });
                 return (
                   <PlyrVideoPlayer
                     key={`${chapter.id}-${chapter.videoUrl}-${chapter.videoType}`}
-                    videoUrl={chapter.videoType === "UPLOAD" ? chapter.videoUrl : undefined}
+                    videoUrl={
+                      chapter.videoType === "UPLOAD" || chapter.videoType === "GOOGLE_DRIVE"
+                        ? chapter.videoUrl ?? undefined
+                        : undefined
+                    }
                     youtubeVideoId={chapter.videoType === "YOUTUBE" ? chapter.youtubeVideoId || undefined : undefined}
-                    videoType={(chapter.videoType as "UPLOAD" | "YOUTUBE") || "UPLOAD"}
+                    videoType={(chapter.videoType as "UPLOAD" | "YOUTUBE" | "GOOGLE_DRIVE") || "UPLOAD"}
                     className="w-full h-full"
                     onEnded={onEnd}
                     onTimeUpdate={(currentTime) => {

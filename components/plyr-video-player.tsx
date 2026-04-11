@@ -6,7 +6,7 @@ import "plyr/dist/plyr.css";
 interface PlyrVideoPlayerProps {
   videoUrl?: string;
   youtubeVideoId?: string;
-  videoType?: "UPLOAD" | "YOUTUBE";
+  videoType?: "UPLOAD" | "YOUTUBE" | "GOOGLE_DRIVE";
   className?: string;
   onEnded?: () => void;
   onTimeUpdate?: (currentTime: number) => void;
@@ -52,8 +52,10 @@ export const PlyrVideoPlayer = ({
     };
   }, [videoType]);
 
-  // Initialize Plyr on mount/update
+  // Initialize Plyr on mount/update (not used for Google Drive iframe embeds)
   useEffect(() => {
+    if (videoType === "GOOGLE_DRIVE") return;
+
     let isCancelled = false;
     
     // Reset unmounting flag when effect runs
@@ -150,12 +152,37 @@ export const PlyrVideoPlayer = ({
     };
   }, [videoUrl, youtubeVideoId, videoType, onEnded, onTimeUpdate]);
 
-  const hasVideo = (videoType === "YOUTUBE" && !!youtubeVideoId) || !!videoUrl;
+  const hasVideo =
+    videoType === "YOUTUBE"
+      ? !!youtubeVideoId
+      : !!videoUrl;
 
   if (!hasVideo) {
     return (
       <div className={`aspect-video bg-muted rounded-lg flex items-center justify-center ${className || ""}`}>
         <div className="text-muted-foreground">لا يوجد فيديو</div>
+      </div>
+    );
+  }
+
+  if (videoType === "GOOGLE_DRIVE" && videoUrl) {
+    return (
+      <div
+        className={`relative aspect-video overflow-hidden rounded-lg bg-black ${className || ""}`}
+        key={`gdrive-${videoUrl}`}
+      >
+        <iframe
+          src={videoUrl}
+          className="absolute inset-0 z-0 h-full w-full border-0"
+          allow="autoplay; fullscreen"
+          allowFullScreen
+          title="Google Drive video"
+        />
+        {/* Blocks Google Drive top chrome (e.g. pop-out); rest of iframe stays interactive */}
+        <div
+          className="pointer-events-auto absolute inset-x-0 top-0 z-10 min-h-[3rem] h-[18%] max-h-28 bg-transparent"
+          aria-hidden={true}
+        />
       </div>
     );
   }

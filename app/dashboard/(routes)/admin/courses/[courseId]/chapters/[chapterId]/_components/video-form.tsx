@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Video, Pencil, Youtube, Link } from "lucide-react";
+import { Video, Pencil, Youtube, Link, Cloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +31,7 @@ export const VideoForm = ({
     const [isEditing, setIsEditing] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
     const [youtubeUrl, setYoutubeUrl] = useState("");
+    const [driveUrl, setDriveUrl] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const router = useRouter();
 
@@ -71,6 +72,39 @@ export const VideoForm = ({
         }
     }
 
+    const onSubmitGoogleDrive = async () => {
+        if (!driveUrl.trim()) {
+            toast.error(t('teacher.pleaseEnterGoogleDriveUrl'));
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+            const response = await fetch(`/api/courses/${courseId}/chapters/${chapterId}/google-drive`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ driveUrl }),
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(error || 'Failed to add Google Drive video');
+            }
+
+            toast.success(t('teacher.googleDriveVideoAddedSuccessfully'));
+            setIsEditing(false);
+            setDriveUrl("");
+            router.refresh();
+        } catch (error) {
+            console.error("[CHAPTER_GOOGLE_DRIVE]", error);
+            toast.error(error instanceof Error ? error.message : t('teacher.errorOccurred'));
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
     if (!isMounted) {
         return null;
     }
@@ -95,9 +129,13 @@ export const VideoForm = ({
                 <div className="relative aspect-video mt-2">
                     {initialData.videoUrl ? (
                         <PlyrVideoPlayer
-                            videoUrl={initialData.videoType === "UPLOAD" ? initialData.videoUrl : undefined}
+                            videoUrl={
+                                initialData.videoType === "UPLOAD" || initialData.videoType === "GOOGLE_DRIVE"
+                                    ? initialData.videoUrl
+                                    : undefined
+                            }
                             youtubeVideoId={initialData.videoType === "YOUTUBE" ? initialData.youtubeVideoId || undefined : undefined}
-                            videoType={(initialData.videoType as "UPLOAD" | "YOUTUBE") || "YOUTUBE"}
+                            videoType={(initialData.videoType as "UPLOAD" | "YOUTUBE" | "GOOGLE_DRIVE") || "UPLOAD"}
                             className="w-full h-full"
                         />
                     ) : (
@@ -109,39 +147,72 @@ export const VideoForm = ({
             )}
 
             {isEditing && (
-                <div className="mt-4 space-y-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Youtube className="h-4 w-4" />
-                        {t('teacher.pasteYouTubeVideoLink')}
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="youtube-url">{t('teacher.youtubeUrl')}</Label>
-                        <div className="flex gap-2">
-                            <Input
-                                id="youtube-url"
-                                placeholder="https://www.youtube.com/watch?v=..."
-                                value={youtubeUrl}
-                                onChange={(e) => setYoutubeUrl(e.target.value)}
-                                className="flex-1"
-                            />
-                            <Button
-                                onClick={onSubmitYouTube}
-                                disabled={isSubmitting || !youtubeUrl.trim()}
-                                className="flex items-center gap-2"
-                            >
-                                <Link className="h-4 w-4" />
-                                {t('teacher.add')}
-                            </Button>
+                <div className="mt-4 grid gap-6 md:grid-cols-2 md:gap-8">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Youtube className="h-4 w-4 shrink-0" />
+                            {t('teacher.pasteYouTubeVideoLink')}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="youtube-url">{t('teacher.youtubeUrl')}</Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    id="youtube-url"
+                                    placeholder="https://www.youtube.com/watch?v=..."
+                                    value={youtubeUrl}
+                                    onChange={(e) => setYoutubeUrl(e.target.value)}
+                                    className="min-w-0 flex-1"
+                                />
+                                <Button
+                                    type="button"
+                                    onClick={onSubmitYouTube}
+                                    disabled={isSubmitting || !youtubeUrl.trim()}
+                                    className="flex shrink-0 items-center gap-2"
+                                >
+                                    <Link className="h-4 w-4" />
+                                    {t('teacher.add')}
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                            {t('teacher.supportedLinks')}:
+                            <br />
+                            • https://www.youtube.com/watch?v=VIDEO_ID
+                            <br />
+                            • https://youtu.be/VIDEO_ID
+                            <br />
+                            • https://www.youtube.com/embed/VIDEO_ID
                         </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                        {t('teacher.supportedLinks')}:
-                        <br />
-                        • https://www.youtube.com/watch?v=VIDEO_ID
-                        <br />
-                        • https://youtu.be/VIDEO_ID
-                        <br />
-                        • https://www.youtube.com/embed/VIDEO_ID
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Cloud className="h-4 w-4 shrink-0" />
+                            {t('teacher.pasteGoogleDriveVideoLink')}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="google-drive-url">{t('teacher.googleDriveUrl')}</Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    id="google-drive-url"
+                                    placeholder="https://drive.google.com/file/d/..."
+                                    value={driveUrl}
+                                    onChange={(e) => setDriveUrl(e.target.value)}
+                                    className="min-w-0 flex-1"
+                                />
+                                <Button
+                                    type="button"
+                                    onClick={onSubmitGoogleDrive}
+                                    disabled={isSubmitting || !driveUrl.trim()}
+                                    className="flex shrink-0 items-center gap-2"
+                                >
+                                    <Link className="h-4 w-4" />
+                                    {t('teacher.add')}
+                                </Button>
+                            </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            {t('teacher.googleDriveEmbedHint')}
+                        </p>
                     </div>
                 </div>
             )}
