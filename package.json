@@ -13,6 +13,8 @@
     "test:quiz-options": "node scripts/test-quiz-options.js",
     "backup-db-urls": "npx tsx ./scripts/backup-db-urls.ts",
     "restore-db-urls": "npx tsx ./scripts/restore-db-urls.ts",
+    "migrate:db": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" scripts/migrate-old-db-to-new-db.ts",
+    "migrate:aiven": "ts-node scripts/migrate-aiven-to-prisma.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

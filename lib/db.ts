@@ -10,12 +10,18 @@ const globalForPrisma = globalThis as unknown as {
 
 const isEdgeRuntime = typeof (globalThis as { EdgeRuntime?: string }).EdgeRuntime !== "undefined";
 
+/** Prisma Accelerate / Data Proxy URLs only; direct Neon URLs use the Node client below. */
+function isPrismaAccelerateUrl(url: string): boolean {
+    const u = url.trim();
+    return u.startsWith("prisma://") || u.startsWith("prisma+postgres://");
+}
+
 function createPrismaClient() {
-    const accelerateUrl = process.env.PRISMA_ACCELERATE_URL;
+    const accelerateUrl = process.env.PRISMA_ACCELERATE_URL?.trim();
     const directDatabaseUrl = process.env.DIRECT_DATABASE_URL;
     const databaseUrl = process.env.DATABASE_URL;
 
-    if (accelerateUrl) {
+    if (accelerateUrl && isPrismaAccelerateUrl(accelerateUrl)) {
         return new PrismaClientEdge({
             datasourceUrl: accelerateUrl,
         }).$extends(
