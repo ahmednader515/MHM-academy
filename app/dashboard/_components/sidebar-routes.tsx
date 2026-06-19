@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart, Compass, Layout, List, Wallet, Shield, Users, Eye, TrendingUp, BookOpen, FileText, Award, PlusSquare, Video, GraduationCap, Calendar, Ticket, UserCheck, MessageSquare } from "lucide-react";
+import { BarChart, Compass, Layout, List, Wallet, Shield, Users, Eye, TrendingUp, BookOpen, FileText, Award, PlusSquare, Video, GraduationCap, Calendar, Ticket, UserCheck, MessageSquare, Settings } from "lucide-react";
 import { SidebarItem } from "./sidebar-item";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/contexts/language-context";
@@ -42,6 +42,11 @@ export const SidebarRoutes = ({ closeOnClick = false }: { closeOnClick?: boolean
             icon: Ticket,
             label: t('subscriptions.mySubscription') || 'My Subscription',
             href: "/dashboard/subscriptions",
+        },
+        {
+            icon: Settings,
+            label: t('dashboard.settings'),
+            href: "/dashboard/settings",
         },
     ];
 
