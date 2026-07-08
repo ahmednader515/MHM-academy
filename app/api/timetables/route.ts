@@ -36,6 +36,11 @@ export async function GET(req: Request) {
     // Students see timetables matching their profile
     else if (user.role === "USER") {
       const conditions: any[] = [];
+      const splitCsv = (value: string) =>
+        value
+          .split(",")
+          .map((v) => v.trim())
+          .filter(Boolean);
 
       // Curriculum: if user has curriculum, timetable must either not specify curriculum or match user's curriculum
       if (user.curriculum) {
@@ -65,27 +70,16 @@ export async function GET(req: Request) {
       // Grade: if user has grade, timetable must either not specify grade or match user's grade
       // Handle comma-separated grades
       if (user.grade) {
-        const userGrade = user.grade;
+        const userGrades = splitCsv(user.grade);
         conditions.push({
           OR: [
             { targetGrade: null },
-            { targetGrade: userGrade }, // Exact match for single grade
-            // Check if user's grade is included in comma-separated targetGrade
-            {
-              targetGrade: {
-                contains: `,${userGrade},`,
-              },
-            },
-            {
-              targetGrade: {
-                startsWith: `${userGrade},`,
-              },
-            },
-            {
-              targetGrade: {
-                endsWith: `,${userGrade}`,
-              },
-            },
+            ...userGrades.flatMap((g) => [
+              { targetGrade: g },
+              { targetGrade: { contains: `,${g},` } },
+              { targetGrade: { startsWith: `${g},` } },
+              { targetGrade: { endsWith: `,${g}` } },
+            ]),
           ],
         });
       } else {
@@ -95,27 +89,16 @@ export async function GET(req: Request) {
       // Section (Language): if user has language, timetable must either not specify section or match user's language
       // Handle comma-separated sections
       if (user.language) {
-        const userLanguage = user.language;
+        const userLanguages = splitCsv(user.language);
         conditions.push({
           OR: [
             { targetSection: null },
-            { targetSection: userLanguage }, // Exact match for single section
-            // Check if user's language is included in comma-separated targetSection
-            {
-              targetSection: {
-                contains: `,${userLanguage},`,
-              },
-            },
-            {
-              targetSection: {
-                startsWith: `${userLanguage},`,
-              },
-            },
-            {
-              targetSection: {
-                endsWith: `,${userLanguage}`,
-              },
-            },
+            ...userLanguages.flatMap((lang) => [
+              { targetSection: lang },
+              { targetSection: { contains: `,${lang},` } },
+              { targetSection: { startsWith: `${lang},` } },
+              { targetSection: { endsWith: `,${lang}` } },
+            ]),
           ],
         });
       } else {

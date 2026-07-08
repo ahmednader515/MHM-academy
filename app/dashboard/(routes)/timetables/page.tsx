@@ -33,6 +33,11 @@ const StudentTimetablesPage = async () => {
 
   // Get timetables matching student's profile
   const conditions: any[] = [];
+  const splitCsv = (value: string) =>
+    value
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
 
   // Curriculum: if user has curriculum, timetable must either not specify curriculum or match user's curriculum
   if (user.curriculum) {
@@ -60,26 +65,16 @@ const StudentTimetablesPage = async () => {
 
   // Grade: if user has grade, timetable must either not specify grade or match user's grade
   if (user.grade) {
-    const userGrade = user.grade;
+    const userGrades = splitCsv(user.grade);
     conditions.push({
       OR: [
         { targetGrade: null },
-        { targetGrade: userGrade },
-        {
-          targetGrade: {
-            contains: `,${userGrade},`,
-          },
-        },
-        {
-          targetGrade: {
-            startsWith: `${userGrade},`,
-          },
-        },
-        {
-          targetGrade: {
-            endsWith: `,${userGrade}`,
-          },
-        },
+        ...userGrades.flatMap((g) => [
+          { targetGrade: g },
+          { targetGrade: { contains: `,${g},` } },
+          { targetGrade: { startsWith: `${g},` } },
+          { targetGrade: { endsWith: `,${g}` } },
+        ]),
       ],
     });
   } else {
@@ -88,26 +83,16 @@ const StudentTimetablesPage = async () => {
 
   // Section (Language): if user has language, timetable must either not specify section or match user's language
   if (user.language) {
-    const userLanguage = user.language;
+    const userLanguages = splitCsv(user.language);
     conditions.push({
       OR: [
         { targetSection: null },
-        { targetSection: userLanguage },
-        {
-          targetSection: {
-            contains: `,${userLanguage},`,
-          },
-        },
-        {
-          targetSection: {
-            startsWith: `${userLanguage},`,
-          },
-        },
-        {
-          targetSection: {
-            endsWith: `,${userLanguage}`,
-          },
-        },
+        ...userLanguages.flatMap((lang) => [
+          { targetSection: lang },
+          { targetSection: { contains: `,${lang},` } },
+          { targetSection: { startsWith: `${lang},` } },
+          { targetSection: { endsWith: `,${lang}` } },
+        ]),
       ],
     });
   } else {

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Edit, Trash2, Ban, CheckCircle } from "lucide-react";
+import { Search, Edit, Trash2, Ban, CheckCircle, Check } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { toast } from "sonner";
@@ -76,6 +76,12 @@ interface EditUserData {
     grade: string;
     role: string;
 }
+
+const splitCsv = (value: string) =>
+    value
+        .split(",")
+        .map((v) => v.trim())
+        .filter(Boolean);
 
 const StudentsPage = () => {
     const { t, isRTL } = useLanguage();
@@ -469,9 +475,13 @@ const StudentsPage = () => {
                                         </TableCell>
                                         <TableCell className={isRTL ? "text-right" : "text-left"}>
                                             {user.grade ? (
-                                                CURRICULA
-                                                    .flatMap(c => c.grades)
-                                                    .find(g => g.id === user.grade)?.name || user.grade
+                                                (() => {
+                                                    const gradeIds = splitCsv(user.grade);
+                                                    const gradeNames = gradeIds
+                                                        .map((id) => CURRICULA.flatMap((c) => c.grades).find((g) => g.id === id)?.name || id)
+                                                        .filter(Boolean);
+                                                    return gradeNames.join("، ");
+                                                })()
                                             ) : (
                                                 <span className="text-muted-foreground">-</span>
                                             )}
@@ -739,25 +749,51 @@ const StudentsPage = () => {
                                 <Label htmlFor="grade" className={isRTL ? "text-right" : "text-left"}>
                                     {t('admin.grade')}
                                 </Label>
-                                <Select
-                                    value={editData.grade || "none"}
-                                    onValueChange={(value) => setEditData({...editData, grade: value === "none" ? "" : value})}
-                                >
-                                    <SelectTrigger className="col-span-3">
-                                        <SelectValue placeholder={t('admin.selectGrade')} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">{t('common.none')}</SelectItem>
+                                <div className="col-span-3 space-y-2">
+                                    <Input
+                                        readOnly
+                                        value={
+                                            editData.grade
+                                                ? splitCsv(editData.grade)
+                                                    .map((id) => {
+                                                        const grades = editData.language
+                                                            ? getGradesByLanguage(editData.curriculum as any, editData.level as any, editData.language as any)
+                                                            : getGradesByLevel(editData.curriculum as any, editData.level as any);
+                                                        return grades.find((g) => g.id === id)?.name || id;
+                                                    })
+                                                    .join("، ")
+                                                : ""
+                                        }
+                                        placeholder={t('admin.selectGrade')}
+                                    />
+                                    <div className="border rounded-md p-2 max-h-48 overflow-y-auto space-y-1">
                                         {(editData.language
                                             ? getGradesByLanguage(editData.curriculum as any, editData.level as any, editData.language as any)
                                             : getGradesByLevel(editData.curriculum as any, editData.level as any)
-                                        ).map((grade) => (
-                                            <SelectItem key={grade.id} value={grade.id}>
-                                                {grade.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                        ).map((grade) => {
+                                            const selectedGrades = editData.grade ? splitCsv(editData.grade) : [];
+                                            const isSelected = selectedGrades.includes(grade.id);
+                                            return (
+                                                <button
+                                                    key={grade.id}
+                                                    type="button"
+                                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-800 ${
+                                                        isSelected ? "bg-[#090919]/10" : ""
+                                                    }`}
+                                                    onClick={() => {
+                                                        const next = isSelected
+                                                            ? selectedGrades.filter((g) => g !== grade.id)
+                                                            : [...selectedGrades, grade.id];
+                                                        setEditData({ ...editData, grade: next.join(",") });
+                                                    }}
+                                                >
+                                                    <span>{grade.name}</span>
+                                                    {isSelected && <Check className="h-4 w-4 text-[#090919]" />}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
                             </div>
                         )}
                         <div className="grid grid-cols-4 items-center gap-4">

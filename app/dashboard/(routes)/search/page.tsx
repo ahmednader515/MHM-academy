@@ -51,6 +51,12 @@ export default async function SearchPage({
         }
     };
 
+    const splitCsv = (value: string) =>
+        value
+            .split(",")
+            .map((v) => v.trim())
+            .filter(Boolean);
+
     // Add curriculum, level, language and grade filtering if user has this information
     if (user?.curriculum || user?.level || user?.language || user?.grade) {
         whereClause.OR = [];
@@ -94,29 +100,17 @@ export default async function SearchPage({
         // Language: if user has language, course must either not specify language or match user's language
         // Handle comma-separated languages (multiple selections like "arabic,languages")
         if (user?.language) {
+            const userLanguages = splitCsv(user.language);
             conditions.push({
                 OR: [
                     { targetLanguage: null },
-                    { targetLanguage: user.language }, // Exact match for single language
-                    // Check if user's language is included in comma-separated targetLanguage
-                    // Match if it's in the middle: ",arabic," or ",languages,"
-                    {
-                        targetLanguage: {
-                            contains: `,${user.language},`
-                        }
-                    },
-                    // Match if it starts with the language: "arabic," or "languages,"
-                    {
-                        targetLanguage: {
-                            startsWith: `${user.language},`
-                        }
-                    },
-                    // Match if it ends with the language: ",arabic" or ",languages"
-                    {
-                        targetLanguage: {
-                            endsWith: `,${user.language}`
-                        }
-                    }
+                    // Match any of the student's selected languages (single or multi)
+                    ...userLanguages.flatMap((lang) => [
+                        { targetLanguage: lang },
+                        { targetLanguage: { contains: `,${lang},` } },
+                        { targetLanguage: { startsWith: `${lang},` } },
+                        { targetLanguage: { endsWith: `,${lang}` } },
+                    ]),
                 ]
             });
         }
@@ -125,29 +119,17 @@ export default async function SearchPage({
         // Handle comma-separated grades (multiple selections like "p4_arabic,p4_languages")
         // This ensures courses with multiple grades appear for students with any of those grades
         if (user?.grade) {
+            const userGrades = splitCsv(user.grade);
             conditions.push({
                 OR: [
                     { targetGrade: null }, // Course available to all grades
-                    { targetGrade: user.grade }, // Exact match for single grade (e.g., course: "p4_arabic", student: "p4_arabic")
-                    // Check if user's grade is included in comma-separated targetGrade
-                    // Match if it's in the middle: ",p4_arabic," (e.g., course: "p3_arabic,p4_arabic,p5_arabic", student: "p4_arabic")
-                    {
-                        targetGrade: {
-                            contains: `,${user.grade},`
-                        }
-                    },
-                    // Match if it starts with the grade: "p4_arabic," (e.g., course: "p4_arabic,p4_languages", student: "p4_arabic")
-                    {
-                        targetGrade: {
-                            startsWith: `${user.grade},`
-                        }
-                    },
-                    // Match if it ends with the grade: ",p4_arabic" (e.g., course: "p3_arabic,p4_arabic", student: "p4_arabic")
-                    {
-                        targetGrade: {
-                            endsWith: `,${user.grade}`
-                        }
-                    }
+                    // Match any of the student's selected grades (single or multi)
+                    ...userGrades.flatMap((g) => [
+                        { targetGrade: g },
+                        { targetGrade: { contains: `,${g},` } },
+                        { targetGrade: { startsWith: `${g},` } },
+                        { targetGrade: { endsWith: `,${g}` } },
+                    ]),
                 ]
             });
         }
