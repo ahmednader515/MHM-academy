@@ -17,9 +17,9 @@ export const CourseMobileSidebar = () => {
 
   if (!mounted) {
     return (
-      <div className="md:hidden pl-4">
-        <div className="flex items-center justify-center h-10 w-10 rounded-md">
-          <Menu className="h-6 w-6" />
+      <div className="md:hidden [@media(orientation:landscape)_and_(max-height:500px)]:!flex">
+        <div className="flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 rounded-md">
+          <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
         </div>
       </div>
     );
@@ -27,12 +27,12 @@ export const CourseMobileSidebar = () => {
   
   return (
     <Sheet>
-      <SheetTrigger className="md:hidden pl-4 hover:opacity-75 transition">
-        <div className="flex items-center justify-center h-10 w-10 rounded-md hover:bg-slate-100">
-          <Menu className="h-6 w-6" />
+      <SheetTrigger className="md:hidden [@media(orientation:landscape)_and_(max-height:500px)]:!flex hover:opacity-75 transition">
+        <div className="flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 rounded-md hover:bg-slate-100">
+          <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
         </div>
       </SheetTrigger>
-      <SheetContent side="right" className="p-0 w-72">
+      <SheetContent side="right" className="p-0 w-[85vw] max-w-72">
         <DialogTitle className="sr-only">{t('student.courseMenu')}</DialogTitle>
         <CourseSidebar />
       </SheetContent>

@@ -74,25 +74,28 @@ export const CourseNavbar = () => {
   };
 
   return (
-    <div className="p-4 h-full flex items-center bg-card text-foreground border-b shadow-sm">
-      <div className="flex items-center">
+    <div className="px-2 sm:px-4 h-full flex items-center gap-1 sm:gap-2 bg-card text-foreground border-b shadow-sm overflow-hidden">
+      <div className="flex items-center min-w-0 shrink">
         <CourseMobileSidebar />
         <Button
           onClick={handleBackToDashboard}
           variant="ghost"
           size="sm"
-          className="flex items-center gap-x-2 hover:bg-slate-100 rtl:mr-2 ltr:ml-2"
+          className="flex items-center gap-x-1 sm:gap-x-2 hover:bg-slate-100 rtl:mr-1 ltr:ml-1 px-1.5 sm:px-3 min-w-0 h-8 sm:h-9"
         >
-          <span className="rtl:text-right ltr:text-left">{t('student.backToCourses')}</span>
-          <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+          <span className="text-[11px] sm:text-sm rtl:text-right ltr:text-left truncate max-w-[7.5rem] sm:max-w-none">
+            {t('student.backToCourses')}
+          </span>
+          <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 rtl:rotate-180" />
         </Button>
       </div>
-      <div className="flex items-center gap-x-4 rtl:mr-auto ltr:ml-auto">
+      <div className="flex items-center gap-x-0.5 sm:gap-x-3 rtl:mr-auto ltr:ml-auto shrink-0">
         {/* Points display for students */}
         {session?.user && session.user.role === "USER" && userPoints !== null && (
-          <Badge variant="secondary" className="flex items-center gap-1 bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
-            <Star className="h-3 w-3" />
-            {userPoints} {t('navigation.points') || 'Points'}
+          <Badge variant="secondary" className="hidden md:flex items-center gap-1 bg-yellow-100 text-yellow-800 hover:bg-yellow-200 px-2.5">
+            <Star className="h-3 w-3 shrink-0" />
+            <span className="tabular-nums">{userPoints}</span>
+            <span>{t('navigation.points') || 'Points'}</span>
           </Badge>
         )}
         
@@ -103,13 +106,15 @@ export const CourseNavbar = () => {
             onClick={handleLogout}
             loading={isLoggingOut}
             loadingText={t('student.loggingOut')}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors duration-200 ease-in-out"
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors duration-200 ease-in-out px-1.5 sm:px-3 h-8 sm:h-9"
           >
-            <LogOut className="h-4 w-4 rtl:ml-2 ltr:mr-2"/>
-            {t('student.logout')}
+            <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4 rtl:ml-1 sm:rtl:ml-2 ltr:mr-1 sm:ltr:mr-2 shrink-0"/>
+            <span className="text-[11px] sm:text-sm whitespace-nowrap">{t('student.logout')}</span>
           </LoadingButton>
         )}
-        <UserButton />
+        <div className="scale-90 sm:scale-100 origin-center">
+          <UserButton />
+        </div>
       </div>
     </div>
   );

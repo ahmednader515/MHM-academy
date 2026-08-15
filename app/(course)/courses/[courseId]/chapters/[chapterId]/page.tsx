@@ -344,8 +344,8 @@ const ChapterPage = () => {
 
   return (
     <div className="h-full">
-      <div className="max-w-5xl mx-auto p-6">
-        <div className="flex flex-col gap-8">
+      <div className="max-w-5xl mx-auto px-3 py-4 sm:p-6">
+        <div className="flex flex-col gap-5 sm:gap-8">
           {/* Course Progress */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -355,20 +355,14 @@ const ChapterPage = () => {
             <Progress value={courseProgress} className="h-2" />
           </div>
 
-          {/* Video Player Section */}
-          <div className="aspect-video relative bg-black rounded-lg overflow-hidden">
-            {chapter.videoUrl ? (
-              (() => {
-                console.log("🔍 Rendering PlyrVideoPlayer with props:", {
-                  videoUrl:
-                    chapter.videoType === "UPLOAD" || chapter.videoType === "GOOGLE_DRIVE"
-                      ? chapter.videoUrl
-                      : undefined,
-                  youtubeVideoId: chapter.videoType === "YOUTUBE" ? chapter.youtubeVideoId || undefined : undefined,
-                  videoType: (chapter.videoType as "UPLOAD" | "YOUTUBE" | "GOOGLE_DRIVE") || "UPLOAD",
-                  key: `${chapter.id}-${chapter.videoUrl}-${chapter.videoType}`
-                });
-                return (
+          {/* Video Player Section — forced 16:9 (padding technique resists flex shrink on mobile) */}
+          <div className="relative w-[calc(100%+1.5rem)] max-w-none -mx-3 sm:mx-0 sm:w-full sm:max-w-full shrink-0 overflow-hidden bg-black sm:rounded-lg">
+            <div
+              className="relative w-full"
+              style={{ paddingBottom: "56.25%", height: 0 }}
+            >
+              {chapter.videoUrl ? (
+                <div className="absolute inset-0 h-full w-full">
                   <PlyrVideoPlayer
                     key={`${chapter.id}-${chapter.videoUrl}-${chapter.videoType}`}
                     videoUrl={
@@ -378,32 +372,31 @@ const ChapterPage = () => {
                     }
                     youtubeVideoId={chapter.videoType === "YOUTUBE" ? chapter.youtubeVideoId || undefined : undefined}
                     videoType={(chapter.videoType as "UPLOAD" | "YOUTUBE" | "GOOGLE_DRIVE") || "UPLOAD"}
-                    className="w-full h-full"
+                    className="absolute inset-0 h-full w-full rounded-none"
                     onEnded={onEnd}
                     onTimeUpdate={(currentTime) => {
-                      // Only log in development
                       if (process.env.NODE_ENV === 'development') {
                         console.log("🔍 Video time update:", currentTime);
                       }
                     }}
                   />
-                );
-              })()
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-white">
-{t('student.noVideoAvailable')}
-              </div>
-            )}
+                </div>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-white">
+                  {t('student.noVideoAvailable')}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Chapter Information */}
           <div className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold">{chapter.title}</h1>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h1 className="text-xl sm:text-2xl font-bold break-words">{chapter.title}</h1>
               <Button
                 variant="outline"
                 onClick={toggleCompletion}
-                className="flex items-center gap-2"
+                className="flex items-center justify-center gap-2 w-full sm:w-auto shrink-0"
               >
                 {isCompleted ? (
                   <>

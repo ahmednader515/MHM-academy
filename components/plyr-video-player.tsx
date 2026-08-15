@@ -168,27 +168,28 @@ export const PlyrVideoPlayer = ({
   if (videoType === "GOOGLE_DRIVE" && videoUrl) {
     return (
       <div
-        className={`relative aspect-video overflow-hidden rounded-lg bg-black ${className || ""}`}
+        className={`relative h-full w-full overflow-hidden bg-black ${className || ""}`}
         key={`gdrive-${videoUrl}`}
       >
         <iframe
           src={videoUrl}
           className="absolute inset-0 z-0 h-full w-full border-0"
-          allow="autoplay; fullscreen"
+          allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
           allowFullScreen
+          loading="eager"
+          referrerPolicy="strict-origin-when-cross-origin"
           title="Google Drive video"
-        />
-        {/* Blocks Google Drive top chrome (e.g. pop-out); rest of iframe stays interactive */}
-        <div
-          className="pointer-events-auto absolute inset-x-0 top-0 z-10 min-h-[3rem] h-[18%] max-h-28 bg-transparent"
-          aria-hidden={true}
         />
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} className={`aspect-video ${className || ""}`} key={`player-${videoType}-${videoUrl || youtubeVideoId}`}>
+    <div
+      ref={containerRef}
+      className={`relative h-full w-full ${className || ""}`}
+      key={`player-${videoType}-${videoUrl || youtubeVideoId}`}
+    >
       {videoType === "YOUTUBE" && youtubeVideoId ? (
         <div
           ref={youtubeEmbedRef}
@@ -201,10 +202,10 @@ export const PlyrVideoPlayer = ({
           }}
         />
       ) : (
-        <video 
-          ref={html5VideoRef} 
-          className="w-full h-full" 
-          playsInline 
+        <video
+          ref={html5VideoRef}
+          className="w-full h-full"
+          playsInline
           crossOrigin="anonymous"
           preload="metadata"
           key={videoUrl}
