@@ -20,8 +20,7 @@ export async function GET() {
         role: true,
         fullName: true,
         points: true
-      },
-      cacheStrategy: { ttl: 60 } // Cache user points for 60 seconds
+      }
     });
     
     const points = user?.points || 0;

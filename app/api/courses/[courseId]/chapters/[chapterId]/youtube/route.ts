@@ -16,15 +16,18 @@ export async function POST(
         }
 
         const userId = session.user.id;
+        const user = session.user;
 
-        const courseOwner = await db.course.findUnique({
-            where: {
-                id: resolvedParams.courseId,
-                userId,
-            }
-        });
+        const course =
+            user?.role === "ADMIN" || user?.role === "SUPERVISOR"
+                ? await db.course.findUnique({
+                    where: { id: resolvedParams.courseId },
+                })
+                : await db.course.findUnique({
+                    where: { id: resolvedParams.courseId, userId },
+                });
 
-        if (!courseOwner) {
+        if (!course) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
