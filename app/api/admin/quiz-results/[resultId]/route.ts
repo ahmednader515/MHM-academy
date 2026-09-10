@@ -14,15 +14,12 @@ export async function GET(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const userId = session.user.id;
+        if (session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR") {
+            return new NextResponse("Forbidden - Only admins and supervisors can access this resource", { status: 403 });
+        }
 
         const quizResult = await getQuizResultDetail({
-            id: resolvedParams.resultId,
-            quiz: {
-                course: {
-                    userId: userId
-                }
-            }
+            id: resolvedParams.resultId
         });
 
         if (!quizResult) {
@@ -31,7 +28,7 @@ export async function GET(
 
         return NextResponse.json(quizResult);
     } catch (error) {
-        console.log("[TEACHER_QUIZ_RESULT_GET]", error);
+        console.log("[ADMIN_QUIZ_RESULT_GET]", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }
@@ -48,8 +45,8 @@ export async function PATCH(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        if (session.user.role !== "TEACHER") {
-            return new NextResponse("Forbidden - Only teachers can grade this resource", { status: 403 });
+        if (session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR") {
+            return new NextResponse("Forbidden - Only admins and supervisors can grade this resource", { status: 403 });
         }
 
         const { answerId, isCorrect } = await req.json();
@@ -62,13 +59,7 @@ export async function PATCH(
             resultId: resolvedParams.resultId,
             answerId,
             isCorrect,
-            accessWhere: {
-                quiz: {
-                    course: {
-                        userId: session.user.id
-                    }
-                }
-            }
+            accessWhere: {}
         });
 
         if (graded.error === "not_found") {
@@ -85,7 +76,7 @@ export async function PATCH(
 
         return NextResponse.json(graded.result);
     } catch (error) {
-        console.log("[TEACHER_QUIZ_RESULT_PATCH]", error);
+        console.log("[ADMIN_QUIZ_RESULT_PATCH]", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

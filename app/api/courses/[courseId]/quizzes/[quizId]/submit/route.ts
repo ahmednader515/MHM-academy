@@ -111,6 +111,7 @@ export async function POST(
             
             let isCorrect = false;
             let pointsEarned = 0;
+            let isGraded = true;
 
             if (question.type === "MULTIPLE_CHOICE") {
                 // Parse options to get the correct answer format
@@ -125,11 +126,13 @@ export async function POST(
             } else if (question.type === "TRUE_FALSE") {
                 isCorrect = studentAnswer.toLowerCase() === question.correctAnswer.toLowerCase();
             } else if (question.type === "SHORT_ANSWER") {
-                // For short answer, do a case-insensitive comparison
-                isCorrect = studentAnswer.trim().toLowerCase() === question.correctAnswer.trim().toLowerCase();
+                // Written answers are graded manually by teachers/admins
+                isGraded = false;
+                isCorrect = false;
+                pointsEarned = 0;
             }
 
-            if (isCorrect) {
+            if (isGraded && isCorrect) {
                 pointsEarned = question.points;
                 totalScore += question.points;
             }
@@ -139,6 +142,7 @@ export async function POST(
                 studentAnswer,
                 correctAnswer: question.correctAnswer,
                 isCorrect,
+                isGraded,
                 pointsEarned
             });
         }

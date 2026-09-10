@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useLanguage } from "@/lib/contexts/language-context";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 interface Course {
     id: string;
@@ -54,6 +55,7 @@ interface QuizResult {
 }
 
 interface QuizAnswer {
+    id?: string;
     questionId: string;
     question: {
         text: string;
@@ -63,12 +65,14 @@ interface QuizAnswer {
     studentAnswer: string;
     correctAnswer: string;
     isCorrect: boolean;
+    isGraded?: boolean;
     pointsEarned: number;
 }
 
 const GradesPage = () => {
     const { t, isRTL } = useLanguage();
     const { data: session } = useSession();
+    const router = useRouter();
     
     const [courses, setCourses] = useState<Course[]>([]);
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -390,13 +394,13 @@ const GradesPage = () => {
                                         </div>
                                         <div className="text-center">
                                             <div className="text-2xl font-bold text-green-600">
-                                                {selectedResult.answers.filter(a => a.isCorrect).length}
+                                                {selectedResult.answers.filter(a => a.isGraded !== false && a.isCorrect).length}
                                             </div>
                                             <div className="text-sm text-muted-foreground">{t('admin.correctAnswers') || t('teacher.correctAnswers')}</div>
                                         </div>
                                         <div className="text-center">
                                             <div className="text-2xl font-bold text-red-600">
-                                                {selectedResult.answers.filter(a => !a.isCorrect).length}
+                                                {selectedResult.answers.filter(a => a.isGraded !== false && !a.isCorrect).length}
                                             </div>
                                             <div className="text-sm text-muted-foreground">{t('admin.incorrectAnswers') || t('teacher.incorrectAnswers')}</div>
                                         </div>
@@ -418,12 +422,14 @@ const GradesPage = () => {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-4">
-                                        {selectedResult.answers.map((answer, index) => (
+                                        {selectedResult.answers.map((answer, index) => {
+                                            const isPending = answer.question.type === "SHORT_ANSWER" && answer.isGraded === false;
+                                            return (
                                             <div key={answer.questionId} className="border rounded-lg p-4">
                                                 <div className="flex items-center justify-between mb-2">
                                                     <h4 className="font-medium">{t('admin.question') || t('teacher.question')} {index + 1}</h4>
-                                                    <Badge variant={answer.isCorrect ? "default" : "destructive"}>
-                                                        {answer.isCorrect ? (t('admin.correct') || t('teacher.correct')) : (t('admin.incorrect') || t('teacher.incorrect'))}
+                                                    <Badge variant={isPending ? "outline" : answer.isCorrect ? "default" : "destructive"}>
+                                                        {isPending ? t('teacher.pendingReview') : answer.isCorrect ? (t('admin.correct') || t('teacher.correct')) : (t('admin.incorrect') || t('teacher.incorrect'))}
                                                     </Badge>
                                                 </div>
                                                 <p className="text-sm text-muted-foreground mb-2">{answer.question.text}</p>
@@ -432,22 +438,31 @@ const GradesPage = () => {
                                                         <span className="font-medium">{t('admin.studentAnswer') || t('teacher.studentAnswer')}:</span>
                                                         <p className="text-muted-foreground">{answer.studentAnswer}</p>
                                                     </div>
-                                                    <div>
-                                                        <span className="font-medium">{t('admin.correctAnswer') || t('teacher.correctAnswer')}:</span>
-                                                        <p className="text-green-600">{answer.correctAnswer}</p>
-                                                    </div>
+                                                    {answer.question.type !== "SHORT_ANSWER" && (
+                                                        <div>
+                                                            <span className="font-medium">{t('admin.correctAnswer') || t('teacher.correctAnswer')}:</span>
+                                                            <p className="text-green-600">{answer.correctAnswer}</p>
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="mt-2 text-sm">
                                                     <span className="font-medium">{t('admin.points') || t('teacher.points')}:</span>
                                                     <span className="text-muted-foreground">
-                                                        {" "}{answer.pointsEarned}/{answer.question.points}
+                                                        {" "}{isPending ? t('teacher.pendingReview') : `${answer.pointsEarned}/${answer.question.points}`}
                                                     </span>
                                                 </div>
                                             </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </CardContent>
                             </Card>
+                            <Button
+                                className="w-full"
+                                onClick={() => router.push(`/dashboard/admin/quiz-results/${selectedResult.id}`)}
+                            >
+                                {t('teacher.gradeQuiz')}
+                            </Button>
                         </div>
                     )}
                 </DialogContent>

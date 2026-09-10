@@ -5,7 +5,7 @@ import { use } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Trash2, FileText } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, FileText, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/contexts/language-context";
@@ -284,6 +284,14 @@ const QuizViewPage = ({ params }: { params: Promise<{ quizId: string }> }) => {
                             >
                                 <Edit className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                                 {t('teacher.editQuiz')}
+                            </Button>
+                            <Button
+                                className="w-full"
+                                variant="outline"
+                                onClick={() => router.push(`/dashboard/admin/quiz-results?quizId=${quiz.id}`)}
+                            >
+                                <Eye className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                {t('teacher.viewResults')}
                             </Button>
                         </CardContent>
                     </Card>

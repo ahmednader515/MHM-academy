@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, CheckCircle, XCircle, Award } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, Award, Clock } from "lucide-react";
 
 interface QuizAnswer {
     questionId: string;
     studentAnswer: string;
     correctAnswer: string;
     isCorrect: boolean;
+    isGraded?: boolean;
     pointsEarned: number;
     question: {
         text: string;
@@ -174,6 +175,13 @@ export default function QuizResultPage({
         return answer;
     };
 
+    const getAnswerStatus = (answer: QuizAnswer) => {
+        if (answer.question.type === "SHORT_ANSWER" && answer.isGraded === false) {
+            return "pending";
+        }
+        return answer.isCorrect ? "correct" : "incorrect";
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -193,8 +201,9 @@ export default function QuizResultPage({
         );
     }
 
-    const correctAnswers = result.answers.filter(a => a.isCorrect).length;
-    const incorrectAnswers = result.answers.filter(a => !a.isCorrect).length;
+    const correctAnswers = result.answers.filter(a => getAnswerStatus(a) === "correct").length;
+    const incorrectAnswers = result.answers.filter(a => getAnswerStatus(a) === "incorrect").length;
+    const pendingAnswers = result.answers.filter(a => getAnswerStatus(a) === "pending").length;
 
     return (
         <div className="min-h-screen bg-background">
@@ -240,6 +249,11 @@ export default function QuizResultPage({
                                     <div className="text-sm text-muted-foreground">إجابات خاطئة</div>
                                 </div>
                             </div>
+                            {pendingAnswers > 0 && (
+                                <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                                    الدرجة الحالية بدون الأسئلة المقالية. هناك {pendingAnswers} سؤال بانتظار تصحيح المعلم.
+                                </div>
+                            )}
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm font-medium">التقدم العام</span>
@@ -260,18 +274,24 @@ export default function QuizResultPage({
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                {result.answers.map((answer, index) => (
+                                {result.answers.map((answer, index) => {
+                                    const status = getAnswerStatus(answer);
+                                    const isWritten = answer.question.type === "SHORT_ANSWER";
+
+                                    return (
                                     <div key={answer.questionId} className="border rounded-lg p-4">
                                         <div className="flex items-center justify-between mb-2">
                                             <h4 className="font-medium">السؤال {index + 1}</h4>
                                             <div className="flex items-center gap-2">
-                                                {answer.isCorrect ? (
+                                                {status === "pending" ? (
+                                                    <Clock className="h-4 w-4 text-amber-600" />
+                                                ) : status === "correct" ? (
                                                     <CheckCircle className="h-4 w-4 text-green-600" />
                                                 ) : (
                                                     <XCircle className="h-4 w-4 text-red-600" />
                                                 )}
-                                                <Badge variant={answer.isCorrect ? "default" : "destructive"}>
-                                                    {answer.isCorrect ? "صحيح" : "خاطئ"}
+                                                <Badge variant={status === "correct" ? "default" : status === "pending" ? "outline" : "destructive"}>
+                                                    {status === "pending" ? "قيد المراجعة" : status === "correct" ? "صحيح" : "خاطئ"}
                                                 </Badge>
                                             </div>
                                         </div>
@@ -286,21 +306,24 @@ export default function QuizResultPage({
                                                     }
                                                 </p>
                                             </div>
-                                            <div>
-                                                <span className="font-medium">الإجابة الصحيحة:</span>
-                                                <p className="text-green-600">
-                                                    {formatAnswer(answer.correctAnswer, answer.question.type)}
-                                                </p>
-                                            </div>
+                                            {!isWritten && (
+                                                <div>
+                                                    <span className="font-medium">الإجابة الصحيحة:</span>
+                                                    <p className="text-green-600">
+                                                        {formatAnswer(answer.correctAnswer, answer.question.type)}
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="mt-2 text-sm">
                                             <span className="font-medium">الدرجات:</span>
                                             <span className="text-muted-foreground">
-                                                {" "}{answer.pointsEarned}/{answer.question.points}
+                                                {" "}{status === "pending" ? "بانتظار التصحيح" : `${answer.pointsEarned}/${answer.question.points}`}
                                             </span>
                                         </div>
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </CardContent>
                     </Card>

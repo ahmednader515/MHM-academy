@@ -55,7 +55,9 @@ export async function GET(req: Request) {
                                 text: true,
                                 type: true,
                                 points: true,
-                                position: true
+                                position: true,
+                                options: true,
+                                correctAnswer: true
                             }
                         }
                     },
