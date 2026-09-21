@@ -117,10 +117,18 @@ export function SettingsContent() {
                 toast.success(t("dashboard.profileUpdated") || t("common.success"));
             } else {
                 const error = await response.text();
-                if (error.includes("Phone number")) {
+                if (error.includes("Parent phone number cannot be the same")) {
+                    toast.error(t("auth.parentPhoneSameAsStudent") || error);
+                } else if (error.includes("already registered as a student")) {
+                    toast.error(t("auth.parentPhoneRegisteredAsStudent") || error);
+                } else if (error.includes("Parent phone")) {
+                    toast.error(t("auth.parentPhoneAlreadyExists") || error);
+                } else if (error.includes("Phone number")) {
                     toast.error(t("auth.phoneAlreadyExists") || error);
                 } else if (error.includes("Email")) {
                     toast.error(t("auth.emailAlreadyExists") || error);
+                } else if (error.includes("Internal Error")) {
+                    toast.error(t("auth.serverError") || t("common.error"));
                 } else {
                     toast.error(error || t("common.error"));
                 }

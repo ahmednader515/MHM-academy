@@ -131,6 +131,10 @@ export async function PATCH(req: NextRequest) {
             return new NextResponse(validationError, { status: 400 });
         }
 
+        const trimmedPhoneNumber = phoneNumber.trim();
+        const trimmedEmail = email.trim();
+        const trimmedParentPhoneNumber = parentPhoneNumber.trim();
+
         const existingUser = await db.user.findUnique({
             where: { id: session.user.id },
         });
@@ -139,10 +143,10 @@ export async function PATCH(req: NextRequest) {
             return new NextResponse("User not found", { status: 404 });
         }
 
-        if (phoneNumber !== existingUser.phoneNumber) {
+        if (trimmedPhoneNumber !== existingUser.phoneNumber) {
             const phoneExists = await db.user.findFirst({
                 where: {
-                    phoneNumber,
+                    phoneNumber: trimmedPhoneNumber,
                     id: { not: session.user.id },
                 },
             });
@@ -151,10 +155,10 @@ export async function PATCH(req: NextRequest) {
             }
         }
 
-        if (email !== existingUser.email) {
+        if (trimmedEmail !== existingUser.email) {
             const emailExists = await db.user.findFirst({
                 where: {
-                    email,
+                    email: trimmedEmail,
                     id: { not: session.user.id },
                 },
             });
@@ -163,45 +167,38 @@ export async function PATCH(req: NextRequest) {
             }
         }
 
-        const parentAsStudent = await db.user.findFirst({
+        const parentPhoneOwner = await db.user.findFirst({
             where: {
-                phoneNumber: parentPhoneNumber,
-                role: "USER",
-                id: { not: session.user.id },
+                phoneNumber: trimmedParentPhoneNumber,
             },
         });
 
-        if (parentAsStudent) {
-            return new NextResponse("Parent phone number is already registered as a student", { status: 400 });
-        }
-
-        const updatedUser = await db.$transaction(async (tx) => {
-            const existingParent = await tx.user.findFirst({
-                where: {
-                    phoneNumber: parentPhoneNumber,
-                    role: "PARENT",
-                },
-            });
-
-            if (!existingParent && parentPhoneNumber !== existingUser.parentPhoneNumber) {
-                await tx.user.create({
-                    data: {
-                        fullName: `${fullName.split(" ")[0]}'s Parent`,
-                        phoneNumber: parentPhoneNumber,
-                        email: `parent_${parentPhoneNumber.replace("+", "")}@mhm.academy`,
-                        hashedPassword: existingUser.hashedPassword ?? "",
-                        role: "PARENT",
-                    },
-                });
+        if (parentPhoneOwner && parentPhoneOwner.role !== "PARENT") {
+            if (parentPhoneOwner.id === session.user.id && trimmedPhoneNumber === trimmedParentPhoneNumber) {
+                return new NextResponse("Parent phone number cannot be the same as student phone number", { status: 400 });
             }
 
-            return tx.user.update({
+            if (parentPhoneOwner.role === "USER" && parentPhoneOwner.id !== session.user.id) {
+                return new NextResponse("Parent phone number is already registered as a student", { status: 400 });
+            }
+
+            if (parentPhoneOwner.id !== session.user.id) {
+                return new NextResponse("Parent phone number already exists", { status: 400 });
+            }
+        }
+
+        const shouldCreateParent =
+            trimmedParentPhoneNumber !== existingUser.parentPhoneNumber &&
+            (!parentPhoneOwner || (parentPhoneOwner.id === session.user.id && trimmedPhoneNumber !== trimmedParentPhoneNumber));
+
+        const updatedUser = await db.$transaction(async (tx) => {
+            const updated = await tx.user.update({
                 where: { id: session.user.id },
                 data: {
                     fullName: fullName.trim(),
-                    phoneNumber: phoneNumber.trim(),
-                    email: email.trim(),
-                    parentPhoneNumber: parentPhoneNumber.trim(),
+                    phoneNumber: trimmedPhoneNumber,
+                    email: trimmedEmail,
+                    parentPhoneNumber: trimmedParentPhoneNumber,
                     curriculum,
                     curriculumType: curriculum === "egyptian" ? curriculumType : null,
                     level,
@@ -220,11 +217,47 @@ export async function PATCH(req: NextRequest) {
                     grade: true,
                 },
             });
+
+            if (shouldCreateParent) {
+                const existingParent = await tx.user.findFirst({
+                    where: {
+                        phoneNumber: trimmedParentPhoneNumber,
+                        role: "PARENT",
+                    },
+                });
+
+                if (!existingParent) {
+                    await tx.user.create({
+                        data: {
+                            fullName: `${fullName.split(" ")[0]}'s Parent`,
+                            phoneNumber: trimmedParentPhoneNumber,
+                            email: `parent_${trimmedParentPhoneNumber.replace("+", "")}@mhm.academy`,
+                            hashedPassword: existingUser.hashedPassword ?? "",
+                            role: "PARENT",
+                        },
+                    });
+                }
+            }
+
+            return updated;
         });
 
         return NextResponse.json(updatedUser);
-    } catch (error) {
+    } catch (error: any) {
         console.error("[USER_PROFILE_PATCH]", error);
+
+        if (error?.code === "P2002") {
+            const target = error?.meta?.target;
+            const fields = Array.isArray(target) ? target.join(",") : String(target || "");
+            if (fields.includes("phoneNumber")) {
+                return new NextResponse("Parent phone number already exists", { status: 400 });
+            }
+            if (fields.includes("email")) {
+                return new NextResponse("Email already exists", { status: 400 });
+            }
+            return new NextResponse("This information is already registered", { status: 400 });
+        }
+
         return new NextResponse("Internal Error", { status: 500 });
     }
 }
