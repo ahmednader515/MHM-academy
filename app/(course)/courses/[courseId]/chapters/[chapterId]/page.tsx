@@ -5,12 +5,14 @@ import { useRouter, useParams } from "next/navigation";
 import axios, { AxiosError } from "axios";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Lock, FileText, Download, Upload, Image as ImageIcon, ClipboardList } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Lock, FileText, Download, Upload, Image as ImageIcon, ClipboardList, Pencil } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { PlyrVideoPlayer } from "@/components/plyr-video-player";
 import { useLanguage } from "@/lib/contexts/language-context";
 import { FileUpload } from "@/components/file-upload";
+import { DocumentEditor } from "@/components/document-editor";
+import { isEditableHomeworkFile } from "@/lib/document-utils";
 
 interface Chapter {
   id: string;
@@ -51,6 +53,10 @@ const ChapterPage = () => {
   const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
   const [homework, setHomework] = useState<{ id: string; imageUrl: string; imageUrls?: string[]; correctedImageUrl?: string | null; correctedImageUrls?: string[]; createdAt: string } | null>(null);
   const [uploadingHomework, setUploadingHomework] = useState(false);
+  const [documentEditor, setDocumentEditor] = useState<{
+    sources: { url: string; name?: string }[];
+    title?: string;
+  } | null>(null);
   const [activities, setActivities] = useState<Array<{ id: string; title: string; description: string | null; isRequired: boolean }>>([]);
   const [activitySubmissions, setActivitySubmissions] = useState<{ [activityId: string]: { id: string; imageUrl: string; createdAt: string } | null }>({});
   const [uploadingActivities, setUploadingActivities] = useState<{ [activityId: string]: boolean }>({});
@@ -154,6 +160,28 @@ const ChapterPage = () => {
       }
       
       toast.success(t('student.fileOpenedInNewTab'));
+    }
+  };
+
+  const refreshHomework = async () => {
+    const homeworkResponse = await axios.get(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/homework`);
+    setHomework(homeworkResponse.data);
+  };
+
+  const submitEditedHomework = async (imageUrls: string[]) => {
+    setUploadingHomework(true);
+    try {
+      await axios.post(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/homework`, {
+        imageUrls,
+      });
+      toast.success(t('student.homeworkSubmittedSuccess') || 'Homework submitted successfully!');
+      await refreshHomework();
+    } catch (error) {
+      toast.error(t('student.homeworkSubmitFailed') || 'Failed to submit homework');
+      console.error("Error submitting homework:", error);
+      throw error;
+    } finally {
+      setUploadingHomework(false);
     }
   };
 
@@ -468,6 +496,18 @@ const ChapterPage = () => {
                               </Button>
                             </div>
                           ))}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setDocumentEditor({
+                              sources: submittedImages.map((url, imageIndex) => ({ url, name: `homework-${imageIndex + 1}.jpg` })),
+                              title: t('student.editHomework') || 'Edit homework',
+                            })}
+                            className="flex items-center gap-1"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            {t('student.editOnPlatform') || 'Edit on platform'}
+                          </Button>
                         </div>
                       );
                     })()}
@@ -728,6 +768,20 @@ const ChapterPage = () => {
                         >
                           {t('student.view')}
                         </Button>
+                        {isEditableHomeworkFile(attachment.url, attachment.name) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setDocumentEditor({
+                              sources: [{ url: attachment.url, name: attachment.name }],
+                              title: attachment.name || t('student.documentEditor'),
+                            })}
+                            className="flex items-center gap-1"
+                          >
+                            <Pencil className="h-3 w-3" />
+                            {t('student.editAndSubmit') || 'Edit & submit'}
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
@@ -767,6 +821,20 @@ const ChapterPage = () => {
                     >
                       {t('student.viewDocument')}
                     </Button>
+                    {isEditableHomeworkFile(chapter.documentUrl || '', chapter.documentName || undefined) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDocumentEditor({
+                          sources: [{ url: chapter.documentUrl!, name: chapter.documentName || undefined }],
+                          title: chapter.documentName || t('student.documentEditor'),
+                        })}
+                        className="flex items-center gap-1"
+                      >
+                        <Pencil className="h-3 w-3" />
+                        {t('student.editAndSubmit') || 'Edit & submit'}
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -813,6 +881,18 @@ const ChapterPage = () => {
           </div>
         </div>
       </div>
+      <DocumentEditor
+        open={!!documentEditor}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDocumentEditor(null);
+          }
+        }}
+        sources={documentEditor?.sources || []}
+        title={documentEditor?.title}
+        submitLabel={t('student.submitEditedHomework') || 'Submit homework'}
+        onSubmit={submitEditedHomework}
+      />
     </div>
   );
 };

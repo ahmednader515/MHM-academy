@@ -34,6 +34,7 @@ const nextConfig = {
     ],
   },
   serverExternalPackages: ['@prisma/client', 'bcrypt'],
+  transpilePackages: ['pdfjs-dist'],
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },

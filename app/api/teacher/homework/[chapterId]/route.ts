@@ -106,9 +106,14 @@ export async function PATCH(
       return new NextResponse("Forbidden", { status: 403 });
     }
 
-    const { homeworkId, correctedImageUrl } = await req.json();
+    const { homeworkId, correctedImageUrl, correctedImageUrls } = await req.json();
+    const incomingImages = Array.isArray(correctedImageUrls)
+      ? correctedImageUrls.filter((url: unknown) => typeof url === "string" && url)
+      : correctedImageUrl
+        ? [correctedImageUrl]
+        : [];
 
-    if (!homeworkId || !correctedImageUrl) {
+    if (!homeworkId || incomingImages.length === 0) {
       return new NextResponse("Homework ID and corrected image URL are required", { status: 400 });
     }
 
@@ -144,7 +149,7 @@ export async function PATCH(
                          ((homework as any).correctedImageUrl ? [(homework as any).correctedImageUrl] : []);
 
     // Append new image to the array (don't replace)
-    const updatedImages = [...currentImages, correctedImageUrl];
+    const updatedImages = [...currentImages, ...incomingImages];
 
     // Update homework with corrected images array
     const updatedHomework = await db.homeworkSubmission.update({

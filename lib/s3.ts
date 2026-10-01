@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export type UploadEndpoint =
@@ -31,7 +31,7 @@ export const uploadConfigs: Record<UploadEndpoint, UploadConfig> = {
     keyPrefix: "course-attachments",
   },
   homeworkImage: {
-    maxFileSize: 10 * MB,
+    maxFileSize: 15 * MB,
     allowedMimeTypes: ["image/"],
     keyPrefix: "homework",
   },
@@ -191,6 +191,24 @@ export function extractS3KeyFromUrl(url: string | null | undefined) {
   }
 
   return null;
+}
+
+export async function getS3ObjectByUrl(url: string) {
+  const key = extractS3KeyFromUrl(url);
+
+  if (!key) {
+    return null;
+  }
+
+  const client = getS3Client();
+  const result = await client.send(
+    new GetObjectCommand({
+      Bucket: getBucketName(),
+      Key: key,
+    })
+  );
+
+  return { key, ...result };
 }
 
 export async function deleteS3ObjectByUrl(url: string | null | undefined) {

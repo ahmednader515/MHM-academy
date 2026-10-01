@@ -18,9 +18,14 @@ export async function POST(
 
     const userId = session.user.id;
 
-    const { imageUrl } = await req.json();
+    const { imageUrl, imageUrls } = await req.json();
+    const incomingImages = Array.isArray(imageUrls)
+      ? imageUrls.filter((url: unknown) => typeof url === "string" && url)
+      : imageUrl
+        ? [imageUrl]
+        : [];
 
-    if (!imageUrl) {
+    if (incomingImages.length === 0) {
       return new NextResponse("Image URL is required", { status: 400 });
     }
 
@@ -71,7 +76,7 @@ export async function POST(
                            ((existingHomework as any).imageUrl ? [(existingHomework as any).imageUrl] : []);
 
       // Append new image to the array (don't replace)
-      const updatedImages = [...currentImages, imageUrl];
+      const updatedImages = [...currentImages, ...incomingImages];
 
       const homework = await db.homeworkSubmission.update({
         where: {
@@ -79,7 +84,7 @@ export async function POST(
         },
         data: {
           imageUrls: updatedImages,
-          imageUrl: imageUrl, // Keep for backward compatibility
+          imageUrl: incomingImages[incomingImages.length - 1],
           updatedAt: new Date(),
         },
       });
@@ -91,15 +96,13 @@ export async function POST(
         data: {
           studentId: userId,
           chapterId: resolvedParams.chapterId,
-          imageUrls: [imageUrl],
-          imageUrl: imageUrl, // Keep for backward compatibility
+          imageUrls: incomingImages,
+          imageUrl: incomingImages[incomingImages.length - 1],
         },
       });
 
       return NextResponse.json(homework);
     }
-
-    return NextResponse.json(homework);
   } catch (error) {
     console.log("[HOMEWORK_SUBMIT]", error);
     return new NextResponse("Internal Error", { status: 500 });

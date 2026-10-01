@@ -23,7 +23,7 @@ const endpointConfig: Record<UploadEndpoint, { accept: string; helperText: strin
     },
     homeworkImage: {
         accept: "image/*",
-        helperText: "Image files up to 10MB.",
+        helperText: "Image files up to 15MB.",
     },
     activityImage: {
         accept: "image/*",

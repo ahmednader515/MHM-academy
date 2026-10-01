@@ -8,12 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Search, Eye, BookOpen, CheckCircle, Clock, Image as ImageIcon, ClipboardList, Upload, X } from "lucide-react";
+import { Search, Eye, BookOpen, CheckCircle, Clock, Image as ImageIcon, ClipboardList, Upload, X, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useLanguage } from "@/lib/contexts/language-context";
 import { toast } from "sonner";
 import { FileUpload } from "@/components/file-upload";
+import { DocumentEditor } from "@/components/document-editor";
 import { CURRICULA, getLevelsByCurriculum, getLanguagesByLevel, getGradesByLanguage, getGradesByLevel } from "@/lib/data/curriculum-data";
 import { Label } from "@/components/ui/label";
 import {
@@ -147,6 +148,12 @@ const ProgressPage = () => {
     const [loadingActivities, setLoadingActivities] = useState(false);
     const [displayedCount, setDisplayedCount] = useState(25);
     const [uploadingCorrectedHomework, setUploadingCorrectedHomework] = useState<{ [homeworkId: string]: boolean }>({});
+    const [correctionEditor, setCorrectionEditor] = useState<{
+        homeworkId: string;
+        chapterId: string;
+        sources: { url: string; name?: string }[];
+        title?: string;
+    } | null>(null);
 
     // Filter states
     const [selectedCurriculum, setSelectedCurriculum] = useState<string>("");
@@ -276,9 +283,10 @@ const ProgressPage = () => {
         setHomeworkDialogOpen(true);
     };
 
-    const handleUploadCorrectedHomework = async (homeworkId: string, chapterId: string, imageUrl: string) => {
+    const handleUploadCorrectedHomework = async (homeworkId: string, chapterId: string, imageUrl: string | string[]) => {
         setUploadingCorrectedHomework(prev => ({ ...prev, [homeworkId]: true }));
         try {
+            const correctedImageUrls = Array.isArray(imageUrl) ? imageUrl : [imageUrl];
             const response = await fetch(`/api/teacher/homework/${chapterId}`, {
                 method: "PATCH",
                 headers: {
@@ -286,7 +294,7 @@ const ProgressPage = () => {
                 },
                 body: JSON.stringify({
                     homeworkId,
-                    correctedImageUrl: imageUrl,
+                    correctedImageUrls,
                 }),
             });
 
@@ -808,6 +816,19 @@ const ProgressPage = () => {
                                                                     </Button>
                                                                 </div>
                                                             ))}
+                                                            <Button
+                                                                variant="outline"
+                                                                className="w-full"
+                                                                onClick={() => setCorrectionEditor({
+                                                                    homeworkId: submission.id,
+                                                                    chapterId: submission.chapter.id,
+                                                                    sources: submittedImages.map((url, imageIndex) => ({ url, name: `homework-${imageIndex + 1}.jpg` })),
+                                                                    title: `${t('dashboard.correctOnPlatform') || 'Correct on platform'} - ${submission.student.fullName}`,
+                                                                })}
+                                                            >
+                                                                <Pencil className="h-4 w-4 mr-2" />
+                                                                {t('dashboard.correctOnPlatform') || 'Correct on platform'}
+                                                            </Button>
                                                         </div>
                                                     );
                                                 })()}
@@ -1005,6 +1026,19 @@ const ProgressPage = () => {
                                                                                 </Button>
                                                                             </div>
                                                                         ))}
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            className="w-full sm:w-auto"
+                                                                            onClick={() => setCorrectionEditor({
+                                                                                homeworkId: submission.id,
+                                                                                chapterId: submission.chapter.id,
+                                                                                sources: submittedImages.map((url, imageIndex) => ({ url, name: `homework-${imageIndex + 1}.jpg` })),
+                                                                                title: `${t('dashboard.correctOnPlatform') || 'Correct on platform'} - ${submission.student.fullName}`,
+                                                                            })}
+                                                                        >
+                                                                            <Pencil className="h-4 w-4 mr-2" />
+                                                                            {t('dashboard.correctOnPlatform') || 'Correct on platform'}
+                                                                        </Button>
                                                                     </div>
                                                                 );
                                                             })()}
@@ -1201,6 +1235,27 @@ const ProgressPage = () => {
                     )}
                 </DialogContent>
             </Dialog>
+            <DocumentEditor
+                open={!!correctionEditor}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setCorrectionEditor(null);
+                    }
+                }}
+                sources={correctionEditor?.sources || []}
+                title={correctionEditor?.title}
+                submitLabel={t('dashboard.saveCorrection') || 'Save correction'}
+                onSubmit={async (imageUrls) => {
+                    if (!correctionEditor) {
+                        return;
+                    }
+                    await handleUploadCorrectedHomework(
+                        correctionEditor.homeworkId,
+                        correctionEditor.chapterId,
+                        imageUrls
+                    );
+                }}
+            />
         </div>
     );
 };
