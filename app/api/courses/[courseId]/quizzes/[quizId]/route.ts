@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@prisma/client";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
@@ -43,12 +44,12 @@ export async function GET(
         } else {
             // Check if user has purchased the course
             let hasAccess = course.purchases.some(purchase => purchase.status === "ACTIVE");
-            
+
             // If no purchase access, check subscription
             if (!hasAccess) {
                 hasAccess = await hasSubscriptionAccess(userId, course);
             }
-            
+
             if (!hasAccess) {
                 // Check if user has an expired subscription that previously granted access
                 const expiredSubscription = await (db as any).subscription.findFirst({
@@ -65,13 +66,13 @@ export async function GET(
                 });
 
                 if (expiredSubscription && courseMatchesSubscription(course, expiredSubscription)) {
-                    return NextResponse.json({ 
+                    return NextResponse.json({
                         error: "SUBSCRIPTION_EXPIRED",
-                        subscriptionEndDate: expiredSubscription.endDate 
+                        subscriptionEndDate: expiredSubscription.endDate
                     }, { status: 403 });
                 }
-                
-                return new NextResponse(JSON.stringify({ error: "Course access required" }), { 
+
+                return new NextResponse(JSON.stringify({ error: "Course access required" }), {
                     status: 403,
                     headers: { "Content-Type": "application/json" }
                 });
@@ -158,7 +159,7 @@ export async function PATCH(
         const userId = session.user.id;
 
         const user = session.user;
-        
+
         // Check if user is admin, supervisor, or course owner
         const whereClause = (user?.role === "ADMIN" || user?.role === "SUPERVISOR")
             ? { id: resolvedParams.courseId }
@@ -172,44 +173,51 @@ export async function PATCH(
             return new NextResponse("Course not found or unauthorized", { status: 404 });
         }
 
-        // Update the quiz
-        const updatedQuiz = await db.quiz.update({
-            where: {
-                id: resolvedParams.quizId,
-                courseId: resolvedParams.courseId
-            },
-            data: {
-                title,
-                description,
-                position,
-                questions: {
-                    deleteMany: {},
-                    create: questions.map((question: any, index: number) => ({
-                        text: question.text,
-                        type: question.type,
-                        options: question.type === "MULTIPLE_CHOICE" ? stringifyQuizOptions(question.options) : null,
-                        correctAnswer: question.correctAnswer,
-                        points: question.points,
-                        imageUrl: question.imageUrl || null,
-                        position: index + 1
-                    }))
-                }
-            },
-            include: {
-                course: {
-                    select: {
-                        title: true
+        return await (db as unknown as PrismaClient).$transaction(async (tx) => {
+            await tx.$queryRaw`SELECT "id" FROM "Quiz" WHERE "id" = ${resolvedParams.quizId} FOR UPDATE`;
+            // Replacing questions cascades deletion into historical student answers.
+            if (await tx.quizResult.count({ where: { quizId: resolvedParams.quizId } })) {
+                return NextResponse.json({ error: "This quiz already has student attempts. Create a new quiz to change its questions.", message: "This quiz already has student attempts. Create a new quiz to change its questions." }, { status: 409 });
+            }
+            // Update the quiz
+            const updatedQuiz = await tx.quiz.update({
+                where: {
+                    id: resolvedParams.quizId,
+                    courseId: resolvedParams.courseId
+                },
+                data: {
+                    title,
+                    description,
+                    position,
+                    questions: {
+                        deleteMany: {},
+                        create: questions.map((question: any, index: number) => ({
+                            text: question.text,
+                            type: question.type,
+                            options: question.type === "MULTIPLE_CHOICE" ? stringifyQuizOptions(question.options) : null,
+                            correctAnswer: question.correctAnswer,
+                            points: question.points,
+                            imageUrl: question.imageUrl || null,
+                            position: index + 1
+                        }))
                     }
                 },
-                questions: {
-                    orderBy: {
-                        position: 'asc'
+                include: {
+                    course: {
+                        select: {
+                            title: true
+                        }
+                    },
+                    questions: {
+                        orderBy: {
+                            position: 'asc'
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        return NextResponse.json(updatedQuiz);
+            return NextResponse.json(updatedQuiz);
+        });
     } catch (error) {
         console.log("[QUIZ_PATCH]", error);
         return new NextResponse("Internal Error", { status: 500 });
@@ -231,7 +239,7 @@ export async function DELETE(
         const userId = session.user.id;
 
         const user = session.user;
-        
+
         // Check if user is admin, supervisor, or course owner
         const whereClause = (user?.role === "ADMIN" || user?.role === "SUPERVISOR")
             ? { id: resolvedParams.courseId }
@@ -258,4 +266,4 @@ export async function DELETE(
         console.log("[QUIZ_DELETE]", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
-} 
+}

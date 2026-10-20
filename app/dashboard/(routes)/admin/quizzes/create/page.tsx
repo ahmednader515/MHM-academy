@@ -81,7 +81,7 @@ const CreateQuizPage = () => {
 
     useEffect(() => {
         fetchCourses();
-        
+
         const urlParams = new URLSearchParams(window.location.search);
         const courseIdFromUrl = urlParams.get('courseId');
         if (courseIdFromUrl) {
@@ -107,15 +107,15 @@ const CreateQuizPage = () => {
         try {
             setIsLoadingCourseItems(true);
             setCourseItems([]);
-            
+
             const [chaptersResponse, quizzesResponse] = await Promise.all([
                 fetch(`/api/courses/${courseId}/chapters`),
                 fetch(`/api/courses/${courseId}/quizzes`)
             ]);
-            
+
             const chaptersData = chaptersResponse.ok ? await chaptersResponse.json() : [];
             const quizzesData = quizzesResponse.ok ? await quizzesResponse.json() : [];
-            
+
             const items: CourseItem[] = [
                 ...chaptersData.map((chapter: Chapter) => ({
                     id: chapter.id,
@@ -132,9 +132,9 @@ const CreateQuizPage = () => {
                     isPublished: quiz.isPublished
                 }))
             ];
-            
+
             items.sort((a, b) => a.position - b.position);
-            
+
             const itemsWithNewQuiz = [
                 ...items,
                 {
@@ -145,10 +145,10 @@ const CreateQuizPage = () => {
                     isPublished: false
                 }
             ];
-            
+
             setCourseItems(itemsWithNewQuiz);
             setChapters(chaptersData);
-            
+
             const lastPosition = items.length + 1;
             setSelectedPosition(lastPosition);
         } catch (error) {
@@ -170,7 +170,7 @@ const CreateQuizPage = () => {
 
         for (let i = 0; i < questions.length; i++) {
             const question = questions[i];
-            
+
             if (!question.text || question.text.trim() === "") {
                 validationErrors.push(`${t('quiz.questionNumber')} ${i + 1}: ${t('quiz.questionRequired')}`);
                 continue;
@@ -182,8 +182,8 @@ const CreateQuizPage = () => {
                     validationErrors.push(`${t('quiz.questionNumber')} ${i + 1}: ${t('quiz.addAtLeastOneOption')}`);
                     continue;
                 }
-                
-                if (typeof question.correctAnswer !== 'number' || question.correctAnswer < 0 || question.correctAnswer >= validOptions.length) {
+
+                if (typeof question.correctAnswer !== 'number' || question.correctAnswer < 0 || !Number.isInteger(question.correctAnswer) || !question.options?.[question.correctAnswer]?.trim()) {
                     validationErrors.push(`${t('quiz.questionNumber')} ${i + 1}: ${t('quiz.selectCorrectAnswerRequired')}`);
                     continue;
                 }
@@ -220,7 +220,10 @@ const CreateQuizPage = () => {
                 const filteredOptions = question.options.filter(option => option.trim() !== "");
                 return {
                     ...question,
-                    options: filteredOptions
+                    options: filteredOptions,
+                    correctAnswer: typeof question.correctAnswer === "number"
+                        ? question.options.slice(0, question.correctAnswer).filter(option => option.trim() !== "").length
+                        : question.correctAnswer
                 };
             }
             return question;
@@ -292,11 +295,11 @@ const CreateQuizPage = () => {
         if (result.draggableId === "new-quiz") {
             const newQuizPosition = result.destination.index + 1;
             setSelectedPosition(newQuizPosition);
-            
+
             const reorderedItems = Array.from(courseItems);
             const [movedItem] = reorderedItems.splice(result.source.index, 1);
             reorderedItems.splice(result.destination.index, 0, movedItem);
-            
+
             setCourseItems(reorderedItems);
         }
     };
@@ -342,9 +345,9 @@ const CreateQuizPage = () => {
                             value={quizTitle}
                             onChange={(e) => {
                                 setQuizTitle(e.target.value);
-                                setCourseItems(prev => 
-                                    prev.map(item => 
-                                        item.id === "new-quiz" 
+                                setCourseItems(prev =>
+                                    prev.map(item =>
+                                        item.id === "new-quiz"
                                             ? { ...item, title: e.target.value || t('quiz.newQuiz') }
                                             : item
                                     )
@@ -410,7 +413,7 @@ const CreateQuizPage = () => {
                                                         )}
                                                     </Draggable>
                                                 ))}
-                                                
+
                                                 {provided.placeholder}
                                             </div>
                                         )}
@@ -494,8 +497,8 @@ const CreateQuizPage = () => {
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <CardTitle className="text-lg">{t('quiz.questionNumber')} {index + 1}</CardTitle>
-                                        {(!question.text.trim() || !question.correctAnswer.toString().trim() || 
-                                          (question.type === "MULTIPLE_CHOICE" && 
+                                        {(!question.text.trim() || !question.correctAnswer.toString().trim() ||
+                                          (question.type === "MULTIPLE_CHOICE" &&
                                            (!question.options || question.options.filter(opt => opt.trim() !== "").length < 2))) && (
                                             <Badge variant="destructive" className="text-xs">
                                                 {t('quiz.incomplete')}
@@ -527,9 +530,9 @@ const CreateQuizPage = () => {
                                     <div className="space-y-2">
                                         {question.imageUrl ? (
                                             <div className="relative">
-                                                <img 
-                                                    src={question.imageUrl} 
-                                                    alt="Question" 
+                                                <img
+                                                    src={question.imageUrl}
+                                                    alt="Question"
                                                     className="max-w-full h-auto max-h-48 rounded-lg border"
                                                 />
                                                 <Button

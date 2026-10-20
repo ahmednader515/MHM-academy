@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@prisma/client";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
@@ -92,67 +93,74 @@ export async function PATCH(
             return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
         }
 
-        // Delete existing questions
-        await db.question.deleteMany({
-            where: { quizId },
-        });
+        return await (db as unknown as PrismaClient).$transaction(async (tx) => {
+            await tx.$queryRaw`SELECT "id" FROM "Quiz" WHERE "id" = ${resolvedParams.quizId} FOR UPDATE`;
+            // Replacing questions cascades deletion into historical student answers.
+            if (await tx.quizResult.count({ where: { quizId: resolvedParams.quizId } })) {
+                return NextResponse.json({ error: "This quiz already has student attempts. Create a new quiz to change its questions.", message: "This quiz already has student attempts. Create a new quiz to change its questions." }, { status: 409 });
+            }
+            // Delete existing questions
+            await tx.question.deleteMany({
+                where: { quizId },
+            });
 
-        // Update quiz and create new questions
-        const quiz = await db.quiz.update({
-            where: { id: quizId },
-            data: {
-                title,
-                description: description || "",
-                courseId,
-                position: position || existingQuiz.position,
-                timer: timer || null,
-                maxAttempts: maxAttempts || 1,
-                questions: {
-                    create: questions.map((q: any, index: number) => {
-                        const rawOptions = Array.isArray(q.options) ? q.options : [];
-                        const cleanedOptions = rawOptions
-                            .filter((option: string) => typeof option === "string" && option.trim().length > 0)
-                            .map((option: string) => option.trim());
+            // Update quiz and create new questions
+            const quiz = await tx.quiz.update({
+                where: { id: quizId },
+                data: {
+                    title,
+                    description: description || "",
+                    courseId,
+                    position: position || existingQuiz.position,
+                    timer: timer || null,
+                    maxAttempts: maxAttempts || 1,
+                    questions: {
+                        create: questions.map((q: any, index: number) => {
+                            const rawOptions = Array.isArray(q.options) ? q.options : [];
+                            const cleanedOptions = rawOptions
+                                .filter((option: string) => typeof option === "string" && option.trim().length > 0)
+                                .map((option: string) => option.trim());
 
-                        const optionsString = q.type === "MULTIPLE_CHOICE"
-                            ? stringifyQuizOptions(cleanedOptions)
-                            : null;
+                            const optionsString = q.type === "MULTIPLE_CHOICE"
+                                ? stringifyQuizOptions(cleanedOptions)
+                                : null;
 
-                        let correctAnswerValue = q.correctAnswer;
+                            let correctAnswerValue = q.correctAnswer;
 
-                        if (q.type === "MULTIPLE_CHOICE") {
-                            if (typeof q.correctAnswer === "number") {
-                                correctAnswerValue = cleanedOptions[q.correctAnswer] ?? "";
-                            } else if (typeof q.correctAnswer === "string") {
-                                const match = cleanedOptions.find((option) => option === q.correctAnswer);
-                                correctAnswerValue = match ?? q.correctAnswer;
+                            if (q.type === "MULTIPLE_CHOICE") {
+                                if (typeof q.correctAnswer === "number") {
+                                    correctAnswerValue = cleanedOptions[q.correctAnswer] ?? "";
+                                } else if (typeof q.correctAnswer === "string") {
+                                    const match = cleanedOptions.find((option) => option === q.correctAnswer);
+                                    correctAnswerValue = match ?? q.correctAnswer;
+                                }
                             }
-                        }
 
-                        return {
-                            text: q.text,
-                            imageUrl: q.imageUrl || null,
-                            type: q.type,
-                            options: optionsString,
-                            correctAnswer: correctAnswerValue?.toString() ?? "",
-                            points: q.points,
-                            position: index + 1,
-                        };
-                    }),
-                },
-            },
-            include: {
-                questions: true,
-                course: {
-                    select: {
-                        id: true,
-                        title: true,
+                            return {
+                                text: q.text,
+                                imageUrl: q.imageUrl || null,
+                                type: q.type,
+                                options: optionsString,
+                                correctAnswer: correctAnswerValue?.toString() ?? "",
+                                points: q.points,
+                                position: index + 1,
+                            };
+                        }),
                     },
                 },
-            },
-        });
+                include: {
+                    questions: true,
+                    course: {
+                        select: {
+                            id: true,
+                            title: true,
+                        },
+                    },
+                },
+            });
 
-        return NextResponse.json(quiz);
+            return NextResponse.json(quiz);
+        });
     } catch (error) {
         console.log("[ADMIN_QUIZ_PATCH]", error);
         return NextResponse.json({ error: "Internal Error" }, { status: 500 });

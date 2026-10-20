@@ -69,7 +69,7 @@ const EditQuizPage = () => {
     const params = useParams();
     const { t } = useLanguage();
     const quizId = params.quizId as string;
-    
+
     const [courses, setCourses] = useState<Course[]>([]);
     const [selectedCourse, setSelectedCourse] = useState<string>("");
     const [quizTitle, setQuizTitle] = useState("");
@@ -113,7 +113,7 @@ const EditQuizPage = () => {
                 setQuizTimer(quiz.timer || null);
                 setQuizMaxAttempts(quiz.maxAttempts || 1);
                 setSelectedCourse(quiz.courseId);
-                
+
                 // Convert stored string correctAnswer values back to indices for multiple choice questions
                 const processedQuestions = quiz.questions.map(question => {
                     if (question.type === "MULTIPLE_CHOICE" && question.options) {
@@ -126,7 +126,7 @@ const EditQuizPage = () => {
                     }
                     return question;
                 });
-                
+
                 setQuestions(processedQuestions);
                 setSelectedPosition(quiz.position);
                 await fetchCourseItems(quiz.courseId);
@@ -148,15 +148,15 @@ const EditQuizPage = () => {
             setIsLoadingCourseItems(true);
             // Clear existing items first
             setCourseItems([]);
-            
+
             const [chaptersResponse, quizzesResponse] = await Promise.all([
                 fetch(`/api/courses/${courseId}/chapters`),
                 fetch(`/api/courses/${courseId}/quizzes`)
             ]);
-            
+
             const chaptersData = chaptersResponse.ok ? await chaptersResponse.json() : [];
             const quizzesData = quizzesResponse.ok ? await quizzesResponse.json() : [];
-            
+
             // Combine chapters and existing quizzes for display
             const items: CourseItem[] = [
                 ...chaptersData.map((chapter: Chapter) => ({
@@ -174,13 +174,13 @@ const EditQuizPage = () => {
                     isPublished: quiz.isPublished
                 }))
             ];
-            
+
             // Sort by position
             items.sort((a, b) => a.position - b.position);
-            
+
             setCourseItems(items);
             setChapters(chaptersData);
-            
+
             // Update the selected position to reflect the actual position of the quiz in the list
             const quizInList = items.find(item => item.id === quizId);
             if (quizInList) {
@@ -206,7 +206,7 @@ const EditQuizPage = () => {
 
         for (let i = 0; i < questions.length; i++) {
             const question = questions[i];
-            
+
             // Validate question text
             if (!question.text || question.text.trim() === "") {
                 validationErrors.push(`${t('quiz.questionNumber')} ${i + 1}: ${t('quiz.questionRequired')}`);
@@ -220,9 +220,9 @@ const EditQuizPage = () => {
                     validationErrors.push(`${t('quiz.questionNumber')} ${i + 1}: ${t('quiz.addAtLeastOneOption')}`);
                     continue;
                 }
-                
+
                 // Check if correct answer index is valid
-                if (typeof question.correctAnswer !== 'number' || question.correctAnswer < 0 || question.correctAnswer >= validOptions.length) {
+                if (typeof question.correctAnswer !== 'number' || question.correctAnswer < 0 || !Number.isInteger(question.correctAnswer) || !question.options?.[question.correctAnswer]?.trim()) {
                     validationErrors.push(`${t('quiz.questionNumber')} ${i + 1}: ${t('quiz.selectCorrectAnswerRequired')}`);
                     continue;
                 }
@@ -263,7 +263,10 @@ const EditQuizPage = () => {
                 const filteredOptions = question.options.filter(option => option.trim() !== "");
                 return {
                     ...question,
-                    options: filteredOptions
+                    options: filteredOptions,
+                    correctAnswer: typeof question.correctAnswer === "number"
+                        ? question.options.slice(0, question.correctAnswer).filter(option => option.trim() !== "").length
+                        : question.correctAnswer
                 };
             }
             return question;
@@ -333,12 +336,12 @@ const EditQuizPage = () => {
             // Calculate the position for the quiz based on where it was dropped
             const newQuizPosition = result.destination.index + 1;
             setSelectedPosition(newQuizPosition);
-            
+
             // Reorder the items array to reflect the new position
             const reorderedItems = Array.from(courseItems);
             const [movedItem] = reorderedItems.splice(result.source.index, 1);
             reorderedItems.splice(result.destination.index, 0, movedItem);
-            
+
             setCourseItems(reorderedItems);
 
             // Create update data for all items with type information
@@ -483,7 +486,7 @@ const EditQuizPage = () => {
                                                         )}
                                                     </Draggable>
                                                 ))}
-                                                
+
                                                 {provided.placeholder}
                                             </div>
                                         )}
@@ -567,12 +570,12 @@ const EditQuizPage = () => {
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <CardTitle className="text-lg">{t('quiz.questionNumber')} {index + 1}</CardTitle>
-                                        {(!question.text.trim() || 
-                                            (question.type === "MULTIPLE_CHOICE" && 
+                                        {(!question.text.trim() ||
+                                            (question.type === "MULTIPLE_CHOICE" &&
                                              (!question.options || question.options.filter(opt => opt.trim() !== "").length === 0)) ||
-                                            (question.type === "TRUE_FALSE" && 
+                                            (question.type === "TRUE_FALSE" &&
                                              (typeof question.correctAnswer !== 'string' || (question.correctAnswer !== "true" && question.correctAnswer !== "false"))) ||
-                                            (question.type === "SHORT_ANSWER" && 
+                                            (question.type === "SHORT_ANSWER" &&
                                              (typeof question.correctAnswer !== 'string' || question.correctAnswer.trim() === ""))) && (
                                             <Badge variant="destructive" className="text-xs">
                                                 {t('quiz.incomplete')}
@@ -604,9 +607,9 @@ const EditQuizPage = () => {
                                     <div className="space-y-2">
                                         {question.imageUrl ? (
                                             <div className="relative">
-                                                <img 
-                                                    src={question.imageUrl} 
-                                                    alt="Question" 
+                                                <img
+                                                    src={question.imageUrl}
+                                                    alt="Question"
                                                     className="max-w-full h-auto max-h-48 rounded-lg border"
                                                 />
                                                 <Button
@@ -685,7 +688,7 @@ const EditQuizPage = () => {
                                                         const oldOptionValue = newOptions[optionIndex];
                                                         newOptions[optionIndex] = e.target.value;
                                                         updateQuestion(index, "options", newOptions);
-                                                        
+
                                                         // If this option was the correct answer, update the correct answer to the new value
                                                         if (question.correctAnswer === oldOptionValue) {
                                                             updateQuestion(index, "correctAnswer", optionIndex);
@@ -756,4 +759,4 @@ const EditQuizPage = () => {
     );
 };
 
-export default EditQuizPage; 
+export default EditQuizPage;

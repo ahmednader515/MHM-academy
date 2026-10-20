@@ -135,7 +135,7 @@ export async function POST(req: Request) {
 
         for (let i = 0; i < questions.length; i++) {
             const question = questions[i];
-            
+
             if (!question.text || !question.text.trim()) {
                 return NextResponse.json({ error: `Question ${i + 1}: Text is required` }, { status: 400 });
             }
@@ -151,7 +151,7 @@ export async function POST(req: Request) {
                 }
 
                 // For multiple choice, correctAnswer should be an index
-                if (typeof question.correctAnswer !== 'number' || question.correctAnswer < 0 || question.correctAnswer >= validOptions.length) {
+                if (typeof question.correctAnswer !== 'number' || question.correctAnswer < 0 || !Number.isInteger(question.correctAnswer) || !question.options[question.correctAnswer]?.trim()) {
                     return NextResponse.json({ error: `Question ${i + 1}: Valid correct answer index is required` }, { status: 400 });
                 }
             } else if (question.type === "TRUE_FALSE") {
@@ -179,7 +179,7 @@ export async function POST(req: Request) {
             timer: timer || null,
             maxAttempts: maxAttempts || 1
         });
-        
+
         const quizData = {
             title,
             description,
@@ -190,13 +190,13 @@ export async function POST(req: Request) {
                             questions: {
                     create: questions.map((question: any, index: number) => {
                         let correctAnswerValue = question.correctAnswer;
-                        
+
                         // For multiple choice questions, convert index to actual option value
                         if (question.type === "MULTIPLE_CHOICE") {
                             const validOptions = question.options.filter((option: string) => option && option.trim() !== "");
-                            correctAnswerValue = validOptions[question.correctAnswer];
+                            correctAnswerValue = question.options[question.correctAnswer].trim();
                         }
-                        
+
                         return {
                             text: question.text,
                             type: question.type,
@@ -209,9 +209,9 @@ export async function POST(req: Request) {
                     })
                 }
         };
-        
+
         console.log("Final quiz data:", JSON.stringify(quizData, null, 2));
-        
+
         // Try creating the quiz without questions first
         const quizDataWithoutQuestions = {
             title,
@@ -221,9 +221,9 @@ export async function POST(req: Request) {
             timer: timer || null,
             maxAttempts: maxAttempts || 1
         };
-        
+
         console.log("Quiz data without questions:", JSON.stringify(quizDataWithoutQuestions, null, 2));
-        
+
         const quiz = await db.quiz.create({
             data: quizDataWithoutQuestions,
             include: {
@@ -234,19 +234,19 @@ export async function POST(req: Request) {
                 }
             }
         });
-        
+
         // Now add the questions separately
         if (questions.length > 0) {
             await db.question.createMany({
                 data: questions.map((question: any, index: number) => {
                     let correctAnswerValue = question.correctAnswer;
-                    
+
                     // For multiple choice questions, convert index to actual option value
                     if (question.type === "MULTIPLE_CHOICE") {
                         const validOptions = question.options.filter((option: string) => option && option.trim() !== "");
-                        correctAnswerValue = validOptions[question.correctAnswer];
+                        correctAnswerValue = question.options[question.correctAnswer].trim();
                     }
-                    
+
                     return {
                         text: question.text,
                         type: question.type,
@@ -260,7 +260,7 @@ export async function POST(req: Request) {
                 })
             });
         }
-        
+
         // Fetch the quiz with questions
         const quizWithQuestions = await db.quiz.findUnique({
             where: { id: quiz.id },
@@ -296,4 +296,4 @@ export async function POST(req: Request) {
         console.log("[TEACHER_QUIZZES_POST]", error);
         return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
-} 
+}

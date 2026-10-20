@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@prisma/client";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { isWrittenQuestion } from "@/lib/quiz-answer-status";
@@ -55,65 +56,66 @@ export async function gradeWrittenQuizAnswer(params: {
     isCorrect: boolean;
     accessWhere: Prisma.QuizResultWhereInput;
 }) {
-    const result = await db.quizResult.findFirst({
-        where: {
-            id: params.resultId,
-            ...params.accessWhere
-        },
-        include: {
-            answers: {
-                include: {
-                    question: {
-                        select: {
-                            type: true,
-                            points: true
+    return (db as unknown as PrismaClient).$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT "id" FROM "QuizResult" WHERE "id" = ${params.resultId} FOR UPDATE`;
+        const result = await tx.quizResult.findFirst({
+            where: {
+                id: params.resultId,
+                ...params.accessWhere
+            },
+            include: {
+                answers: {
+                    include: {
+                        question: {
+                            select: {
+                                type: true,
+                                points: true
+                            }
                         }
                     }
                 }
             }
+        });
+
+        if (!result) {
+            return { error: "not_found" as const };
         }
-    });
 
-    if (!result) {
-        return { error: "not_found" as const };
-    }
-
-    const answer = result.answers.find((item) => item.id === params.answerId);
-    if (!answer) {
-        return { error: "answer_not_found" as const };
-    }
-
-    if (!isWrittenQuestion(answer.question.type)) {
-        return { error: "not_written" as const };
-    }
-
-    const pointsEarned = params.isCorrect ? answer.question.points : 0;
-    const nextScore = result.answers.reduce((sum, item) => {
-        if (item.id === answer.id) {
-            return sum + pointsEarned;
+        const answer = result.answers.find((item) => item.id === params.answerId);
+        if (!answer) {
+            return { error: "answer_not_found" as const };
         }
-        return sum + item.pointsEarned;
-    }, 0);
-    const percentage = result.totalPoints > 0 ? (nextScore / result.totalPoints) * 100 : 0;
 
-    await db.$transaction([
-        db.quizAnswer.update({
+        if (!isWrittenQuestion(answer.question.type)) {
+            return { error: "not_written" as const };
+        }
+
+        const pointsEarned = params.isCorrect ? answer.question.points : 0;
+        const nextScore = result.answers.reduce((sum, item) => {
+            if (item.id === answer.id) {
+                return sum + pointsEarned;
+            }
+            return sum + item.pointsEarned;
+        }, 0);
+        const percentage = result.totalPoints > 0 ? (nextScore / result.totalPoints) * 100 : 0;
+
+        await tx.quizAnswer.update({
             where: { id: answer.id },
             data: {
                 isCorrect: params.isCorrect,
                 isGraded: true,
                 pointsEarned
             }
-        }),
-        db.quizResult.update({
+        });
+        await tx.quizResult.update({
             where: { id: result.id },
             data: {
                 score: nextScore,
                 percentage
             }
-        })
-    ]);
+        });
 
-    const updated = await getQuizResultDetail({ id: result.id });
-    return { error: null, result: updated };
+        const updated = await tx.quizResult.findFirst({ where: { id: result.id }, include: quizResultDetailInclude });
+        return { error: null, result: updated };
+    });
 }

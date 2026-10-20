@@ -63,12 +63,12 @@ export default function QuizResultPage({
             const contentResponse = await fetch(`/api/courses/${courseId}/content`);
             if (contentResponse.ok) {
                 const allContent = await contentResponse.json();
-                
+
                 // Find the current quiz in the content array
-                const currentIndex = allContent.findIndex((content: any) => 
+                const currentIndex = allContent.findIndex((content: any) =>
                     content.id === quizId && content.type === 'quiz'
                 );
-                
+
                 // If no next content, set flag to show dashboard button
                 if (currentIndex === -1 || currentIndex >= allContent.length - 1) {
                     setWillRedirectToDashboard(true);
@@ -138,12 +138,12 @@ export default function QuizResultPage({
             const contentResponse = await fetch(`/api/courses/${courseId}/content`);
             if (contentResponse.ok) {
                 const allContent = await contentResponse.json();
-                
+
                 // Find the current quiz in the content array
-                const currentIndex = allContent.findIndex((content: any) => 
+                const currentIndex = allContent.findIndex((content: any) =>
                     content.id === quizId && content.type === 'quiz'
                 );
-                
+
                                  if (currentIndex !== -1 && currentIndex < allContent.length - 1) {
                      const nextContent = allContent[currentIndex + 1];
                      if (nextContent.type === 'chapter') {
@@ -226,13 +226,13 @@ export default function QuizResultPage({
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                                 <div className="text-center">
                                     <div className="text-2xl font-bold text-blue-600">
-                                        {result.score}/{result.totalPoints}
+                                        {pendingAnswers > 0 ? "بانتظار التصحيح" : `${result.score}/${result.totalPoints}`}
                                     </div>
                                     <div className="text-sm text-muted-foreground">الدرجة</div>
                                 </div>
                                 <div className="text-center">
-                                    <div className={`text-2xl font-bold ${getGradeColor(result.percentage)}`}>
-                                        {result.percentage.toFixed(1)}%
+                                    <div className={`text-2xl font-bold ${pendingAnswers > 0 ? "text-amber-600" : getGradeColor(result.percentage)}`}>
+                                        {pendingAnswers > 0 ? "—" : `${result.percentage.toFixed(1)}%`}
                                     </div>
                                     <div className="text-sm text-muted-foreground">النسبة المئوية</div>
                                 </div>
@@ -251,15 +251,15 @@ export default function QuizResultPage({
                             </div>
                             {pendingAnswers > 0 && (
                                 <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                                    الدرجة الحالية بدون الأسئلة المقالية. هناك {pendingAnswers} سؤال بانتظار تصحيح المعلم.
+                                    النتيجة لم تكتمل بعد. هناك {pendingAnswers} سؤال بانتظار تصحيح المعلم.
                                 </div>
                             )}
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm font-medium">التقدم العام</span>
-                                    <span className="text-sm font-medium">{result.percentage.toFixed(1)}%</span>
+                                    <span className="text-sm font-medium">{pendingAnswers > 0 ? "—" : `${result.percentage.toFixed(1)}%`}</span>
                                 </div>
-                                <Progress value={result.percentage} className="w-full" />
+                                {pendingAnswers === 0 && <Progress value={result.percentage} className="w-full" />}
                             </div>
                         </CardContent>
                     </Card>
@@ -300,7 +300,7 @@ export default function QuizResultPage({
                                             <div>
                                                 <span className="font-medium">إجابتك:</span>
                                                 <p className="text-muted-foreground">
-                                                    {answer.studentAnswer 
+                                                    {answer.studentAnswer
                                                         ? formatAnswer(answer.studentAnswer, answer.question.type)
                                                         : "لم تجب"
                                                     }
@@ -350,4 +350,4 @@ export default function QuizResultPage({
             </div>
         </div>
     );
-} 
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,7 +53,11 @@ export default function QuizPage({
     const [submitting, setSubmitting] = useState(false);
     const [answers, setAnswers] = useState<QuizAnswer[]>([]);
     const [currentQuestion, setCurrentQuestion] = useState(0);
-    const [timeLeft, setTimeLeft] = useState(0);
+    const [timeLeft, setTimeLeft] = useState<number | null>(null);
+    const answersRef = useRef<QuizAnswer[]>([]);
+    const submitRef = useRef<() => void>(() => {});
+    const submissionLocked = useRef(false);
+    const deadlineRef = useRef<number | null>(null);
     const [navigation, setNavigation] = useState<{
         nextContentId: string | null;
         previousContentId: string | null;
@@ -75,13 +79,16 @@ export default function QuizPage({
     }, [redirectToResult, courseId, quizId, router]);
 
     useEffect(() => {
-        if (timeLeft > 0) {
-            const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-            return () => clearTimeout(timer);
-        } else if (timeLeft === 0 && quiz) {
-            handleSubmit();
+        if (!quiz || timeLeft === null || submitting) return;
+        if (timeLeft === 0) {
+            submitRef.current();
+            return;
         }
-    }, [timeLeft]);
+        const timer = setTimeout(() => {
+            setTimeLeft(Math.max(0, Math.ceil(((deadlineRef.current ?? Date.now()) - Date.now()) / 1000)));
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, [quiz, timeLeft, submitting]);
 
     const fetchQuiz = async () => {
         try {
@@ -89,18 +96,22 @@ export default function QuizPage({
             if (response.ok) {
                 const data = await response.json();
                 setQuiz(data);
-                // Set timer from database or default to 30 minutes
-                const timerInSeconds = (data.timer || 30) * 60;
-                setTimeLeft(timerInSeconds);
+                answersRef.current = [];
+                setAnswers([]);
+                setCurrentQuestion(0);
+                submissionLocked.current = false;
+                const seconds = data.timer > 0 ? data.timer * 60 : null;
+                deadlineRef.current = seconds === null ? null : Date.now() + seconds * 1000;
+                setTimeLeft(seconds);
             } else {
                 let errorData;
                 try {
-                    errorData = await response.json();
+                    errorData = JSON.parse(await response.clone().text());
                 } catch {
                     const errorText = await response.text();
                     errorData = { error: errorText };
                 }
-                
+
                 if (errorData.error === "SUBSCRIPTION_EXPIRED") {
                     setSubscriptionExpired(true);
                 } else if (errorData.error && errorData.error.includes("Maximum attempts reached")) {
@@ -132,44 +143,48 @@ export default function QuizPage({
     };
 
     const handleAnswerChange = (questionId: string, answer: string) => {
-        setAnswers(prev => {
-            const existing = prev.find(a => a.questionId === questionId);
-            if (existing) {
-                return prev.map(a => a.questionId === questionId ? { ...a, answer } : a);
-            } else {
-                return [...prev, { questionId, answer }];
-            }
-        });
+        if (submissionLocked.current) return;
+        const previous = answersRef.current;
+        const next = previous.some(a => a.questionId === questionId)
+            ? previous.map(a => a.questionId === questionId ? { ...a, answer } : a)
+            : [...previous, { questionId, answer }];
+        answersRef.current = next;
+        setAnswers(next);
     };
 
     const handleSubmit = async () => {
-        if (!quiz) return;
-
+        if (!quiz || submissionLocked.current) return;
+        submissionLocked.current = true;
         setSubmitting(true);
+        let succeeded = false;
         try {
             const response = await fetch(`/api/courses/${courseId}/quizzes/${quizId}/submit`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ answers }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ answers: answersRef.current }),
             });
-
             if (response.ok) {
-                const result = await response.json();
+                succeeded = true;
                 toast.success("تم إرسال الاختبار بنجاح!");
                 router.push(`/courses/${courseId}/quizzes/${quizId}/result`);
             } else {
-                const error = await response.text();
-                toast.error(error || "حدث خطأ أثناء إرسال الاختبار");
+                toast.error((await response.text()) || "حدث خطأ أثناء إرسال الاختبار");
             }
         } catch (error) {
             console.error("Error submitting quiz:", error);
             toast.error("حدث خطأ أثناء إرسال الاختبار");
         } finally {
-            setSubmitting(false);
+            if (!succeeded) {
+                // Retry failed timeout submissions explicitly instead of looping.
+                submissionLocked.current = false;
+                setTimeLeft(null);
+                setSubmitting(false);
+            }
         }
     };
+    useEffect(() => {
+        submitRef.current = handleSubmit;
+    });
 
     const formatTime = (seconds: number) => {
         const minutes = Math.floor(seconds / 60);
@@ -239,7 +254,7 @@ export default function QuizPage({
         );
     }
 
-    if (!quiz) {
+    if (!quiz || quiz.questions.length === 0) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
@@ -268,7 +283,7 @@ export default function QuizPage({
                             رجوع
                         </Button>
                         <div className="flex items-center gap-4">
-                            {quiz.timer && (
+                            {timeLeft !== null && (
                                 <div className="flex items-center gap-2 text-amber-600">
                                     <Clock className="h-4 w-4" />
                                     <span className="font-medium">{formatTime(timeLeft)}</span>
@@ -293,7 +308,7 @@ export default function QuizPage({
                         </CardHeader>
                         <CardContent>
                             <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div 
+                                <div
                                     className="bg-[#211FC3] h-2 rounded-full transition-all duration-300"
                                     style={{ width: `${progress}%` }}
                                 ></div>
@@ -315,9 +330,9 @@ export default function QuizPage({
                             {/* Question Image */}
                             {currentQuestionData.imageUrl && (
                                 <div className="flex justify-center">
-                                    <img 
-                                        src={currentQuestionData.imageUrl} 
-                                        alt="Question" 
+                                    <img
+                                        src={currentQuestionData.imageUrl}
+                                        alt="Question"
                                         className="max-w-full h-auto max-h-96 rounded-lg border shadow-sm"
                                     />
                                 </div>
@@ -325,6 +340,8 @@ export default function QuizPage({
 
                             {currentQuestionData.type === "MULTIPLE_CHOICE" && (
                                 <RadioGroup
+                                    key={currentQuestionData.id}
+                                    disabled={submitting}
                                     value={answers.find(a => a.questionId === currentQuestionData.id)?.answer || ""}
                                     onValueChange={(value) => handleAnswerChange(currentQuestionData.id, value)}
                                 >
@@ -339,6 +356,8 @@ export default function QuizPage({
 
                             {currentQuestionData.type === "TRUE_FALSE" && (
                                 <RadioGroup
+                                    key={currentQuestionData.id}
+                                    disabled={submitting}
                                     value={answers.find(a => a.questionId === currentQuestionData.id)?.answer || ""}
                                     onValueChange={(value) => handleAnswerChange(currentQuestionData.id, value)}
                                 >
@@ -355,6 +374,7 @@ export default function QuizPage({
 
                             {currentQuestionData.type === "SHORT_ANSWER" && (
                                 <Textarea
+                                    disabled={submitting}
                                     placeholder="اكتب إجابتك هنا..."
                                     value={answers.find(a => a.questionId === currentQuestionData.id)?.answer || ""}
                                     onChange={(e) => handleAnswerChange(currentQuestionData.id, e.target.value)}
@@ -402,7 +422,7 @@ export default function QuizPage({
                                 <span className="font-medium">تنبيه</span>
                             </div>
                             <p className="text-amber-700 mt-2">
-                                {quiz.maxAttempts > 1 
+                                {quiz.maxAttempts > 1
                                     ? `تأكد من إجابة جميع الأسئلة قبل إنهاء الاختبار. يمكنك إعادة الاختبار ${quiz.maxAttempts - (quiz.currentAttempt || 1)} مرات أخرى.`
                                     : "تأكد من إجابة جميع الأسئلة قبل إنهاء الاختبار. لا يمكنك العودة للاختبار بعد الإرسال."
                                 }
@@ -433,4 +453,4 @@ export default function QuizPage({
             </div>
         </div>
     );
-} 
+}

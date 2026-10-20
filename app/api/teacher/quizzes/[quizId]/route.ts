@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@prisma/client";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
@@ -141,7 +142,7 @@ export async function PATCH(
 
         for (let i = 0; i < questions.length; i++) {
             const question = questions[i];
-            
+
             if (!question.text || !question.text.trim()) {
                 return NextResponse.json({ error: `Question ${i + 1}: Text is required` }, { status: 400 });
             }
@@ -157,7 +158,7 @@ export async function PATCH(
                 }
 
                 // For multiple choice, correctAnswer should be an index
-                if (typeof question.correctAnswer !== 'number' || question.correctAnswer < 0 || question.correctAnswer >= validOptions.length) {
+                if (typeof question.correctAnswer !== 'number' || question.correctAnswer < 0 || !Number.isInteger(question.correctAnswer) || !question.options[question.correctAnswer]?.trim()) {
                     return NextResponse.json({ error: `Question ${i + 1}: Valid correct answer index is required` }, { status: 400 });
                 }
             } else if (question.type === "TRUE_FALSE") {
@@ -178,94 +179,101 @@ export async function PATCH(
         // Note: Position reordering is now handled by the separate reorder API
         // This API just updates the quiz with the provided position
 
-        // Update the quiz without questions first
-        const updatedQuiz = await db.quiz.update({
-            where: {
-                id: resolvedParams.quizId
-            },
-            data: {
-                title,
-                description,
-                courseId: targetCourseId, // Update courseId if changed
-                position: Number(quizPosition), // Explicitly cast to number
-                timer: timer || null,
-                maxAttempts: maxAttempts || 1
-            },
-            include: {
-                course: {
-                    select: {
-                        title: true
-                    }
-                }
+        return await (db as unknown as PrismaClient).$transaction(async (tx) => {
+            await tx.$queryRaw`SELECT "id" FROM "Quiz" WHERE "id" = ${resolvedParams.quizId} FOR UPDATE`;
+            // Replacing questions cascades deletion into historical student answers.
+            if (await tx.quizResult.count({ where: { quizId: resolvedParams.quizId } })) {
+                return NextResponse.json({ error: "This quiz already has student attempts. Create a new quiz to change its questions.", message: "This quiz already has student attempts. Create a new quiz to change its questions." }, { status: 409 });
             }
-        });
-
-        // Delete existing questions
-        await db.question.deleteMany({
-            where: {
-                quizId: resolvedParams.quizId
-            }
-        });
-
-        // Add questions separately
-        if (questions.length > 0) {
-            await db.question.createMany({
-                data: questions.map((question: any, index: number) => {
-                    let correctAnswerValue = question.correctAnswer;
-                    
-                    // For multiple choice questions, convert index to actual option value
-                    if (question.type === "MULTIPLE_CHOICE") {
-                        const validOptions = question.options.filter((option: string) => option && option.trim() !== "");
-                        correctAnswerValue = validOptions[question.correctAnswer];
-                    }
-                    
-                    return {
-                        text: question.text,
-                        type: question.type,
-                        options: question.type === "MULTIPLE_CHOICE" ? stringifyQuizOptions(question.options) : null,
-                        correctAnswer: correctAnswerValue,
-                        points: question.points,
-                        imageUrl: question.imageUrl || null,
-                        quizId: resolvedParams.quizId,
-                        position: index + 1
-                    };
-                })
-            });
-        }
-
-        // Fetch the updated quiz with questions
-        const quizWithQuestions = await db.quiz.findUnique({
-            where: { id: resolvedParams.quizId },
-            include: {
-                course: {
-                    select: {
-                        title: true
-                    }
+            // Update the quiz without questions first
+            const updatedQuiz = await tx.quiz.update({
+                where: {
+                    id: resolvedParams.quizId
                 },
-                questions: {
-                    orderBy: {
-                        position: 'asc'
+                data: {
+                    title,
+                    description,
+                    courseId: targetCourseId, // Update courseId if changed
+                    position: Number(quizPosition), // Explicitly cast to number
+                    timer: timer || null,
+                    maxAttempts: maxAttempts || 1
+                },
+                include: {
+                    course: {
+                        select: {
+                            title: true
+                        }
                     }
                 }
+            });
+
+            // Delete existing questions
+            await tx.question.deleteMany({
+                where: {
+                    quizId: resolvedParams.quizId
+                }
+            });
+
+            // Add questions separately
+            if (questions.length > 0) {
+                await tx.question.createMany({
+                    data: questions.map((question: any, index: number) => {
+                        let correctAnswerValue = question.correctAnswer;
+
+                        // For multiple choice questions, convert index to actual option value
+                        if (question.type === "MULTIPLE_CHOICE") {
+                            const validOptions = question.options.filter((option: string) => option && option.trim() !== "");
+                            correctAnswerValue = question.options[question.correctAnswer].trim();
+                        }
+
+                        return {
+                            text: question.text,
+                            type: question.type,
+                            options: question.type === "MULTIPLE_CHOICE" ? stringifyQuizOptions(question.options) : null,
+                            correctAnswer: correctAnswerValue,
+                            points: question.points,
+                            imageUrl: question.imageUrl || null,
+                            quizId: resolvedParams.quizId,
+                            position: index + 1
+                        };
+                    })
+                });
             }
+
+            // Fetch the updated quiz with questions
+            const quizWithQuestions = await tx.quiz.findUnique({
+                where: { id: resolvedParams.quizId },
+                include: {
+                    course: {
+                        select: {
+                            title: true
+                        }
+                    },
+                    questions: {
+                        orderBy: {
+                            position: 'asc'
+                        }
+                    }
+                }
+            });
+
+            if (!quizWithQuestions) {
+                return NextResponse.json({ error: "Failed to update quiz" }, { status: 500 });
+            }
+
+            // Parse options for the response
+            const quizWithParsedOptions = {
+                ...quizWithQuestions,
+                questions: quizWithQuestions.questions.map(question => ({
+                    ...question,
+                    options: parseQuizOptions(question.options)
+                }))
+            };
+
+            return NextResponse.json(quizWithParsedOptions);
         });
-
-        if (!quizWithQuestions) {
-            return NextResponse.json({ error: "Failed to update quiz" }, { status: 500 });
-        }
-
-        // Parse options for the response
-        const quizWithParsedOptions = {
-            ...quizWithQuestions,
-            questions: quizWithQuestions.questions.map(question => ({
-                ...question,
-                options: parseQuizOptions(question.options)
-            }))
-        };
-
-        return NextResponse.json(quizWithParsedOptions);
     } catch (error) {
         console.log("[QUIZ_PATCH]", error);
         return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
-} 
+}

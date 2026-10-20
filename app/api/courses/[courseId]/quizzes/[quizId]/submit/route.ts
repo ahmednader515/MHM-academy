@@ -1,7 +1,9 @@
+import type { PrismaClient } from "@prisma/client";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { parseQuizOptions } from "@/lib/utils";
+import { scoreQuiz, validQuizAnswers } from "@/lib/quiz-scoring";
 import { hasSubscriptionAccess } from "@/lib/subscription-utils";
 
 export async function POST(
@@ -17,6 +19,9 @@ export async function POST(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
+        if (!validQuizAnswers(answers)) {
+            return new NextResponse("Invalid quiz answers", { status: 400 });
+        }
         const userId = session.user.id;
 
         // Check if user has access to the course
@@ -43,146 +48,110 @@ export async function POST(
         if (!course.isFree) {
             // Check if user has purchased the course
             let hasAccess = course.purchases.length > 0;
-            
+
             // If no purchase access, check subscription
             if (!hasAccess) {
                 hasAccess = await hasSubscriptionAccess(userId, course);
             }
-            
+
             if (!hasAccess) {
                 return new NextResponse("Course access required", { status: 403 });
             }
         }
 
-        // Get the quiz with questions (quiz already fetched above, but need questions)
-        const quizWithQuestions = await db.quiz.findFirst({
-            where: {
-                id: resolvedParams.quizId,
-                courseId: resolvedParams.courseId,
-                isPublished: true
-            },
-            include: {
-                questions: {
-                    select: {
-                        id: true,
-                        text: true,
-                        type: true,
-                        options: true,
-                        correctAnswer: true,
-                        points: true,
-                        imageUrl: true
-                    },
-                    orderBy: {
-                        position: 'asc'
+        return await (db as unknown as PrismaClient).$transaction(async (tx) => {
+            // Serialize submissions across tabs/devices before checking the attempt limit.
+            await tx.$queryRaw`SELECT "id" FROM "Quiz" WHERE "id" = ${resolvedParams.quizId} FOR UPDATE`;
+            // Get the quiz with questions (quiz already fetched above, but need questions)
+            const quizWithQuestions = await tx.quiz.findFirst({
+                where: {
+                    id: resolvedParams.quizId,
+                    courseId: resolvedParams.courseId,
+                    isPublished: true
+                },
+                include: {
+                    questions: {
+                        select: {
+                            id: true,
+                            text: true,
+                            type: true,
+                            options: true,
+                            correctAnswer: true,
+                            points: true,
+                            imageUrl: true
+                        },
+                        orderBy: {
+                            position: 'asc'
+                        }
                     }
                 }
-            }
-        });
-
-        if (!quizWithQuestions) {
-            return new NextResponse("Quiz not found", { status: 404 });
-        }
-
-        // Check if user has already taken this quiz and if they can take it again
-        const existingResults = await db.quizResult.findMany({
-            where: {
-                studentId: userId,
-                quizId: resolvedParams.quizId
-            },
-            orderBy: {
-                attemptNumber: 'desc'
-            }
-        });
-
-        const currentAttemptNumber = existingResults.length + 1;
-
-        if (existingResults.length >= quizWithQuestions.maxAttempts) {
-            return new NextResponse("Maximum attempts reached for this quiz", { status: 400 });
-        }
-
-        // Calculate score
-        let totalScore = 0;
-        let totalPoints = 0;
-        const quizAnswers = [];
-
-        for (const question of quizWithQuestions.questions) {
-            totalPoints += question.points;
-            const studentAnswer = answers.find((a: any) => a.questionId === question.id)?.answer || "";
-            
-            let isCorrect = false;
-            let pointsEarned = 0;
-            let isGraded = true;
-
-            if (question.type === "MULTIPLE_CHOICE") {
-                // Parse options to get the correct answer format
-                const options = parseQuizOptions(question.options);
-                const correctAnswer = question.correctAnswer.trim();
-                
-                // Check if student answer matches any of the correct options
-                isCorrect = options.some(option => 
-                    option.trim() === correctAnswer && 
-                    option.trim() === studentAnswer.trim()
-                );
-            } else if (question.type === "TRUE_FALSE") {
-                isCorrect = studentAnswer.toLowerCase() === question.correctAnswer.toLowerCase();
-            } else if (question.type === "SHORT_ANSWER") {
-                // Written answers are graded manually by teachers/admins
-                isGraded = false;
-                isCorrect = false;
-                pointsEarned = 0;
-            }
-
-            if (isGraded && isCorrect) {
-                pointsEarned = question.points;
-                totalScore += question.points;
-            }
-
-            quizAnswers.push({
-                questionId: question.id,
-                studentAnswer,
-                correctAnswer: question.correctAnswer,
-                isCorrect,
-                isGraded,
-                pointsEarned
             });
-        }
 
-        const percentage = totalPoints > 0 ? (totalScore / totalPoints) * 100 : 0;
+            if (!quizWithQuestions) {
+                return new NextResponse("Quiz not found", { status: 404 });
+            }
 
-        // Create quiz result
-        const quizResult = await db.quizResult.create({
-            data: {
-                studentId: userId,
-                quizId: resolvedParams.quizId,
-                score: totalScore,
-                totalPoints,
-                percentage,
-                attemptNumber: currentAttemptNumber,
-                answers: {
-                    create: quizAnswers
+            // Check if user has already taken this quiz and if they can take it again
+            const existingResults = await tx.quizResult.findMany({
+                where: {
+                    studentId: userId,
+                    quizId: resolvedParams.quizId
+                },
+                orderBy: {
+                    attemptNumber: 'desc'
                 }
-            },
-            include: {
-                answers: {
-                    include: {
-                        question: true
+            });
+
+            const currentAttemptNumber = (existingResults[0]?.attemptNumber ?? 0) + 1;
+
+            if (existingResults.length >= quizWithQuestions.maxAttempts) {
+                return new NextResponse("Maximum attempts reached for this quiz", { status: 400 });
+            }
+
+            if (quizWithQuestions.questions.length === 0) {
+                return new NextResponse("Quiz has no questions", { status: 400 });
+            }
+            const questionIds = new Set(quizWithQuestions.questions.map(question => question.id));
+            if (answers.some(answer => !questionIds.has(answer.questionId))) {
+                return new NextResponse("Quiz questions have changed. Please reload the quiz.", { status: 409 });
+            }
+            const { score: totalScore, totalPoints, percentage, quizAnswers } = scoreQuiz(quizWithQuestions.questions, answers);
+
+            // Create quiz result
+            const quizResult = await tx.quizResult.create({
+                data: {
+                    studentId: userId,
+                    quizId: resolvedParams.quizId,
+                    score: totalScore,
+                    totalPoints,
+                    percentage,
+                    attemptNumber: currentAttemptNumber,
+                    answers: {
+                        create: quizAnswers
+                    }
+                },
+                include: {
+                    answers: {
+                        include: {
+                            question: true
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        return NextResponse.json({
-            ...quizResult,
-            answers: quizResult.answers.map(answer => ({
-                ...answer,
-                question: {
-                    ...answer.question,
-                    options: parseQuizOptions(answer.question.options)
-                }
-            }))
+            return NextResponse.json({
+                ...quizResult,
+                answers: quizResult.answers.map(answer => ({
+                    ...answer,
+                    question: {
+                        ...answer.question,
+                        options: parseQuizOptions(answer.question.options)
+                    }
+                }))
+            });
         });
     } catch (error) {
         console.log("[QUIZ_SUBMIT]", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
-} 
+}

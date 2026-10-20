@@ -41,12 +41,12 @@ export async function GET(
         if (!course.isFree) {
             // Check if user has purchased the course
             let hasAccess = course.purchases.length > 0;
-            
+
             // If no purchase access, check subscription
             if (!hasAccess) {
                 hasAccess = await hasSubscriptionAccess(userId, course);
             }
-            
+
             if (!hasAccess) {
                 return new NextResponse("Course access required", { status: 403 });
             }
@@ -56,7 +56,8 @@ export async function GET(
         const quizResult = await db.quizResult.findFirst({
             where: {
                 studentId: userId,
-                quizId: resolvedParams.quizId
+                quizId: resolvedParams.quizId,
+                quiz: { courseId: resolvedParams.courseId }
             },
             orderBy: {
                 attemptNumber: 'desc'
@@ -91,4 +92,4 @@ export async function GET(
         console.log("[QUIZ_RESULT_GET]", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
-} 
+}
