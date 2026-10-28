@@ -106,7 +106,7 @@ export async function PATCH(
       return new NextResponse("Forbidden", { status: 403 });
     }
 
-    const { homeworkId, correctedImageUrl, correctedImageUrls } = await req.json();
+    const { homeworkId, correctedImageUrl, correctedImageUrls, replaceUrl } = await req.json();
     const incomingImages = Array.isArray(correctedImageUrls)
       ? correctedImageUrls.filter((url: unknown) => typeof url === "string" && url)
       : correctedImageUrl
@@ -148,8 +148,13 @@ export async function PATCH(
     const currentImages = (homework as any).correctedImageUrls || 
                          ((homework as any).correctedImageUrl ? [(homework as any).correctedImageUrl] : []);
 
-    // Append new image to the array (don't replace)
-    const updatedImages = [...currentImages, ...incomingImages];
+    if (replaceUrl !== undefined && (typeof replaceUrl !== "string" || !currentImages.includes(replaceUrl))) {
+      return new NextResponse("Corrected file no longer exists", { status: 400 });
+    }
+    // Reopening a saved correction updates that file without duplicating it.
+    const updatedImages = replaceUrl
+      ? currentImages.flatMap((url: string) => url === replaceUrl ? incomingImages : [url])
+      : [...currentImages, ...incomingImages];
 
     // Update homework with corrected images array
     const updatedHomework = await db.homeworkSubmission.update({

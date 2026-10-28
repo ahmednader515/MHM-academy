@@ -22,8 +22,8 @@ const endpointConfig: Record<UploadEndpoint, { accept: string; helperText: strin
         helperText: "Images, videos, audio, text files, and PDFs up to 512MB.",
     },
     homeworkImage: {
-        accept: "image/*",
-        helperText: "Image files up to 15MB.",
+        accept: "image/*,.pdf,application/pdf",
+        helperText: "Images and PDFs up to 50MB.",
     },
     activityImage: {
         accept: "image/*",

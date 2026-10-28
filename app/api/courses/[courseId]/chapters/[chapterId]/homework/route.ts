@@ -18,7 +18,7 @@ export async function POST(
 
     const userId = session.user.id;
 
-    const { imageUrl, imageUrls } = await req.json();
+    const { imageUrl, imageUrls, replaceExisting } = await req.json();
     const incomingImages = Array.isArray(imageUrls)
       ? imageUrls.filter((url: unknown) => typeof url === "string" && url)
       : imageUrl
@@ -75,8 +75,8 @@ export async function POST(
       const currentImages = (existingHomework as any).imageUrls || 
                            ((existingHomework as any).imageUrl ? [(existingHomework as any).imageUrl] : []);
 
-      // Append new image to the array (don't replace)
-      const updatedImages = [...currentImages, ...incomingImages];
+      // An edited document replaces the old page images; standalone uploads append.
+      const updatedImages = replaceExisting === true ? incomingImages : [...currentImages, ...incomingImages];
 
       const homework = await db.homeworkSubmission.update({
         where: {

@@ -14,7 +14,9 @@ import { ar } from "date-fns/locale";
 import { useLanguage } from "@/lib/contexts/language-context";
 import { toast } from "sonner";
 import { FileUpload } from "@/components/file-upload";
+import { HomeworkFilePreview } from "@/components/homework-file-preview";
 import { DocumentEditor } from "@/components/document-editor";
+import { isPdfFile } from "@/lib/document-utils";
 import { CURRICULA, getLevelsByCurriculum, getLanguagesByLevel, getGradesByLanguage, getGradesByLevel } from "@/lib/data/curriculum-data";
 import { Label } from "@/components/ui/label";
 import {
@@ -153,6 +155,7 @@ const ProgressPage = () => {
         chapterId: string;
         sources: { url: string; name?: string }[];
         title?: string;
+        replaceUrl?: string;
     } | null>(null);
 
     // Filter states
@@ -283,7 +286,7 @@ const ProgressPage = () => {
         setHomeworkDialogOpen(true);
     };
 
-    const handleUploadCorrectedHomework = async (homeworkId: string, chapterId: string, imageUrl: string | string[]) => {
+    const handleUploadCorrectedHomework = async (homeworkId: string, chapterId: string, imageUrl: string | string[], replaceUrl?: string) => {
         setUploadingCorrectedHomework(prev => ({ ...prev, [homeworkId]: true }));
         try {
             const correctedImageUrls = Array.isArray(imageUrl) ? imageUrl : [imageUrl];
@@ -295,6 +298,7 @@ const ProgressPage = () => {
                 body: JSON.stringify({
                     homeworkId,
                     correctedImageUrls,
+                    replaceUrl,
                 }),
             });
 
@@ -314,11 +318,12 @@ const ProgressPage = () => {
                     handleRefreshAllHomeworks();
                 }
             } else {
-                toast.error(t('dashboard.errorUploadingCorrectedHomework') || 'Failed to upload corrected homework');
+                throw new Error('Failed to save corrected homework');
             }
         } catch (error) {
             console.error("Error uploading corrected homework:", error);
             toast.error(t('dashboard.errorUploadingCorrectedHomework') || 'Failed to upload corrected homework');
+            if (Array.isArray(imageUrl)) throw error;
         } finally {
             setUploadingCorrectedHomework(prev => ({ ...prev, [homeworkId]: false }));
         }
@@ -784,7 +789,7 @@ const ProgressPage = () => {
                                                         const submittedImages = submission.imageUrls || (submission.imageUrl ? [submission.imageUrl] : []);
                                                         return submittedImages.length > 1 && (
                                                             <span className="text-xs text-muted-foreground ml-2">
-                                                                ({submittedImages.length} {t('dashboard.images') || 'images'})
+                                                                ({submittedImages.length} {t('dashboard.files') || 'files'})
                                                             </span>
                                                         );
                                                     })()}
@@ -798,7 +803,7 @@ const ProgressPage = () => {
                                                             {submittedImages.map((imageUrl, index) => (
                                                                 <div key={index} className="space-y-2">
                                                                     <div className="relative w-full overflow-hidden">
-                                                                        <img 
+                                                                        <HomeworkFilePreview
                                                                             src={imageUrl} 
                                                                             alt={`Homework ${index + 1} by ${submission.student.fullName}`}
                                                                             className="w-full h-auto max-w-full rounded-md border cursor-pointer object-contain hover:opacity-90 transition-opacity"
@@ -822,7 +827,7 @@ const ProgressPage = () => {
                                                                 onClick={() => setCorrectionEditor({
                                                                     homeworkId: submission.id,
                                                                     chapterId: submission.chapter.id,
-                                                                    sources: submittedImages.map((url, imageIndex) => ({ url, name: `homework-${imageIndex + 1}.jpg` })),
+                                                                    sources: submittedImages.map((url) => ({ url })),
                                                                     title: `${t('dashboard.correctOnPlatform') || 'Correct on platform'} - ${submission.student.fullName}`,
                                                                 })}
                                                             >
@@ -851,12 +856,24 @@ const ProgressPage = () => {
                                                                 {correctedImages.map((imageUrl, index) => (
                                                                     <div key={index} className="space-y-2">
                                                                         <div className="relative w-full overflow-hidden">
-                                                                            <img 
+                                                                            <HomeworkFilePreview
                                                                                 src={imageUrl} 
                                                                                 alt={`Corrected homework ${index + 1} for ${submission.student.fullName}`}
                                                                                 className="w-full h-auto max-w-full rounded-md border cursor-pointer object-contain hover:opacity-90 transition-opacity"
                                                                                 onClick={() => window.open(imageUrl, '_blank')}
                                                                             />
+                                                                            {isPdfFile(imageUrl) && <Button variant="outline" size="sm"
+                                                                                disabled={uploadingCorrectedHomework[submission.id]}
+                                                                                onClick={() => setCorrectionEditor({
+                                                                                    homeworkId: submission.id,
+                                                                                    chapterId: submission.chapter.id,
+                                                                                    sources: [{ url: imageUrl }],
+                                                                                    replaceUrl: imageUrl,
+                                                                                    title: t('dashboard.editSavedCorrection'),
+                                                                                })}>
+                                                                                <Pencil className="h-4 w-4" />
+                                                                                {t('dashboard.editSavedCorrection')}
+                                                                            </Button>}
                                                                         </div>
                                                                         <Button
                                                                             variant="outline"
@@ -994,7 +1011,7 @@ const ProgressPage = () => {
                                                                     const submittedImages = submission.imageUrls || (submission.imageUrl ? [submission.imageUrl] : []);
                                                                     return submittedImages.length > 1 && (
                                                                         <span className="text-xs text-muted-foreground ml-2">
-                                                                            ({submittedImages.length} {t('dashboard.images') || 'images'})
+                                                                            ({submittedImages.length} {t('dashboard.files') || 'files'})
                                                                         </span>
                                                                     );
                                                                 })()}
@@ -1008,7 +1025,7 @@ const ProgressPage = () => {
                                                                         {submittedImages.map((imageUrl, index) => (
                                                                             <div key={index} className="space-y-2">
                                                                                 <div className="relative w-full max-w-2xl overflow-hidden">
-                                                                                    <img 
+                                                                                    <HomeworkFilePreview
                                                                                         src={imageUrl} 
                                                                                         alt={`Homework ${index + 1} by ${submission.student.fullName} for ${chapter.title}`}
                                                                                         className="w-full h-auto max-w-full rounded-md border cursor-pointer hover:opacity-90 transition-opacity object-contain"
@@ -1032,7 +1049,7 @@ const ProgressPage = () => {
                                                                             onClick={() => setCorrectionEditor({
                                                                                 homeworkId: submission.id,
                                                                                 chapterId: submission.chapter.id,
-                                                                                sources: submittedImages.map((url, imageIndex) => ({ url, name: `homework-${imageIndex + 1}.jpg` })),
+                                                                                sources: submittedImages.map((url) => ({ url })),
                                                                                 title: `${t('dashboard.correctOnPlatform') || 'Correct on platform'} - ${submission.student.fullName}`,
                                                                             })}
                                                                         >
@@ -1061,12 +1078,24 @@ const ProgressPage = () => {
                                                                             {correctedImages.map((imageUrl, index) => (
                                                                                 <div key={index} className="space-y-2">
                                                                                     <div className="relative w-full max-w-2xl overflow-hidden">
-                                                                                        <img 
+                                                                                        <HomeworkFilePreview
                                                                                             src={imageUrl} 
                                                                                             alt={`Corrected homework ${index + 1} for ${submission.student.fullName}`}
                                                                                             className="w-full h-auto max-w-full rounded-md border cursor-pointer hover:opacity-90 transition-opacity object-contain"
                                                                                             onClick={() => window.open(imageUrl, '_blank')}
                                                                                         />
+                                                                            {isPdfFile(imageUrl) && <Button variant="outline" size="sm"
+                                                                                disabled={uploadingCorrectedHomework[submission.id]}
+                                                                                onClick={() => setCorrectionEditor({
+                                                                                    homeworkId: submission.id,
+                                                                                    chapterId: submission.chapter.id,
+                                                                                    sources: [{ url: imageUrl }],
+                                                                                    replaceUrl: imageUrl,
+                                                                                    title: t('dashboard.editSavedCorrection'),
+                                                                                })}>
+                                                                                <Pencil className="h-4 w-4" />
+                                                                                {t('dashboard.editSavedCorrection')}
+                                                                            </Button>}
                                                                                     </div>
                                                                                     <Button
                                                                                         variant="outline"
@@ -1252,7 +1281,8 @@ const ProgressPage = () => {
                     await handleUploadCorrectedHomework(
                         correctionEditor.homeworkId,
                         correctionEditor.chapterId,
-                        imageUrls
+                        imageUrls,
+                        correctionEditor.replaceUrl
                     );
                 }}
             />

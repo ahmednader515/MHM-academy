@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { PlyrVideoPlayer } from "@/components/plyr-video-player";
 import { useLanguage } from "@/lib/contexts/language-context";
 import { FileUpload } from "@/components/file-upload";
+import { HomeworkFilePreview } from "@/components/homework-file-preview";
 import { DocumentEditor } from "@/components/document-editor";
 import { isEditableHomeworkFile } from "@/lib/document-utils";
 
@@ -173,6 +174,7 @@ const ChapterPage = () => {
     try {
       await axios.post(`/api/courses/${routeParams.courseId}/chapters/${routeParams.chapterId}/homework`, {
         imageUrls,
+        replaceExisting: true,
       });
       toast.success(t('student.homeworkSubmittedSuccess') || 'Homework submitted successfully!');
       await refreshHomework();
@@ -461,7 +463,7 @@ const ChapterPage = () => {
                         const submittedImages = homework.imageUrls || (homework.imageUrl ? [homework.imageUrl] : []);
                         return submittedImages.length > 1 && (
                           <span className="text-xs text-muted-foreground">
-                            ({submittedImages.length} {t('student.images') || 'images'})
+                            ({submittedImages.length} {t('student.files') || 'files'})
                           </span>
                         );
                       })()}
@@ -478,7 +480,7 @@ const ChapterPage = () => {
                           {submittedImages.map((imageUrl, index) => (
                             <div key={index} className="space-y-2">
                               <div className="relative w-full max-w-md">
-                                <img 
+                                <HomeworkFilePreview
                                   src={imageUrl} 
                                   alt={`Homework submission ${index + 1}`}
                                   className="w-full h-auto rounded-md border cursor-pointer hover:opacity-90 transition-opacity"
@@ -500,7 +502,7 @@ const ChapterPage = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => setDocumentEditor({
-                              sources: submittedImages.map((url, imageIndex) => ({ url, name: `homework-${imageIndex + 1}.jpg` })),
+                              sources: submittedImages.map((url) => ({ url })),
                               title: t('student.editHomework') || 'Edit homework',
                             })}
                             className="flex items-center gap-1"
@@ -528,7 +530,7 @@ const ChapterPage = () => {
                           </span>
                           {correctedImages.length > 1 && (
                             <span className="text-xs text-muted-foreground">
-                              ({correctedImages.length} {t('student.images') || 'images'})
+                              ({correctedImages.length} {t('student.files') || 'files'})
                             </span>
                           )}
                         </div>
@@ -539,7 +541,7 @@ const ChapterPage = () => {
                           {correctedImages.map((imageUrl, index) => (
                             <div key={index} className="space-y-2">
                               <div className="relative w-full max-w-md">
-                                <img 
+                                <HomeworkFilePreview
                                   src={imageUrl} 
                                   alt={`Corrected homework ${index + 1}`}
                                   className="w-full h-auto rounded-md border border-green-300 dark:border-green-700 cursor-pointer hover:opacity-90 transition-opacity"

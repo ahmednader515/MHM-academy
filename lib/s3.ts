@@ -31,8 +31,8 @@ export const uploadConfigs: Record<UploadEndpoint, UploadConfig> = {
     keyPrefix: "course-attachments",
   },
   homeworkImage: {
-    maxFileSize: 15 * MB,
-    allowedMimeTypes: ["image/"],
+    maxFileSize: 50 * MB,
+    allowedMimeTypes: ["image/", "application/pdf"],
     keyPrefix: "homework",
   },
   activityImage: {
